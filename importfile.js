@@ -9,9 +9,22 @@ document.getElementById("file").addEventListener("change", function (e) {
     reader.onload = function () {
         var src = reader.result;
         var binary = atob(src.split(',')[1]);
-        console.log(hex(binary));
+        //console.log(binary.slice(0,8).split('').map(x=>x.codePointAt(0)));
+        //console.log([137,80,78,71,13,10,26,10].map(x=>String.fromCharCode(x)).join(''));
+        // tostringして結果比較(怪しい)
+        if(binary.slice(0,8) === [137,80,78,71,13,10,26,10].map(x=>String.fromCharCode(x)).join('')){
+            console.log('this is PNG file');
+        }else{
+            console.log('this is not PNG file');
+        }
+        console.log(binary.slice(0,26).split('').map(x=>x.codePointAt(0)));
         //drawCanvas(src);
         //paletteColor(binary);
+        if(binary.charCodeAt(25) === 3){
+            console.log('this PNG supported');
+        }else{
+            console.log('this PNG not supported')
+        }
     };
 }, false);
 }
@@ -38,7 +51,7 @@ function paletteColor(source) {
 function hex(s) {
     var result="";
     for(var i=0;i<s.length;++i){
-      var h = ("0"+s.charCodeAt(i).toString(16)).substr(-2);
+      var h = ("0"+s.charCodeAt(i).toString(16)).slice(-2);
       result += h;
     }
     return result;

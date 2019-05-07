@@ -8,6 +8,24 @@
     - 拡大必要
 - シェア
     - uriをパラメータでやるのが良さそう
+## PNG
+PNG signature 8byte
+137,80,78,71,13,10,26,10
+IHDR Length 4byte
+0,0,0,13
+IHDR Chunk Type 4byte
+73,72,68,82
+IHDR Chunk Data width 4byte
+W,W,W,W
+IHDR Chunk Data height 4byte
+H,H,H,H
+IHDR Chunk Data bit depth 1byte
+D
+IHDR Chunk Data color type 1byte
+C
+
+if C == 3 / png use palette
+
 
 ## 参考文献
 http://www.landofcrispy.com/nonogrammer/nonogram.html?mode=play
