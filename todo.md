@@ -6,23 +6,24 @@
     - 数字はあとからcanvasで？
 - クリックで遊べるように
     - 拡大必要
+    - 毎回一つずつ
 - シェア
     - uriをパラメータでやるのが良さそう
 ## PNG
-PNG signature 8byte
-137,80,78,71,13,10,26,10
-IHDR Length 4byte
-0,0,0,13
-IHDR Chunk Type 4byte
-73,72,68,82
-IHDR Chunk Data width 4byte
-W,W,W,W
-IHDR Chunk Data height 4byte
-H,H,H,H
-IHDR Chunk Data bit depth 1byte
-D
-IHDR Chunk Data color type 1byte
-C
+PNG signature 8byte  
+137,80,78,71,13,10,26,10  
+IHDR Length 4byte  
+0,0,0,13  
+IHDR Chunk Type 4byte  
+73,72,68,82  
+IHDR Chunk Data width 4byte  
+W,W,W,W  
+IHDR Chunk Data height 4byte  
+H,H,H,H  
+IHDR Chunk Data bit depth 1byte  
+D  
+IHDR Chunk Data color type 1byte  
+C  
 
 if C == 3 / png use palette
 
@@ -38,3 +39,7 @@ https://hoshi-sano.hatenablog.com/entry/2013/08/18/112550
 https://developer.mozilla.org/ja/docs/Web/JavaScript/Reference/Global_Objects/DataView
 https://qiita.com/megadreams14/items/dded3cf770010bb8ff08
 https://developer.mozilla.org/ja/docs/Web/API/FileReader/result
+http://var.blog.jp/archives/62330155.html
+http://imaya.blog.jp/archives/6136997.html
+https://stackoverflow.com/questions/4858187/save-restore-background-area-of-html5-canvas
+https://qiita.com/nekoneko-wanwan/items/9af7fb34d0fb7f9fc870
