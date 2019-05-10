@@ -43,3 +43,5 @@ http://var.blog.jp/archives/62330155.html
 http://imaya.blog.jp/archives/6136997.html
 https://stackoverflow.com/questions/4858187/save-restore-background-area-of-html5-canvas
 https://qiita.com/nekoneko-wanwan/items/9af7fb34d0fb7f9fc870
+https://katashin.info/2018/12/18/247
+https://qiita.com/kznr_luk/items/790f1b154d1b6d4de398
