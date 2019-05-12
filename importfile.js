@@ -19,97 +19,114 @@ window.onload = function () {
 
         // ファイルが読み込めたら処理開始
         reader.onload = function () {
-            //　読み込んだファイルをuint8arrayに入れる
-            const src = reader.result;
-            const binary = atob(src.split(',')[1]);
-            const uint8array = Uint8Array.from(binary.split(""), e => e.charCodeAt(0));
-            const splitChunk = [];
-
-            // PNGファイルかどうかを確認
-            if (JSON.stringify(Array.from(uint8array.slice(0, 8))) === JSON.stringify([137, 80, 78, 71, 13, 10, 26, 10])) {
-                console.log('This file is PNG file');
-            } else {
-                console.log('This file is not PNG file');
-                alert(`This file is not PNG file.
-This file cannot use this service.`);
-                return 0;
-            }
-
-            // チャンクの読み取り
-            for (let i = 8; i < uint8array.length; i += splitChunk.slice(-1)[0].chunkLength + 12) {
-                splitChunk.push(readChunk(uint8array.slice(i)));
-            }
-
-            console.log(splitChunk);
-
-            //　PNGの縦横サイズ
-            const pngwidth = new Uint32Array(splitChunk.filter(x => x.chunkType === 'IHDR')[0].chunkData.slice(0, 4).reverse().buffer)[0];
-            const pngheight = new Uint32Array(splitChunk.filter(x => x.chunkType === 'IHDR')[0].chunkData.slice(4, 8).reverse().buffer)[0];
-
-            //　読み込みに必要なデータの所得
-            const bitdepth = splitChunk.filter(x => x.chunkType === 'IHDR')[0].chunkData[8];
-            const colortype = splitChunk.filter(x => x.chunkType === 'IHDR')[0].chunkData[9];
-            const tRNSdata = splitChunk.filter(x => x.chunkType === 'tRNS')[0].chunkData[0];
-
-            // インタレースを使ってないか確認
-            if (splitChunk.filter(x => x.chunkType === 'IHDR')[0].chunkData[12] === 1) {
-                console.log('This PNG file use interlace.');
-                alert(`This PNG file use interlace.
-This file cannot use this service.`);
-                return 0;
-            }
-            // パレットを使っているか確認
-            if (colortype !== 3) {
-                console.log('This PNG file does not used a palette.');
-                alert(`This PNG file does not used a palette.
-This file cannot use this service.`);
-                return 0;
-            }
-
-            // IDATのchunkDataは圧縮されているのでzlibで展開
-            const compressed = splitChunk.filter(x => x.chunkType === 'IDAT')[0].chunkData;
-            const idatdata = new Zlib.Inflate(compressed).decompress();
-
-            // 読み込まれたPNGのPNGマトリクスの作成
-            const pngmatrix = makePNGMatrix(idatdata, pngwidth, pngheight, bitdepth);
-            console.log(pngmatrix);
-
-            // 遊ぶための空のマトリクスを作成
-            for (let i = 0; i < pngmatrix.length; i++) {
-                const row = [];
-                for (let j = 0; j < pngmatrix[i].length; j++) {
-                    row.push(tRNSdata);
-                }
-                g_drawmatrix.push(row);
-            }
-            // パレットの読み込み
-            const pngpalettecolor = paletteColor(splitChunk.filter(x => x.chunkType === 'PLTE')[0].chunkData);
-
-            // デフォルト色を背景色で設定
-            g_selectcolor = tRNSdata;
-
-            // 使ってる色のパレット番号の取り出し
-            const pngpalettecolorset = new Set(Array.prototype.concat.apply([], pngmatrix));
-
-            // nonogramの数字の計算
-            const numberrow = makeNumber(pngmatrix, tRNSdata);
-            const numbercolumn = makeNumber(transpose(pngmatrix), tRNSdata);
-
-            // 描画
-            draw(pngmatrix, pngpalettecolor, pngpalettecolorset,numberrow,numbercolumn,tRNSdata);
-
+            const src = reader.result.split(',')[1];
+            main(src);
         };
     }, false);
+
+    if (window.location.search[0] === '?') {
+        main(window.location.search.slice(1));
+    }
+
+}
+
+function main(src) {
+    console.log(src);
+    //　読み込んだファイルをuint8arrayに入れる
+    const binary = atob(src);
+    const uint8array = Uint8Array.from(binary.split(""), e => e.charCodeAt(0));
+    const splitChunk = [];
+
+    // PNGファイルかどうかを確認
+    if (JSON.stringify(Array.from(uint8array.slice(0, 8))) === JSON.stringify([137, 80, 78, 71, 13, 10, 26, 10])) {
+        console.log('This file is PNG file');
+    } else {
+        console.log('This file is not PNG file');
+        alert(`This file is not PNG file.
+    This file cannot use this service.`);
+        return 0;
+    }
+
+    // チャンクの読み取り
+    for (let i = 8; i < uint8array.length; i += splitChunk.slice(-1)[0].chunkLength + 12) {
+        splitChunk.push(readChunk(uint8array.slice(i)));
+    }
+
+    console.log(splitChunk);
+
+    //　PNGの縦横サイズ
+    const pngwidth = new Uint32Array(splitChunk.filter(x => x.chunkType === 'IHDR')[0].chunkData.slice(0, 4).reverse().buffer)[0];
+    const pngheight = new Uint32Array(splitChunk.filter(x => x.chunkType === 'IHDR')[0].chunkData.slice(4, 8).reverse().buffer)[0];
+
+    //　読み込みに必要なデータの所得
+    const bitdepth = splitChunk.filter(x => x.chunkType === 'IHDR')[0].chunkData[8];
+    const colortype = splitChunk.filter(x => x.chunkType === 'IHDR')[0].chunkData[9];
+    const tRNSdata = splitChunk.filter(x => x.chunkType === 'tRNS')[0].chunkData[0];
+
+    // インタレースを使ってないか確認
+    if (splitChunk.filter(x => x.chunkType === 'IHDR')[0].chunkData[12] === 1) {
+        console.log('This PNG file use interlace.');
+        alert(`This PNG file use interlace.
+    This file cannot use this service.`);
+        return 0;
+    }
+    // パレットを使っているか確認
+    if (colortype !== 3) {
+        console.log('This PNG file does not used a palette.');
+        alert(`This PNG file does not used a palette.
+    This file cannot use this service.`);
+        return 0;
+    }
+
+    // IDATのchunkDataは圧縮されているのでzlibで展開
+    const compressed = splitChunk.filter(x => x.chunkType === 'IDAT')[0].chunkData;
+    const idatdata = new Zlib.Inflate(compressed).decompress();
+
+    // 読み込まれたPNGのPNGマトリクスの作成
+    const pngmatrix = makePNGMatrix(idatdata, pngwidth, pngheight, bitdepth);
+    console.log(pngmatrix);
+
+    // 遊ぶための空のマトリクスを作成
+    for (let i = 0; i < pngmatrix.length; i++) {
+        const row = [];
+        for (let j = 0; j < pngmatrix[i].length; j++) {
+            row.push(tRNSdata);
+        }
+        g_drawmatrix.push(row);
+    }
+    // パレットの読み込み
+    const pngpalettecolor = paletteColor(splitChunk.filter(x => x.chunkType === 'PLTE')[0].chunkData);
+
+    // デフォルト色を背景色で設定
+    g_selectcolor = tRNSdata;
+
+    // 使ってる色のパレット番号の取り出し
+    const pngpalettecolorset = new Set(Array.prototype.concat.apply([], pngmatrix));
+
+    // nonogramの数字の計算
+    const numberrow = makeNumber(pngmatrix, tRNSdata);
+    const numbercolumn = makeNumber(transpose(pngmatrix), tRNSdata);
+
+    // 描画
+    draw(pngmatrix, pngpalettecolor, pngpalettecolorset, numberrow, numbercolumn, tRNSdata);
+
+    //Twitterシェア(動かない)
+    //document.getElementById('share').href = `http://twitter.com/share?url=${window.location.href+"?"+src}&text=このNonogramが解けるかな？&related=sytkm`;
 }
 
 // 描画関数
-function draw(pngmatrix, pngpalettecolor, pngpalettecolorset,numberrow,numbercolumn,tRNSdata){
+function draw(pngmatrix, pngpalettecolor, pngpalettecolorset, numberrow, numbercolumn, tRNSdata) {
     const canvas = document.getElementById('canvas');
-    canvas.width = pngmatrix.length * g_css + numberrow[1] * g_css;
-    canvas.height = pngmatrix[0].length * g_css + numbercolumn[1] * g_css;
+    //canvas.width = window.innerWidth;
+    //canvas.height = pngmatrix.length * g_css + numbercolumn[1] * g_css;
+
+    canvas.width = pngmatrix[0].length * g_css + numberrow[1] * g_css;
+    canvas.height = pngmatrix.length * g_css + numbercolumn[1] * g_css;
+
 
     // パレットの描画
-    drawPalette(pngpalettecolor, pngpalettecolorset);
+    //drawPalette(pngpalettecolor, pngpalettecolorset);
+    drawUnderPalette(pngpalettecolor, pngpalettecolorset);
 
     // キャンバスの描画
     //drawCanvasfromBinary(canvas,pngmatrix,pngpalettecolor,tRNSdata,[numberrow[1]*g_css,numbercolumn[1]*g_css]);
@@ -296,14 +313,14 @@ function drawPalette(sourcepalette, usecolor) {
             drawPaletteColor(i, j, true);
         }
     }
-    const saved_pallete = context.getImageData(0, 0, mag * 4 * 16, mag * 3 * 16);
+    const saved_palette = context.getImageData(0, 0, mag * 4 * 16, mag * 3 * 16);
 
     canvas.addEventListener('click', (e) => {
         const rect = e.target.getBoundingClientRect();
         let i, j, x, y;
         [x, y] = [e.clientX - rect.left, e.clientY - rect.top];
         [j, i] = [Math.floor(x / (mag * 4)), Math.floor(y / (mag * 3))];
-        context.putImageData(saved_pallete, 0, 0);
+        context.putImageData(saved_palette, 0, 0);
         drawPaletteColor(i, j, false);
     }, false);
 
@@ -317,6 +334,38 @@ function drawPalette(sourcepalette, usecolor) {
         }
         context.fillStyle = `rgb(${sourcepalette[i * 16 + j]})`;
         context.fillRect(mag * 4 * j + 1, mag * 3 * i + 1, mag * 4 - 2, mag * 3 - 2);
+    }
+}
+
+function drawUnderPalette(sourcepalette, usecolor) {
+    const useset = Array.from(usecolor);
+    const mag = 40;
+    const canvas = document.getElementById('underPalette');
+    canvas.width = useset.length * (mag + 10);
+    canvas.height = 50;
+
+    const context = canvas.getContext('2d');
+    for (let i = 0; i < useset.length; i++) {
+        drawPaletteColor(i, true);
+    }
+    const saved_palette = context.getImageData(0, 0, canvas.width, canvas.height);
+
+    canvas.addEventListener('click', (e) => {
+        const rect = e.target.getBoundingClientRect();
+        let i, j, x, y;
+        [x, y] = [e.clientX - rect.left, e.clientY - rect.top];
+        i = Math.floor(x / (mag + 10));
+        context.putImageData(saved_palette, 0, 0);
+        drawPaletteColor(i, false);
+        g_selectcolor = useset[i];
+    }, false);
+
+    function drawPaletteColor(i, def) {
+        context.fillStyle = def ? 'rgb(128,128,128)' : 'rgb(255,255,0)';
+        context.fillRect((mag + 10) * i, 5, mag, mag);
+
+        context.fillStyle = `rgb(${sourcepalette[useset[i]]})`;
+        context.fillRect((mag + 10) * i + 4, 5 + 4, mag - 8, mag - 8);
     }
 }
 

@@ -1,18 +1,29 @@
 <!DOCTYPE html>
 <html lang="ja">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <script src="inflate.min.js"></script>
     <script src="importfile.js"></script>
+    <link rel="stylesheet" href="style.css">
     <title>Make Nonogram from your PNG</title>
 </head>
+
 <body>
+    <div id="fix-phone-under-menu">
+        <canvas id="underPalette"></canvas>
+    </div>
     <input type="file" id="file">
-    <div id="bdata"></div>
-    <canvas id="canvas"></canvas>
-    <canvas id="paletteCanvas" width="256" height="192"style="border:1px solid #333333;"></canvas>
     <input type="button" value="answer" id="solve">
+    <div id="bdata"></div>
+    <div id="pixelcanvas">
+        <canvas id="canvas"></canvas>
+    </div>
+    <div id="footer"></div>
+    <!-- <canvas id="paletteCanvas" width="256" height="192"style="border:1px solid #333333;"></canvas> -->
+    <!-- <a href="" target="_blank" id="share">Twitterでシェア</a> -->
 </body>
+
 </html>
