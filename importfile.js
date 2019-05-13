@@ -61,8 +61,10 @@ function main(src) {
     //　読み込みに必要なデータの所得
     const bitdepth = splitChunk.filter(x => x.chunkType === 'IHDR')[0].chunkData[8];
     const colortype = splitChunk.filter(x => x.chunkType === 'IHDR')[0].chunkData[9];
-    const tRNSdata = splitChunk.filter(x => x.chunkType === 'tRNS')[0].chunkData[0];
-
+    let tRNSdata = -1;
+    if(splitChunk.filter(x => x.chunkType === 'tRNS').length !== 0){
+        tRNSdata = splitChunk.filter(x => x.chunkType === 'tRNS')[0].chunkData[0];
+    }
     // インタレースを使ってないか確認
     if (splitChunk.filter(x => x.chunkType === 'IHDR')[0].chunkData[12] === 1) {
         console.log('This PNG file use interlace.');
@@ -84,21 +86,21 @@ function main(src) {
 
     // 読み込まれたPNGのPNGマトリクスの作成
     const pngmatrix = makePNGMatrix(idatdata, pngwidth, pngheight, bitdepth);
-    console.log(pngmatrix);
+    const pngsplitmatrix = splitMatrix(pngmatrix,16,16);
 
     // 遊ぶための空のマトリクスを作成
     for (let i = 0; i < pngmatrix.length; i++) {
         const row = [];
         for (let j = 0; j < pngmatrix[i].length; j++) {
-            row.push(tRNSdata);
+            row.push(0);
         }
         g_drawmatrix.push(row);
     }
     // パレットの読み込み
     const pngpalettecolor = paletteColor(splitChunk.filter(x => x.chunkType === 'PLTE')[0].chunkData);
 
-    // デフォルト色を背景色で設定
-    g_selectcolor = tRNSdata;
+    // デフォルト色を0番で設定
+    g_selectcolor = 0;
 
     // 使ってる色のパレット番号の取り出し
     const pngpalettecolorset = new Set(Array.prototype.concat.apply([], pngmatrix));
@@ -278,9 +280,11 @@ function drawCanvasfromBinary(canvas, arr, palette, alpha, offset) {
         const rect = e.target.getBoundingClientRect();
         let i, j, x, y;
         [x, y] = [e.clientX - rect.left - offset[0], e.clientY - rect.top - offset[1]];
+        if(x>0&&y>0){
         [j, i] = [Math.floor(x / g_css), Math.floor(y / g_css)];
         drawSelectColor(i, j);
         g_drawmatrix[i][j] = g_selectcolor;
+        }
     }, false);
 
     // マスの色を塗る関数
@@ -376,6 +380,18 @@ function paletteColor(source) {
         palette.push([source[3 * i], source[3 * i + 1], source[3 * i + 2]]);
     }
     return palette;
+}
+
+function splitMatrix(matrix,wid,hei){
+    const spmatrix=[];
+    for(let i = 0;i<matrix.length/hei;i++){
+        const sprowmatrix = [];
+        for(let j=0;j<matrix[i].length/wid;j++){
+            sprowmatrix.push(matrix.map(x=>x.slice(j*wid,(j+1)*wid)).slice(i*hei,(i+1)*hei));
+        }
+        spmatrix.push(sprowmatrix);
+    }
+    return spmatrix;
 }
 
 // 背景色から文字色を決める関数
