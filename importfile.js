@@ -61,10 +61,11 @@ function main(src) {
     //　読み込みに必要なデータの所得
     const bitdepth = splitChunk.filter(x => x.chunkType === 'IHDR')[0].chunkData[8];
     const colortype = splitChunk.filter(x => x.chunkType === 'IHDR')[0].chunkData[9];
-    let tRNSdata = -1;
+    let tRNSdata = 0;
     if(splitChunk.filter(x => x.chunkType === 'tRNS').length !== 0){
         tRNSdata = splitChunk.filter(x => x.chunkType === 'tRNS')[0].chunkData[0];
     }
+
     // インタレースを使ってないか確認
     if (splitChunk.filter(x => x.chunkType === 'IHDR')[0].chunkData[12] === 1) {
         console.log('This PNG file use interlace.');
