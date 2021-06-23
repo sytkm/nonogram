@@ -444,6 +444,8 @@ function drawUnderPalette(sourcepalette, usecolor) {
         drawPaletteColor(i, true);
     }
     const saved_palette = context.getImageData(0, 0, canvas.width, canvas.height);
+    // デフォルトを選択状態にする
+    drawPaletteColor(0,false);
 
     canvas.addEventListener('click', (e) => {
         const rect = e.target.getBoundingClientRect();
