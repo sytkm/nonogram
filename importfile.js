@@ -146,6 +146,10 @@ function draw(pngmatrix, pngpalettecolor, pngpalettecolorset, numberrow, numberc
 
     canvas.width = pngmatrix[0].length * g_css + numberrow[1] * g_css;
     canvas.height = pngmatrix.length * g_css + numbercolumn[1] * g_css;
+    //背景を白に
+    const context = canvas.getContext('2d');
+    context.fillStyle = "rgb(255,255,255)";
+    context.fillRect(0, 0, canvas.width, canvas.height);
 
 
     // パレットの描画
@@ -337,8 +341,6 @@ function drawCanvas(source) {
  */
 function drawCanvasfromBinary(canvas, arr, palette, alpha, offset) {
     const context = canvas.getContext('2d');
-    context.fillStyle = "rgb(255,255,255)";
-    context.fillRect(0, 0, canvas.width, canvas.height);
 
     for (let i = 0; i < arr.length; i++) {
         for (let j = 0; j < arr[0].length; j++) {
