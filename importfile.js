@@ -115,6 +115,15 @@ function main(src) {
 
     //Twitterシェア(動かない)
     //document.getElementById('share').href = `http://twitter.com/share?url=${window.location.href+"?"+src}&text=このNonogramが解けるかな？&related=sytkm`;
+    
+    //canvasダウンロード
+    document.getElementById('downl').addEventListener("click", function () {
+        const download_canvas = document.getElementById('canvas');
+        let link =document.createElement("a");
+        link.href = download_canvas.toDataURL("image/png");
+        link.download = "nonogram.png";
+        link.click();
+    });
 }
 
 // 描画関数
@@ -269,6 +278,8 @@ function drawCanvas(source) {
 // Nonogramキャンバス描画関数
 function drawCanvasfromBinary(canvas, arr, palette, alpha, offset) {
     const context = canvas.getContext('2d');
+    context.fillStyle = "rgb(255,255,255)";
+    context.fillRect(0,0,canvas.width,canvas.height);
 
     for (let i = 0; i < arr.length; i++) {
         for (let j = 0; j < arr[0].length; j++) {
