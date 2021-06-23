@@ -29,7 +29,10 @@ window.onload = function () {
     }
 
 }
-
+/**
+ * メイン関数
+ * @param  {String} src - 読み込んだファイル
+ */
 function main(src) {
     console.log(src);
     //　読み込んだファイルをuint8arrayに入れる
@@ -62,7 +65,7 @@ function main(src) {
     const bitdepth = splitChunk.filter(x => x.chunkType === 'IHDR')[0].chunkData[8];
     const colortype = splitChunk.filter(x => x.chunkType === 'IHDR')[0].chunkData[9];
     let tRNSdata = 0;
-    if(splitChunk.filter(x => x.chunkType === 'tRNS').length !== 0){
+    if (splitChunk.filter(x => x.chunkType === 'tRNS').length !== 0) {
         tRNSdata = splitChunk.filter(x => x.chunkType === 'tRNS')[0].chunkData[0];
     }
 
@@ -87,7 +90,7 @@ function main(src) {
 
     // 読み込まれたPNGのPNGマトリクスの作成
     const pngmatrix = makePNGMatrix(idatdata, pngwidth, pngheight, bitdepth);
-    const pngsplitmatrix = splitMatrix(pngmatrix,16,16);
+    const pngsplitmatrix = splitMatrix(pngmatrix, 16, 16);
 
     // 遊ぶための空のマトリクスを作成
     for (let i = 0; i < pngmatrix.length; i++) {
@@ -115,18 +118,27 @@ function main(src) {
 
     //Twitterシェア(動かない)
     //document.getElementById('share').href = `http://twitter.com/share?url=${window.location.href+"?"+src}&text=このNonogramが解けるかな？&related=sytkm`;
-    
+
     //canvasダウンロード
     document.getElementById('downl').addEventListener("click", function () {
         const download_canvas = document.getElementById('canvas');
-        let link =document.createElement("a");
+        let link = document.createElement("a");
         link.href = download_canvas.toDataURL("image/png");
         link.download = "nonogram.png";
         link.click();
     });
 }
 
-// 描画関数
+
+/**
+ * Nonogram描画関数
+ * @param  {Number[][]} pngmatrix -  読み込んだpngのmatrix 数字はパレット番号
+ * @param  {Number[][]} pngpalettecolor - 読み込んだpngのパレット 項番ごとにその色
+ * @param  {Set<Number>} pngpalettecolorset - 使っているパレット番号のセット
+ * @param  {Number[][],Number} numberrow - rowの数字一覧とその色、最大の数字
+ * @param  {Number[][],Number} numbercolumn - columnの数字一覧とその色、最大の数字
+ * @param  {Number} tRNSdata - 透過色の番号
+ */
 function draw(pngmatrix, pngpalettecolor, pngpalettecolorset, numberrow, numbercolumn, tRNSdata) {
     const canvas = document.getElementById('canvas');
     //canvas.width = window.innerWidth;
@@ -154,7 +166,11 @@ function draw(pngmatrix, pngpalettecolor, pngpalettecolorset, numberrow, numberc
     });
 }
 
-// PNGチャンク読み取り関数
+/**
+ * PNGチャンク読み取り関数
+ * @param  {String} source - バイナリファイル
+ * @return {Object} - chunk読み取りデータ サイズ/タイプ/データ/終値
+ */
 function readChunk(source) {
     const chunklength = new Uint32Array(source.slice(0, 4).reverse().buffer)[0];
     const chunktype = Array.from(source.slice(4, 8), e => String.fromCharCode(e)).join("");
@@ -163,7 +179,14 @@ function readChunk(source) {
     return { chunkLength: chunklength, chunkType: chunktype, chunkData: chunkdata, chunkCRC: chunkcrc };
 }
 
-// PNGマトリクス生成関数
+/**
+ * PNGマトリクス生成関数
+ * @param  {String} data - chunkデータ
+ * @param  {number} pngwidth - pngファイルの幅
+ * @param  {Number} pngheight - pngファイルの高さ
+ * @param  {Number} bitdepth - ビット深度
+ * @return {Number[][]} - pngマトリクス 中身はパレット番号
+ */
 function makePNGMatrix(data, pngwidth, pngheight, bitdepth) {
     const pngmatrix = [];
     const depthwidth = pngwidth / (8 / bitdepth);
@@ -177,7 +200,12 @@ function makePNGMatrix(data, pngwidth, pngheight, bitdepth) {
     return pngmatrix;
 }
 
-// ビット深度調整関数
+/**
+ * ビット深度調整関数
+ * @param  {String[]} source - pngの行データ(string)
+ * @param  {Number} bitdepth - ビット深度
+ * @return {Number[]} pngの行データ
+ */
 function optimizeData(source, bitdepth) {
     const optimizeData = [];
     for (let i = 0; i < source.length; i++) {
@@ -188,7 +216,11 @@ function optimizeData(source, bitdepth) {
     return optimizeData;
 }
 
-// Nonogram数字計算関数
+/**
+ * Nonogram数字計算関数
+ * @param  {Number[]} arr - 数字データ
+ * @return {Number[][]} 連続する数字のデータ
+ */
 function calcNumber(arr) {
     const calculated = [[arr[0], 1]];
     for (let i = 1; i < arr.length; i++) {
@@ -201,7 +233,12 @@ function calcNumber(arr) {
     return calculated;
 }
 
-// Nonogram数字マトリクス生成関数
+/**
+ * Nonogram数字マトリクス生成関数
+ * @param  {Number[][]} arr - pngマトリクス
+ * @param  {Number} alpha - 透過色
+ * @return - 計算した数字集合、最大値
+ */
 function makeNumber(arr, alpha) {
     const numberrowarray = [];
     let maxnumber = 0;
@@ -217,7 +254,13 @@ function makeNumber(arr, alpha) {
     return [numberrowarray, maxnumber];
 }
 
-// Nonogram行数字マトリクス描画関数
+/**
+ * Nonogram行数字マトリクス描画関数
+ * @param  {HTMLElement} canvas - 描画するcanvas
+ * @param  {Number[][]} arr - 描画するNonogram数字マトリクス
+ * @param  {Number[][]} palette - パレット
+ * @param  {Number} offset - オフセット
+ */
 function drawNumberRow(canvas, arr, palette, offset) {
     const context = canvas.getContext('2d');
     for (let i = 0; i < arr.length; i++) {
@@ -238,7 +281,13 @@ function drawNumberRow(canvas, arr, palette, offset) {
     }
 }
 
-// Nonogram列数字マトリクス描画関数
+/**
+ * Nonogram列数字マトリクス描画関数
+ * @param  {HTMLElement} canvas - 描画するcanvas
+ * @param  {Number[][]} arr - 描画するNonogram数字マトリクス
+ * @param  {Number[][]} palette - パレット
+ * @param  {Number} offset - オフセット
+ */
 function drawNumberColumn(canvas, arr, palette, offset) {
     const context = canvas.getContext('2d');
     for (let i = 0; i < arr.length; i++) {
@@ -260,7 +309,10 @@ function drawNumberColumn(canvas, arr, palette, offset) {
     }
 }
 
-// PNG描画関数
+/**
+ * PNG描画関数
+ * @param  {String} source - 画像ファイル
+ */
 function drawCanvas(source) {
     const canvas = document.getElementById('canvas');
     if (canvas.getContext) {
@@ -275,11 +327,18 @@ function drawCanvas(source) {
     }
 }
 
-// Nonogramキャンバス描画関数
+/**
+ * Nonogramキャンバス描画関数
+ * @param  {HTMLElement} canvas - 描画するcanvas
+ * @param  {Number[][]} arr - pngマトリクス
+ * @param  {Number[][]} palette - パレット
+ * @param  {Number} alpha - 透過色
+ * @param  {Number[]} offset - オフセット
+ */
 function drawCanvasfromBinary(canvas, arr, palette, alpha, offset) {
     const context = canvas.getContext('2d');
     context.fillStyle = "rgb(255,255,255)";
-    context.fillRect(0,0,canvas.width,canvas.height);
+    context.fillRect(0, 0, canvas.width, canvas.height);
 
     for (let i = 0; i < arr.length; i++) {
         for (let j = 0; j < arr[0].length; j++) {
@@ -292,14 +351,18 @@ function drawCanvasfromBinary(canvas, arr, palette, alpha, offset) {
         const rect = e.target.getBoundingClientRect();
         let i, j, x, y;
         [x, y] = [e.clientX - rect.left - offset[0], e.clientY - rect.top - offset[1]];
-        if(x>0&&y>0){
-        [j, i] = [Math.floor(x / g_css), Math.floor(y / g_css)];
-        drawSelectColor(i, j);
-        g_drawmatrix[i][j] = g_selectcolor;
+        if (x > 0 && y > 0) {
+            [j, i] = [Math.floor(x / g_css), Math.floor(y / g_css)];
+            drawSelectColor(i, j);
+            g_drawmatrix[i][j] = g_selectcolor;
         }
     }, false);
 
-    // マスの色を塗る関数
+    /**
+     * マスの色を塗る関数
+     * @param  {Number} i y座標
+     * @param  {Number} j x座標
+     */
     function drawColor(i, j) {
         context.fillStyle = `rgb(0,0,0)`;
         context.fillRect(offset[0] + g_css * j, offset[1] + g_css * i, g_css, g_css);
@@ -310,7 +373,11 @@ function drawCanvasfromBinary(canvas, arr, palette, alpha, offset) {
         context.fillRect(offset[0] + g_css * j + 1, offset[1] + g_css * i + 1, g_css - 2, g_css - 2);
     }
 
-    // 選択したマスの色を塗る関数
+    /**
+     * 選択したマスの色を塗る関数
+     * @param  {Number} i y座標
+     * @param  {Number} j x座標
+     */
     function drawSelectColor(i, j) {
         context.fillStyle = `rgb(0,0,0)`;
         context.fillRect(offset[0] + g_css * j, offset[1] + g_css * i, g_css, g_css);
@@ -319,7 +386,12 @@ function drawCanvasfromBinary(canvas, arr, palette, alpha, offset) {
     }
 }
 
-// PNGパレット描画関数
+/**
+ * PNGパレット描画関数
+ * @deprecated
+ * @param  {} sourcepalette
+ * @param  {} usecolor
+ */
 function drawPalette(sourcepalette, usecolor) {
     const mag = 4;
     const canvas = document.getElementById('paletteCanvas');
@@ -353,6 +425,11 @@ function drawPalette(sourcepalette, usecolor) {
     }
 }
 
+/**
+ * PNGパレット描画関数
+ * @param  {Number[][]} sourcepalette - パレット
+ * @param  {Set<Number>} usecolor - パレットの中で使っている色集合
+ */
 function drawUnderPalette(sourcepalette, usecolor) {
     const useset = Array.from(usecolor);
     const mag = 40;
@@ -376,6 +453,11 @@ function drawUnderPalette(sourcepalette, usecolor) {
         g_selectcolor = useset[i];
     }, false);
 
+    /**
+     * パレットの色を塗る
+     * @param  {} i
+     * @param  {} def
+     */
     function drawPaletteColor(i, def) {
         context.fillStyle = def ? 'rgb(128,128,128)' : 'rgb(255,255,0)';
         context.fillRect((mag + 10) * i, 5, mag, mag);
@@ -385,7 +467,11 @@ function drawUnderPalette(sourcepalette, usecolor) {
     }
 }
 
-// PNGパレット生成関数
+/**
+ * PNGパレット生成関数
+ * @param  {Number[]} source - パレットのデータ 数字が3つずつ並んでいる
+ * @return {Number[][]} - パレット
+ */
 function paletteColor(source) {
     const palette = [];
     for (i = 0; i < source.length / 3; i++) {
@@ -394,20 +480,34 @@ function paletteColor(source) {
     return palette;
 }
 
-function splitMatrix(matrix,wid,hei){
-    const spmatrix=[];
-    for(let i = 0;i<matrix.length/hei;i++){
+/**
+ * 行列分割関数
+ * @param  {Number[][]} matrix - 分割する行列
+ * @param  {Number} wid - 分割の幅
+ * @param  {Number} hei - 分割の高さ
+ * @return {Number[][][]} - 分割された行列
+ */
+function splitMatrix(matrix, wid, hei) {
+    const spmatrix = [];
+    for (let i = 0; i < matrix.length / hei; i++) {
         const sprowmatrix = [];
-        for(let j=0;j<matrix[i].length/wid;j++){
-            sprowmatrix.push(matrix.map(x=>x.slice(j*wid,(j+1)*wid)).slice(i*hei,(i+1)*hei));
+        for (let j = 0; j < matrix[i].length / wid; j++) {
+            sprowmatrix.push(matrix.map(x => x.slice(j * wid, (j + 1) * wid)).slice(i * hei, (i + 1) * hei));
         }
         spmatrix.push(sprowmatrix);
     }
     return spmatrix;
 }
 
-// 背景色から文字色を決める関数
-// https://katashin.info/2018/12/18/247
+
+/**
+ * 背景色から文字色を決める関数
+ * https://katashin.info/2018/12/18/247
+ * @param  {Number} red 
+ * @param  {Number} green
+ * @param  {Number} blue
+ * @return {String} 'white'か'blackを返す
+ */
 function chooseTextColor(red, green, blue) {
     // sRGB を RGB に変換し、背景色の相対輝度を求める
     const toRgbItem = item => {
@@ -432,13 +532,21 @@ function chooseTextColor(red, green, blue) {
     return Cw < Cb ? 'black' : 'white'
 }
 
-// 行列転置関数
-// https://qiita.com/kznr_luk/items/790f1b154d1b6d4de398
+/**
+ * 行列転置関数
+ * https://qiita.com/kznr_luk/items/790f1b154d1b6d4de398
+ * @param  {Number[][]} arr - 入力マトリクス
+ * @return {Number[][]} - 転置したマトリクス
+ */
 function transpose(arr) {
     return arr[0].map((_, c) => arr.map(r => r[c]))
 }
 
-// ASCII文字hex変換関数
+/**
+ * ASCII文字hex変換関数
+ * @param  {String} s - ASCII文字
+ * @return {String} - hex
+ */
 function hex(s) {
     const result = "";
     for (let i = 0; i < s.length; ++i) {
