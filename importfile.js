@@ -4,7 +4,7 @@
 let g_selectcolor = 0;
 
 // 描画したマトリクス
-const g_drawmatrix = [];
+let g_drawmatrix = [];
 
 // キャンバスの拡大倍率
 // canvas scale size 
@@ -92,6 +92,9 @@ function main(src) {
     const pngmatrix = makePNGMatrix(idatdata, pngwidth, pngheight, bitdepth);
     const pngsplitmatrix = splitMatrix(pngmatrix, 16, 16);
 
+    // マトリクスを空にする
+    g_drawmatrix = [];
+
     // 遊ぶための空のマトリクスを作成
     for (let i = 0; i < pngmatrix.length; i++) {
         const row = [];
@@ -126,6 +129,18 @@ function main(src) {
         link.href = download_canvas.toDataURL("image/png");
         link.download = "nonogram.png";
         link.click();
+    });
+
+    //チェック
+    document.getElementById('check').addEventListener("click", function () {
+        console.log(numberrow);
+        console.log(numbercolumn);
+        console.log(g_drawmatrix);
+        if (checkNumber(numberrow, g_drawmatrix, tRNSdata) && checkNumber(numbercolumn, transpose(g_drawmatrix), tRNSdata)) {
+            alert("collect!");
+        } else {
+            alert("incorrect...");
+        }
     });
 }
 
@@ -166,7 +181,8 @@ function draw(pngmatrix, pngpalettecolor, pngpalettecolorset, numberrow, numberc
 
     // 解答
     document.getElementById('solve').addEventListener("click", function () {
-        drawCanvasfromBinary(canvas, pngmatrix, pngpalettecolor, tRNSdata, [numberrow[1] * g_css, numbercolumn[1] * g_css]);
+        g_drawmatrix = pngmatrix.slice();
+        drawCanvasfromBinary(canvas, g_drawmatrix, pngpalettecolor, tRNSdata, [numberrow[1] * g_css, numbercolumn[1] * g_css]);
     });
 }
 
@@ -238,10 +254,21 @@ function calcNumber(arr) {
 }
 
 /**
+ * Nonogramマトリクスチェック関数
+ * @param  {Number[][],Number} checkarr - チェック用の数字配列
+ * @param  {Number[][]} targetmatrix - チェックする配列
+ * @param  {Number} alpha - 透過色
+ * @return {Boolean} - 合っているか間違っているか
+ */
+function checkNumber(checkarr, targetmatrix, alpha) {
+    return String(checkarr) === String(makeNumber(targetmatrix, alpha));
+}
+
+/**
  * Nonogram数字マトリクス生成関数
  * @param  {Number[][]} arr - pngマトリクス
  * @param  {Number} alpha - 透過色
- * @return - 計算した数字集合、最大値
+ * @return {Number[][],Number}- 計算した数字集合、最大値
  */
 function makeNumber(arr, alpha) {
     const numberrowarray = [];
@@ -445,7 +472,7 @@ function drawUnderPalette(sourcepalette, usecolor) {
     }
     const saved_palette = context.getImageData(0, 0, canvas.width, canvas.height);
     // デフォルトを選択状態にする
-    drawPaletteColor(0,false);
+    drawPaletteColor(0, false);
 
     canvas.addEventListener('click', (e) => {
         const rect = e.target.getBoundingClientRect();
