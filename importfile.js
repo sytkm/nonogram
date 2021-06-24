@@ -181,7 +181,7 @@ function draw(pngmatrix, pngpalettecolor, pngpalettecolorset, numberrow, numberc
 
     // 解答
     document.getElementById('solve').addEventListener("click", function () {
-        g_drawmatrix = pngmatrix.slice();
+        g_drawmatrix = JSON.parse(JSON.stringify(pngmatrix));
         drawCanvasfromBinary(canvas, g_drawmatrix, pngpalettecolor, tRNSdata, [numberrow[1] * g_css, numbercolumn[1] * g_css]);
     });
 }
