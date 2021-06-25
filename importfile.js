@@ -178,7 +178,7 @@ function draw(pngmatrix, pngpalettecolor, pngpalettecolorset, numberrow, numberc
 
     // パレットの描画
     //drawPalette(pngpalettecolor, pngpalettecolorset);
-    drawUnderPalette(pngpalettecolor, pngpalettecolorset);
+    drawUnderPalette(pngpalettecolor, pngpalettecolorset,tRNSdata);
 
     // キャンバスの描画
     //drawCanvasfromBinary(canvas,pngmatrix,pngpalettecolor,tRNSdata,[numberrow[1]*g_css,numbercolumn[1]*g_css]);
@@ -420,6 +420,9 @@ function drawCanvasfromBinary(canvas, arr, palette, alpha, offset) {
         context.fillStyle = `rgb(0,0,0)`;
         context.fillRect(offset[0] + g_css * j, offset[1] + g_css * i, g_css, g_css);
         context.fillStyle = `rgb(${palette[g_selectcolor]})`;
+        if (g_selectcolor === alpha) {
+            context.fillStyle = `rgb(255,255,255)`;
+        }
         context.fillRect(offset[0] + g_css * j + 1, offset[1] + g_css * i + 1, g_css - 2, g_css - 2);
     }
 }
@@ -430,7 +433,7 @@ function drawCanvasfromBinary(canvas, arr, palette, alpha, offset) {
  * @param  {} sourcepalette
  * @param  {} usecolor
  */
-function drawPalette(sourcepalette, usecolor) {
+function drawPalette(sourcepalette, usecolor,alpha) {
     const mag = 4;
     const canvas = document.getElementById('paletteCanvas');
     const context = canvas.getContext('2d');
@@ -468,7 +471,7 @@ function drawPalette(sourcepalette, usecolor) {
  * @param  {Number[][]} sourcepalette - パレット
  * @param  {Set<Number>} usecolor - パレットの中で使っている色集合
  */
-function drawUnderPalette(sourcepalette, usecolor) {
+function drawUnderPalette(sourcepalette, usecolor, alpha) {
     const useset = Array.from(usecolor);
     const mag = 40;
     const canvas = document.getElementById('underPalette');
@@ -503,6 +506,9 @@ function drawUnderPalette(sourcepalette, usecolor) {
         context.fillRect((mag + 10) * i, 5, mag, mag);
 
         context.fillStyle = `rgb(${sourcepalette[useset[i]]})`;
+        if (i === alpha) {
+            context.fillStyle = `rgb(255,255,255)`;
+        }
         context.fillRect((mag + 10) * i + 4, 5 + 4, mag - 8, mag - 8);
     }
 }
