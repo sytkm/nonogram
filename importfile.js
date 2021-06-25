@@ -25,7 +25,8 @@ window.onload = function () {
     }, false);
 
     if (window.location.search[0] === '?') {
-        main(window.location.search.slice(1));
+
+        main(decodeURIComponent(window.location.search.slice(1)));
     }
 
 }
@@ -121,7 +122,7 @@ function main(src) {
     draw(pngmatrix, pngpalettecolor, pngpalettecolorset, numberrow, numbercolumn, tRNSdata);
 
     //Twitterシェア(動かない)
-    document.getElementById('share').href = `http://twitter.com/share?url=${window.location.href+"?"+src}&text=このNonogramが解けるかな？&related=sytkm`;
+    document.getElementById('share').href = `http://twitter.com/share?url=${window.location.href+"?"+encodeURIComponent(src)}&text=このNonogramが解けるかな？&related=sytkm`;
 
     //canvasダウンロード
     document.getElementById('downl').addEventListener("click", function () {
