@@ -8,7 +8,7 @@ let g_drawmatrix = [];
 
 // キャンバスの拡大倍率
 // canvas scale size 
-const g_css = 10;
+let g_css = 10;
 
 window.onload = function () {
     document.getElementById("file").addEventListener("change", function (e) {
@@ -25,7 +25,10 @@ window.onload = function () {
     }, false);
 
     if (window.location.search[0] === '?') {
-
+        document.getElementById("file").style.display = "none";
+        document.getElementById("solve").style.display = "none";
+        document.getElementById("downl").style.display = "none";
+        document.getElementById("share").style.display = "none";
         main(decodeURIComponent(window.location.search.slice(1)));
     }
 
@@ -118,10 +121,13 @@ function main(src) {
     const numberrow = makeNumber(pngmatrix, tRNSdata);
     const numbercolumn = makeNumber(transpose(pngmatrix), tRNSdata);
 
+    //キャンバス拡大倍率の計算
+    g_css = Math.max(Math.round(600/(pngmatrix.length+numbercolumn[1])),10);
+
     // 描画
     draw(pngmatrix, pngpalettecolor, pngpalettecolorset, numberrow, numbercolumn, tRNSdata);
 
-    //Twitterシェア(動かない)
+    //Twitterシェア
     document.getElementById('share').href = `http://twitter.com/share?url=${window.location.href+"?"+encodeURIComponent(src)}&text=このNonogramが解けるかな？&related=sytkm`;
 
     //canvasダウンロード
@@ -167,6 +173,7 @@ function draw(pngmatrix, pngpalettecolor, pngpalettecolorset, numberrow, numberc
     const context = canvas.getContext('2d');
     context.fillStyle = "rgb(255,255,255)";
     context.fillRect(0, 0, canvas.width, canvas.height);
+    context.font= `${g_css}px Arial`;
 
 
     // パレットの描画
@@ -306,11 +313,11 @@ function drawNumberRow(canvas, arr, palette, offset) {
         if (arr[i][j][0] >= 0) {
             context.fillStyle = `rgb(${palette[arr[i][j][0]]})`;
             context.fillRect(g_css * j, g_css * i + offset, g_css, g_css);
-            context.strokeStyle = chooseTextColor(...palette[arr[i][j][0]]);
+            context.fillStyle = chooseTextColor(...palette[arr[i][j][0]]);
         } else {
-            context.strokeStyle = `rgb(0,0,0)`;
+            context.fillStyle = `rgb(0,0,0)`;
         }
-        context.strokeText(`${arr[i][j][1]}`, g_css * j, g_css * i + g_css + offset, g_css);
+        context.fillText(`${arr[i][j][1]}`, g_css * j, g_css * i + g_css + offset, g_css);
     }
 }
 
@@ -334,11 +341,11 @@ function drawNumberColumn(canvas, arr, palette, offset) {
         if (arr[i][j][0] >= 0) {
             context.fillStyle = `rgb(${palette[arr[i][j][0]]})`;
             context.fillRect(g_css * i + offset, g_css * j, g_css, g_css);
-            context.strokeStyle = chooseTextColor(...palette[arr[i][j][0]]);
+            context.fillStyle = chooseTextColor(...palette[arr[i][j][0]]);
         } else {
-            context.strokeStyle = `rgb(0,0,0)`;
+            context.fillStyle = `rgb(0,0,0)`;
         }
-        context.strokeText(`${arr[i][j][1]}`, g_css * i + offset, g_css * j + g_css, g_css);
+        context.fillText(`${arr[i][j][1]}`, g_css * i + offset, g_css * j + g_css, g_css);
     }
 }
 
