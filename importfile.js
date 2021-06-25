@@ -146,6 +146,7 @@ function main(src) {
         console.log(g_drawmatrix);
         if (checkNumber(numberrow, g_drawmatrix, tRNSdata) && checkNumber(numbercolumn, transpose(g_drawmatrix), tRNSdata)) {
             alert("collect!");
+            document.getElementById("downl").style.display = "inline";
         } else {
             alert("incorrect...");
         }
@@ -284,7 +285,7 @@ function makeNumber(arr, alpha) {
     let maxnumber = 0;
     for (let i = 0; i < arr.length; i++) {
         let calcnum = calcNumber(arr[i]);
-        calcnum = calcnum.filter(x => x[0] !== alpha);
+        calcnum = calcnum.filter(x => (x[0] !== alpha)&&(x[0] !== -1));
         if (calcnum.length === 0) {
             calcnum.push([-1, 0]);
         }
@@ -419,11 +420,22 @@ function drawCanvasfromBinary(canvas, arr, palette, alpha, offset) {
     function drawSelectColor(i, j) {
         context.fillStyle = `rgb(0,0,0)`;
         context.fillRect(offset[0] + g_css * j, offset[1] + g_css * i, g_css, g_css);
-        context.fillStyle = `rgb(${palette[g_selectcolor]})`;
-        if (g_selectcolor === alpha) {
+        if(g_selectcolor>=0){
+            context.fillStyle = `rgb(${palette[g_selectcolor]})`;
+            if (g_selectcolor === alpha) {
+                context.fillStyle = `rgb(255,255,255)`;
+            }
+            context.fillRect(offset[0] + g_css * j + 1, offset[1] + g_css * i + 1, g_css - 2, g_css - 2);
+        }else{
             context.fillStyle = `rgb(255,255,255)`;
+            context.fillRect(offset[0] + g_css * j + 1, offset[1] + g_css * i + 1, g_css - 2, g_css - 2);
+            context.beginPath();
+            context.strokeStyle = `rgb(0,0,0)`;  
+            context.moveTo(offset[0] + g_css * j + 1 + g_css - 2, offset[1] + g_css * i + 1);
+            context.lineTo(offset[0] + g_css * j + 1, offset[1] + g_css * i + 1 + g_css - 2);
+            context.lineWidth = 1;
+            context.stroke();
         }
-        context.fillRect(offset[0] + g_css * j + 1, offset[1] + g_css * i + 1, g_css - 2, g_css - 2);
     }
 }
 
@@ -475,13 +487,15 @@ function drawUnderPalette(sourcepalette, usecolor, alpha) {
     const useset = Array.from(usecolor);
     const mag = 40;
     const canvas = document.getElementById('underPalette');
-    canvas.width = useset.length * (mag + 10);
+    canvas.width = (useset.length + 1) * (mag + 10);
     canvas.height = 50;
 
     const context = canvas.getContext('2d');
     for (let i = 0; i < useset.length; i++) {
         drawPaletteColor(i, true);
     }
+    drawPaletteColor(useset.length,true);
+
     const saved_palette = context.getImageData(0, 0, canvas.width, canvas.height);
     // デフォルトを選択状態にする
     drawPaletteColor(0, false);
@@ -493,7 +507,11 @@ function drawUnderPalette(sourcepalette, usecolor, alpha) {
         i = Math.floor(x / (mag + 10));
         context.putImageData(saved_palette, 0, 0);
         drawPaletteColor(i, false);
-        g_selectcolor = useset[i];
+        if(i<useset.length){
+            g_selectcolor = useset[i];
+        }else{
+            g_selectcolor = -1;
+        }
     }, false);
 
     /**
@@ -505,11 +523,22 @@ function drawUnderPalette(sourcepalette, usecolor, alpha) {
         context.fillStyle = def ? 'rgb(128,128,128)' : 'rgb(255,255,0)';
         context.fillRect((mag + 10) * i, 5, mag, mag);
 
-        context.fillStyle = `rgb(${sourcepalette[useset[i]]})`;
-        if (i === alpha) {
+        if(i<useset.length){
+            context.fillStyle = `rgb(${sourcepalette[useset[i]]})`;
+            if (i === alpha) {
+                context.fillStyle = `rgb(255,255,255)`;
+            }
+            context.fillRect((mag + 10) * i + 4, 5 + 4, mag - 8, mag - 8);
+        }else{
             context.fillStyle = `rgb(255,255,255)`;
+            context.fillRect((mag + 10) * i + 4, 5 + 4, mag - 8, mag - 8);
+            context.beginPath();
+            context.strokeStyle = `rgb(0,0,0)`;  
+            context.moveTo((mag + 10) * i + 4 + mag - 8, 5 + 4);
+            context.lineTo((mag + 10) * i + 4, 5 + 4 + mag - 8);
+            context.lineWidth = 1;
+            context.stroke();
         }
-        context.fillRect((mag + 10) * i + 4, 5 + 4, mag - 8, mag - 8);
     }
 }
 
