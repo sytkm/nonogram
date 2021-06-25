@@ -122,7 +122,7 @@ function main(src) {
     const numbercolumn = makeNumber(transpose(pngmatrix), tRNSdata);
 
     //キャンバス拡大倍率の計算
-    g_css = Math.max(Math.round(600/(pngmatrix.length+numbercolumn[1])),10);
+    g_css = Math.max(Math.round(500/(pngmatrix.length+numbercolumn[1])),10);
 
     // 描画
     draw(pngmatrix, pngpalettecolor, pngpalettecolorset, numberrow, numbercolumn, tRNSdata);
@@ -145,7 +145,7 @@ function main(src) {
         console.log(numbercolumn);
         console.log(g_drawmatrix);
         if (checkNumber(numberrow, g_drawmatrix, tRNSdata) && checkNumber(numbercolumn, transpose(g_drawmatrix), tRNSdata)) {
-            alert("collect!");
+            alert("correct!");
             document.getElementById("downl").style.display = "inline";
         } else {
             alert("incorrect...");
