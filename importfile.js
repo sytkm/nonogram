@@ -29,6 +29,7 @@ window.onload = function () {
     }
 
 }
+
 /**
  * メイン関数
  * @param  {String} src - 読み込んだファイル
@@ -120,7 +121,7 @@ function main(src) {
     draw(pngmatrix, pngpalettecolor, pngpalettecolorset, numberrow, numbercolumn, tRNSdata);
 
     //Twitterシェア(動かない)
-    //document.getElementById('share').href = `http://twitter.com/share?url=${window.location.href+"?"+src}&text=このNonogramが解けるかな？&related=sytkm`;
+    document.getElementById('share').href = `http://twitter.com/share?url=${window.location.href+"?"+src}&text=このNonogramが解けるかな？&related=sytkm`;
 
     //canvasダウンロード
     document.getElementById('downl').addEventListener("click", function () {
