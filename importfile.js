@@ -219,11 +219,14 @@ function readChunk(source) {
  */
 function makePNGMatrix(data, pngwidth, pngheight, bitdepth) {
     const pngmatrix = [];
-    const depthwidth = pngwidth / (8 / bitdepth);
+    const depthwidth = Math.ceil(pngwidth / (8 / bitdepth));
     for (let i = 0; i < pngheight; i++) {
         let row = Array.from(data.slice((depthwidth + 1) * i + 1, (depthwidth + 1) * (i + 1)));
         if (bitdepth < 8) {
             row = optimizeData(row, bitdepth);
+        }
+        if(pngwidth % 2 === 1){
+            row.pop();
         }
         pngmatrix.push(row);
     }
@@ -248,7 +251,7 @@ function optimizeData(source, bitdepth) {
 
 /**
  * Nonogram数字計算関数
- * @param  {Number[]} arr - 数字データ
+ * @param  {Number[]} arr - 数字 データ
  * @return {Number[][]} 連続する数字のデータ
  */
 function calcNumber(arr) {
