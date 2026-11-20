@@ -235,8 +235,15 @@ function startPuzzle({ matrix, palette, blank }, options = {}) {
         g_css = options.sample ? 40 : Math.max(Math.round(500 / (matrix.length + columnClues[1])), 10);
     }
 
-    draw(matrix, palette, usedColors, rowClues, columnClues, blank);
     setPlaying(true);
+    try {
+        draw(matrix, palette, usedColors, rowClues, columnClues, blank);
+    } catch (error) {
+        setPlaying(false);
+        throw error;
+    }
+    document.getElementById('play-options').open = false;
+    setupBoardZoom();
     document.getElementById('preview-monochrome').hidden = !options.canConvert;
 
     const share = document.getElementById('share');
@@ -265,6 +272,56 @@ function startPuzzle({ matrix, palette, blank }, options = {}) {
             checkNumber(columnClues, transpose(g_drawmatrix), blank);
         alert(solved ? '正解！' : 'まだ一致していません。');
     };
+}
+
+function setupBoardZoom() {
+    const viewport = document.getElementById('pixelcanvas');
+    const canvas = document.getElementById('canvas');
+    const zoomIn = document.getElementById('zoom-in');
+    const zoomOut = document.getElementById('zoom-out');
+    const widthInCells = canvas.width / g_css;
+    const heightInCells = canvas.height / g_css;
+    const maxCellSize = 64;
+    const fit = () => Math.max(1, Math.min(maxCellSize, Math.floor(Math.min(
+        viewport.clientWidth / widthInCells, viewport.clientHeight / heightInCells
+    ))));
+    let cellSize;
+
+    function resizeBoard(nextSize, center) {
+        const previousSize = cellSize;
+        const oldCenterX = Math.min(viewport.clientWidth, canvas.clientWidth) / 2;
+        const oldCenterY = Math.min(viewport.clientHeight, canvas.clientHeight) / 2;
+        const oldX = viewport.scrollLeft + oldCenterX;
+        const oldY = viewport.scrollTop + oldCenterY;
+        cellSize = nextSize;
+        canvas.style.width = (widthInCells * cellSize) + 'px';
+        canvas.style.height = (heightInCells * cellSize) + 'px';
+        if (center && previousSize) {
+            const ratio = cellSize / previousSize;
+            viewport.scrollLeft = oldX * ratio - Math.min(viewport.clientWidth, canvas.clientWidth) / 2;
+            viewport.scrollTop = oldY * ratio - Math.min(viewport.clientHeight, canvas.clientHeight) / 2;
+        } else {
+            viewport.scrollLeft = 0;
+            viewport.scrollTop = 0;
+        }
+        zoomIn.disabled = cellSize >= maxCellSize;
+        zoomOut.disabled = cellSize <= 1;
+    }
+
+    const onSmallScreen = window.matchMedia('(max-width: 600px), (pointer: coarse)').matches;
+    const initialSize = onSmallScreen ? Math.max(28, Math.min(44, fit())) : Math.min(g_css, maxCellSize);
+    resizeBoard(initialSize, false);
+    zoomIn.onclick = () => resizeBoard(Math.min(maxCellSize, Math.ceil(cellSize * 1.25)), true);
+    zoomOut.onclick = () => resizeBoard(Math.max(1, Math.floor(cellSize / 1.25)), true);
+    document.getElementById('zoom-fit').onclick = () => resizeBoard(fit(), false);
+}
+
+function boardCellAt(x, y, rect, bufferWidth, bufferHeight, offset, cellSize, columns, rows) {
+    if (!rect.width || !rect.height) return null;
+    const column = Math.floor(((x - rect.left) * bufferWidth / rect.width - offset[0]) / cellSize);
+    const row = Math.floor(((y - rect.top) * bufferHeight / rect.height - offset[1]) / cellSize);
+    if (row < 0 || row >= rows || column < 0 || column >= columns) return null;
+    return { row, column };
 }
 
 /**
@@ -501,10 +558,10 @@ function drawCanvasfromBinary(canvas, arr, palette, alpha, offset) {
 
     // ヒント欄を除き、盤面内のマスだけ塗る。
     canvas.onclick = (e) => {
-        const rect = canvas.getBoundingClientRect();
-        const column = Math.floor((e.clientX - rect.left - offset[0]) / g_css);
-        const row = Math.floor((e.clientY - rect.top - offset[1]) / g_css);
-        if (row < 0 || row >= arr.length || column < 0 || column >= arr[0].length) return;
+        const cell = boardCellAt(e.clientX, e.clientY, canvas.getBoundingClientRect(),
+            canvas.width, canvas.height, offset, g_css, arr[0].length, arr.length);
+        if (!cell) return;
+        const { row, column } = cell;
         drawSelectColor(row, column);
         g_drawmatrix[row][column] = g_selectcolor;
     };
@@ -551,106 +608,45 @@ function drawCanvasfromBinary(canvas, arr, palette, alpha, offset) {
     }
 }
 
-/**
- * PNGパレット描画関数
- * @deprecated
- * @param  {} sourcepalette
- * @param  {} usecolor
- */
-function drawPalette(sourcepalette, usecolor,alpha) {
-    const mag = 4;
-    const canvas = document.getElementById('paletteCanvas');
-    const context = canvas.getContext('2d');
-    for (let i = 0; i < 16; i++) {
-        for (let j = 0; j < 16; j++) {
-            drawPaletteColor(i, j, true);
+// パレットを通常のボタンで表示し、指でもキーボードでも色を選べるようにする。
+function drawUnderPalette(palette, usedColors, blank) {
+    const container = document.getElementById('color-palette');
+    container.replaceChildren();
+    const colors = [...usedColors];
+    if (!usedColors.has(blank)) colors.push(blank);
+    colors.push(-1);
+
+    let selected;
+    for (const color of colors) {
+        const button = document.createElement('button');
+        const swatch = document.createElement('span');
+        button.type = 'button';
+        button.className = 'palette-color';
+        swatch.className = 'palette-swatch';
+
+        let label;
+        if (color === -1) {
+            label = '斜線で印を付ける';
+            swatch.classList.add('palette-mark');
+        } else if (color === blank) {
+            label = '空白に戻す';
+        } else {
+            const hexColor = '#' + palette[color].map(channel => channel.toString(16).padStart(2, '0')).join('');
+            label = '色 ' + hexColor;
+            swatch.style.backgroundColor = hexColor;
         }
-    }
-    const saved_palette = context.getImageData(0, 0, mag * 4 * 16, mag * 3 * 16);
-
-    canvas.addEventListener('click', (e) => {
-        const rect = e.target.getBoundingClientRect();
-        let i, j, x, y;
-        [x, y] = [e.clientX - rect.left, e.clientY - rect.top];
-        [j, i] = [Math.floor(x / (mag * 4)), Math.floor(y / (mag * 3))];
-        context.putImageData(saved_palette, 0, 0);
-        drawPaletteColor(i, j, false);
-    }, false);
-
-    function drawPaletteColor(i, j, def) {
-        if (usecolor.has(i * 16 + j)) {
-            context.fillStyle = def ? 'rgb(128,128,128)' : 'rgb(255,255,0)';
-            context.fillRect(mag * 4 * j, mag * 3 * i, mag * 4, mag * 3);
-        }
-        if (!def) {
-            g_selectcolor = i * 16 + j;
-        }
-        context.fillStyle = `rgb(${sourcepalette[i * 16 + j]})`;
-        context.fillRect(mag * 4 * j + 1, mag * 3 * i + 1, mag * 4 - 2, mag * 3 - 2);
-    }
-}
-
-/**
- * PNGパレット描画関数
- * @param  {Number[][]} sourcepalette - パレット
- * @param  {Set<Number>} usecolor - パレットの中で使っている色集合
- */
-function drawUnderPalette(sourcepalette, usecolor, alpha) {
-    const useset = Array.from(usecolor);
-    const mag = 40;
-    const canvas = document.getElementById('underPalette');
-    canvas.width = (useset.length + 1) * (mag + 10);
-    canvas.height = 50;
-
-    const context = canvas.getContext('2d');
-    for (let i = 0; i < useset.length; i++) {
-        drawPaletteColor(i, true);
-    }
-    drawPaletteColor(useset.length,true);
-
-    const saved_palette = context.getImageData(0, 0, canvas.width, canvas.height);
-    // デフォルトを選択状態にする
-    drawPaletteColor(0, false);
-
-    canvas.addEventListener('click', (e) => {
-        const rect = e.target.getBoundingClientRect();
-        let i, j, x, y;
-        [x, y] = [e.clientX - rect.left, e.clientY - rect.top];
-        i = Math.floor(x / (mag + 10));
-        context.putImageData(saved_palette, 0, 0);
-        drawPaletteColor(i, false);
-        if(i<useset.length){
-            g_selectcolor = useset[i];
-        }else{
-            g_selectcolor = -1;
-        }
-    }, false);
-
-    /**
-     * パレットの色を塗る
-     * @param  {} i
-     * @param  {} def
-     */
-    function drawPaletteColor(i, def) {
-        context.fillStyle = def ? 'rgb(128,128,128)' : 'rgb(255,255,0)';
-        context.fillRect((mag + 10) * i, 5, mag, mag);
-
-        if(i<useset.length){
-            context.fillStyle = `rgb(${sourcepalette[useset[i]]})`;
-            if (useset[i] === alpha) {
-                context.fillStyle = `rgb(255,255,255)`;
-            }
-            context.fillRect((mag + 10) * i + 4, 5 + 4, mag - 8, mag - 8);
-        }else{
-            context.fillStyle = `rgb(255,255,255)`;
-            context.fillRect((mag + 10) * i + 4, 5 + 4, mag - 8, mag - 8);
-            context.beginPath();
-            context.strokeStyle = `rgb(0,0,0)`;  
-            context.moveTo((mag + 10) * i + 4 + mag - 8, 5 + 4);
-            context.lineTo((mag + 10) * i + 4, 5 + 4 + mag - 8);
-            context.lineWidth = 1;
-            context.stroke();
-        }
+        button.title = label;
+        button.setAttribute('aria-label', label);
+        button.setAttribute('aria-pressed', String(g_selectcolor === color));
+        if (g_selectcolor === color) selected = button;
+        button.append(swatch);
+        button.onclick = () => {
+            selected?.setAttribute('aria-pressed', 'false');
+            selected = button;
+            button.setAttribute('aria-pressed', 'true');
+            g_selectcolor = color;
+        };
+        container.append(button);
     }
 }
 

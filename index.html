@@ -49,20 +49,31 @@
             </div>
         </div>
         <div id="play-panel" hidden>
-            <p>上と左のヒントは、色ごとに連続して塗るマスの数です。下のパレットで色を選び、盤面のマスを押します。</p>
-            <input type="button" value="答え合わせ" id="check">
-            <input type="button" value="答えを見る" id="solve">
-            <input type="button" value="画像を保存" id="downl">
-            <button type="button" id="preview-monochrome" hidden>同じ画像を白黒に変換</button>
-            <a href="" id="share" target="_blank" rel="noopener">Twitterでシェア</a>
-            <a href="?">最初の画面に戻る</a>
+            <p class="play-instructions">下で色を選び、マスを押して塗ります。大きな盤面は上下左右にスクロールできます。</p>
+            <div class="board-tools" role="group" aria-label="盤面の操作">
+                <button type="button" id="check">答え合わせ</button>
+                <button type="button" id="zoom-out" aria-label="盤面を縮小">−</button>
+                <button type="button" id="zoom-in" aria-label="盤面を拡大">＋</button>
+                <button type="button" id="zoom-fit">全体を表示</button>
+                <details id="play-options">
+                    <summary>その他</summary>
+                    <p class="play-instructions">上と左の数字は、色ごとに連続して塗るマスの数です。</p>
+                    <div class="play-options-items">
+                        <button type="button" id="solve">答えを見る</button>
+                        <button type="button" id="downl">画像を保存</button>
+                        <button type="button" id="preview-monochrome" hidden>同じ画像を白黒に変換</button>
+                        <a href="" id="share" target="_blank" rel="noopener">Twitterでシェア</a>
+                        <a href="?">最初の画面に戻る</a>
+                    </div>
+                </details>
+            </div>
         </div>
     </header>
     <div id="pixelcanvas" hidden>
         <canvas id="canvas"></canvas>
     </div>
     <div id="fix-phone-under-menu" hidden>
-        <canvas id="underPalette"></canvas>
+        <div id="color-palette" role="group" aria-label="塗る色"></div>
     </div>
 </body>
 

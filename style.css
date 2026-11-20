@@ -51,11 +51,98 @@ h1 {
     overflow: auto;
 }
 
-#fix-phone-under-menu {
-    flex: 0 0 auto;
-    overflow-x: auto;
+#canvas {
+    display: block;
 }
 
-#underPalette {
-    display: block;
+.play-instructions {
+    margin: 0.5rem 0;
+}
+
+.board-tools,
+.play-options-items {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.375rem;
+}
+
+.board-tools button,
+.board-tools summary,
+.play-options-items a {
+    box-sizing: border-box;
+    min-height: 44px;
+    padding: 0.45rem 0.65rem;
+    font: inherit;
+    font-size: 0.875rem;
+}
+
+.board-tools summary {
+    align-content: center;
+    cursor: pointer;
+}
+
+#play-options[open] {
+    flex-basis: 100%;
+}
+
+.play-options-items a {
+    display: inline-grid;
+    align-items: center;
+}
+
+.board-tools button[hidden],
+.play-options-items a[hidden] {
+    display: none;
+}
+
+#zoom-out,
+#zoom-in {
+    min-width: 44px;
+    font-size: 1.125rem;
+}
+
+#fix-phone-under-menu {
+    flex: 0 0 auto;
+    border-top: 1px solid #ccc;
+    padding: 0.375rem max(0.5rem, env(safe-area-inset-right))
+        max(0.375rem, env(safe-area-inset-bottom)) max(0.5rem, env(safe-area-inset-left));
+}
+
+#color-palette {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    max-height: 6.5rem;
+    padding: 0.25rem;
+    overflow: auto;
+}
+
+.palette-color {
+    display: grid;
+    place-items: center;
+    flex: 0 0 44px;
+    height: 44px;
+    padding: 4px;
+    border: 2px solid #777;
+    border-radius: 6px;
+    background: white;
+    cursor: pointer;
+}
+
+.palette-color[aria-pressed="true"] {
+    border-color: #111;
+    box-shadow: 0 0 0 2px #1673c9;
+}
+
+.palette-swatch {
+    width: 100%;
+    height: 100%;
+    border: 1px solid #aaa;
+    border-radius: 2px;
+    box-sizing: border-box;
+}
+
+.palette-mark {
+    background: linear-gradient(135deg, white 46%, #222 47% 53%, white 54%);
 }
