@@ -225,10 +225,8 @@ function makePNGMatrix(data, pngwidth, pngheight, bitdepth) {
         if (bitdepth < 8) {
             row = optimizeData(row, bitdepth);
         }
-        if(pngwidth % 2 === 1){
-            row.pop();
-        }
-        pngmatrix.push(row);
+        // ビット展開で生じた行末の余白を、画像の幅に合わせて取り除く。
+        pngmatrix.push(row.slice(0, pngwidth));
     }
     return pngmatrix;
 }
