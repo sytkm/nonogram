@@ -33,6 +33,18 @@ h1 {
     margin-top: 1rem;
 }
 
+#preview-canvas {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    border: 1px solid #777;
+    image-rendering: pixelated;
+}
+
+#image-preview button {
+    margin-bottom: 0.5rem;
+}
+
 #pixelcanvas {
     flex: 1 0 0;
     min-height: 0;

@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <script src="inflate.min.js"></script>
+    <script src="image-input.js"></script>
     <script src="importfile.js"></script>
     <link rel="stylesheet" href="style.css">
     <title>画像でノノグラム</title>
@@ -18,14 +19,41 @@
             <p>画像からノノグラムを作れます。画像がなくても、サンプルですぐに遊べます。</p>
             <a href="?sample">サンプル問題で遊ぶ</a>
             <label for="file">自分の画像で作る</label>
-            <input type="file" id="file" accept=".png,image/png">
-            <p>パレット形式のPNG（インターレースなし）を選んでください。</p>
+            <input type="file" id="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp">
+            <p>PNG・JPEG・WebPに対応しています。カラー問題にできるPNGは、選ぶとすぐに遊べます。画像はブラウザ内で処理します。</p>
+            <p id="image-status" role="status"></p>
+            <div id="image-preview" hidden>
+                <h2>ノノグラムのプレビュー</h2>
+                <div id="puzzle-mode-panel" hidden>
+                    <label for="puzzle-mode">遊び方</label>
+                    <select id="puzzle-mode">
+                        <option value="color">カラー</option>
+                        <option value="monochrome">白黒</option>
+                    </select>
+                </div>
+                <label for="puzzle-side">盤面の最長辺（マス）</label>
+                <input id="puzzle-side" type="number" min="1" step="1" inputmode="numeric">
+                <p id="preview-size"></p>
+                <canvas id="preview-canvas" role="img" aria-label="変換した画像"></canvas>
+                <div id="threshold-panel">
+                    <label for="threshold">黒にする明るさの境目</label>
+                    <input id="threshold" type="range" min="1" max="255" value="128">
+                    <output id="threshold-value" for="threshold">128</output>
+                    <button type="button" id="reset-threshold">自動設定に戻す</button>
+                    <p>境目は画像に合わせて自動で選びます。値を上げると、より明るい部分も黒になります。</p>
+                </div>
+                <p id="color-note" hidden>近い色を最大7色にまとめます。白に近い部分は空白になります。</p>
+                <p id="preview-message" role="status"></p>
+                <button type="button" id="play-preview">この問題で遊ぶ</button>
+                <button type="button" id="resume-color" hidden>カラー問題に戻る</button>
+            </div>
         </div>
         <div id="play-panel" hidden>
             <p>上と左のヒントは、色ごとに連続して塗るマスの数です。下のパレットで色を選び、盤面のマスを押します。</p>
             <input type="button" value="答え合わせ" id="check">
             <input type="button" value="答えを見る" id="solve">
             <input type="button" value="画像を保存" id="downl">
+            <button type="button" id="preview-monochrome" hidden>同じ画像を白黒に変換</button>
             <a href="" id="share" target="_blank" rel="noopener">Twitterでシェア</a>
             <a href="?">最初の画面に戻る</a>
         </div>
