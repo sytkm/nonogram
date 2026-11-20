@@ -6,15 +6,15 @@ let g_selectcolor = 0;
 // 描画したマトリクス
 let g_drawmatrix = [];
 
-// キャンバスの拡大倍率
-// canvas scale size 
-let g_css = 10;
+// 表示中の盤面だけ、画面の解像度が変わったときに描き直す。
+let refreshBoard;
 
 // 5×5の十字を描いたパレット形式のサンプルPNG。
 const samplePNG = 'iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAMAAAC6sdbXAAAABlBMVEX///8wW6NnOUAjAAAAFUlEQVR4nGNgYGBkAAEQyQgCDEgiAAClAAqu0sLdAAAAAElFTkSuQmCC';
 
 window.onload = function () {
     setupImagePicker();
+    window.addEventListener('resize', () => refreshBoard?.());
 
     const query = window.location.search;
     if (!query) return;
@@ -196,8 +196,8 @@ function decodeLegacyPng(src) {
     const find = type => chunks.find(chunk => chunk.chunkType === type)?.chunkData;
     const header = find('IHDR');
     const colors = find('PLTE');
-    const compressed = find('IDAT');
-    if (header?.length !== 13 || header[9] !== 3 || header[12] !== 0 || !colors || !compressed) {
+    const dataChunks = chunks.filter(chunk => chunk.chunkType === 'IDAT');
+    if (header?.length !== 13 || header[9] !== 3 || header[12] !== 0 || !colors || !dataChunks.length) {
         throw new Error('対応していないカラーPNGです。');
     }
     const view = new DataView(header.buffer, header.byteOffset, header.byteLength);
@@ -208,19 +208,42 @@ function decodeLegacyPng(src) {
         throw new Error('PNGの寸法またはビット深度が不正です。');
     }
 
+    // PNGではすべてのIDATをつなげてから展開する。
+    const compressed = new Uint8Array(dataChunks.reduce((size, chunk) => size + chunk.chunkLength, 0));
+    let offset = 0;
+    for (const { chunkData } of dataChunks) {
+        compressed.set(chunkData, offset);
+        offset += chunkData.length;
+    }
     const pixels = new Zlib.Inflate(compressed).decompress();
     if (pixels.length !== height * (1 + Math.ceil(width * bitDepth / 8))) {
         throw new Error('PNGの画素数が画像サイズと一致しません。');
     }
-    return {
-        matrix: makePNGMatrix(pixels, width, height, bitDepth),
-        palette: paletteColor(colors),
-        blank: find('tRNS')?.[0] ?? 0,
-    };
+    const matrix = makePNGMatrix(pixels, width, height, bitDepth);
+    const palette = paletteColor(colors);
+    const alphaByIndex = find('tRNS');
+    // 透過情報のない画像では、従来どおりパレットの0番を背景として使う。
+    const blank = alphaByIndex ? palette.length : 0;
+    for (const row of matrix) {
+        for (let column = 0; column < row.length; column++) {
+            const index = row[column];
+            if (index >= palette.length) throw new Error('PNGの色番号が不正です。');
+            if (alphaByIndex?.[index] === 0) row[column] = blank;
+        }
+    }
+    if (alphaByIndex) {
+        for (let index = 0; index < palette.length; index++) {
+            const alpha = (alphaByIndex[index] ?? 255) / 255;
+            if (alpha > 0 && alpha < 1) {
+                palette[index] = palette[index].map(channel => Math.round(channel * alpha + 255 * (1 - alpha)));
+            }
+        }
+    }
+    return { matrix, palette, blank };
 }
 
 function startPuzzle({ matrix, palette, blank }, options = {}) {
-    g_drawmatrix = matrix.map(row => row.map(() => 0));
+    g_drawmatrix = matrix.map(row => row.map(() => blank));
     const usedColors = options.generated
         ? new Set([...palette.slice(1).map((_, i) => i + 1), blank])
         : new Set(matrix.flat());
@@ -228,22 +251,21 @@ function startPuzzle({ matrix, palette, blank }, options = {}) {
     const rowClues = makeNumber(matrix, blank);
     const columnClues = makeNumber(transpose(matrix), blank);
 
-    if (options.generated) {
-        const longestSide = Math.max(matrix.length + columnClues[1], matrix[0].length + rowClues[1]);
-        g_css = Math.max(10, Math.min(40, Math.floor(500 / longestSide)));
-    } else {
-        g_css = options.sample ? 40 : Math.max(Math.round(500 / (matrix.length + columnClues[1])), 10);
-    }
+    const widthInCells = matrix[0].length + rowClues[1];
+    const heightInCells = matrix.length + columnClues[1];
+    const initialCellSize = options.generated
+        ? Math.max(10, Math.min(40, Math.floor(500 / Math.max(widthInCells, heightInCells))))
+        : options.sample ? 40 : Math.max(Math.round(500 / heightInCells), 10);
 
+    document.getElementById('play-options').open = false;
     setPlaying(true);
     try {
-        draw(matrix, palette, usedColors, rowClues, columnClues, blank);
+        drawUnderPalette(palette, usedColors, blank);
+        setupBoard(matrix, palette, blank, rowClues, columnClues, initialCellSize);
     } catch (error) {
         setPlaying(false);
         throw error;
     }
-    document.getElementById('play-options').open = false;
-    setupBoardZoom();
     document.getElementById('preview-monochrome').hidden = !options.canConvert;
 
     const share = document.getElementById('share');
@@ -274,28 +296,121 @@ function startPuzzle({ matrix, palette, blank }, options = {}) {
     };
 }
 
-function setupBoardZoom() {
+function boardResolution(width, height, pixelRatio) {
+    // 大きな盤面を拡大しても、描画用のメモリを使いすぎないようにする。
+    const scale = Math.min(pixelRatio, 4096 / width, 4096 / height, Math.sqrt(8_388_608 / (width * height)));
+    return {
+        width: Math.max(1, Math.floor(width * scale)),
+        height: Math.max(1, Math.floor(height * scale)),
+    };
+}
+
+function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSize) {
     const viewport = document.getElementById('pixelcanvas');
     const canvas = document.getElementById('canvas');
+    const context = canvas.getContext('2d');
     const zoomIn = document.getElementById('zoom-in');
     const zoomOut = document.getElementById('zoom-out');
-    const widthInCells = canvas.width / g_css;
-    const heightInCells = canvas.height / g_css;
+    const columns = answer[0].length;
+    const rows = answer.length;
+    const [rowsOfClues, leftClueCount] = rowClues;
+    const [columnsOfClues, topClueCount] = columnClues;
+    const widthInCells = columns + leftClueCount;
+    const heightInCells = rows + topClueCount;
     const maxCellSize = 64;
     const fit = () => Math.max(1, Math.min(maxCellSize, Math.floor(Math.min(
         viewport.clientWidth / widthInCells, viewport.clientHeight / heightInCells
     ))));
     let cellSize;
 
+    function renderBoard(force = false) {
+        const size = boardResolution(widthInCells * cellSize, heightInCells * cellSize,
+            window.devicePixelRatio || 1);
+        if (!force && canvas.width === size.width && canvas.height === size.height) return;
+        if (canvas.width !== size.width || canvas.height !== size.height) {
+            canvas.width = size.width;
+            canvas.height = size.height;
+        }
+
+        context.fillStyle = '#fff';
+        context.fillRect(0, 0, canvas.width, canvas.height);
+        g_drawmatrix.forEach((row, y) => row.forEach((color, x) => paintCell(y, x, color)));
+
+        const fontSize = Math.max(1, Math.floor(Math.min(
+            canvas.width / widthInCells, canvas.height / heightInCells
+        ) * 0.68));
+        context.font = '600 ' + fontSize + 'px system-ui, sans-serif';
+        context.textAlign = 'center';
+        context.textBaseline = 'middle';
+
+        // ヒントを盤面側に揃え、どの行・列の数字か追いやすくする。
+        rowsOfClues.forEach((clues, y) => clues.forEach((clue, x) =>
+            paintClue(leftClueCount - clues.length + x, topClueCount + y, clue)
+        ));
+        columnsOfClues.forEach((clues, x) => clues.forEach((clue, y) =>
+            paintClue(leftClueCount + x, topClueCount - clues.length + y, clue)
+        ));
+    }
+
+    function rectangle(column, row) {
+        // 端を描画面の整数座標に揃え、罫線のにじみを防ぐ。
+        const left = Math.round(column * canvas.width / widthInCells);
+        const top = Math.round(row * canvas.height / heightInCells);
+        return {
+            left,
+            top,
+            width: Math.round((column + 1) * canvas.width / widthInCells) - left,
+            height: Math.round((row + 1) * canvas.height / heightInCells) - top,
+        };
+    }
+
+    function paintClue(column, row, [color, count]) {
+        const { left, top, width, height } = rectangle(column, row);
+        if (!width || !height) return;
+        if (color >= 0) {
+            context.fillStyle = 'rgb(' + palette[color].join(',') + ')';
+            context.fillRect(left, top, width, height);
+            context.fillStyle = chooseTextColor(...palette[color]);
+        } else {
+            context.fillStyle = '#111';
+        }
+        if (cellSize >= 6 && width >= 4 && height >= 4) {
+            context.fillText(String(count), left + width / 2, top + height / 2, width * 0.85);
+        }
+    }
+
+    function paintCell(row, column, color) {
+        const { left, top, width, height } = rectangle(leftClueCount + column, topClueCount + row);
+        if (!width || !height) return;
+        context.fillStyle = color === blank || color < 0 ? '#fff' : 'rgb(' + palette[color].join(',') + ')';
+        context.fillRect(left, top, width, height);
+
+        const border = Math.min(width, height) >= 24 ? 2 : 1;
+        if (Math.min(width, height) >= 3) {
+            context.fillStyle = '#555';
+            context.fillRect(left, top, width, border);
+            context.fillRect(left, top, border, height);
+            if (row === rows - 1) context.fillRect(left, top + height - border, width, border);
+            if (column === columns - 1) context.fillRect(left + width - border, top, border, height);
+        }
+        if (color < 0 && Math.min(width, height) >= 4) {
+            context.strokeStyle = '#222';
+            context.lineWidth = border;
+            context.beginPath();
+            context.moveTo(left + width - border, top + border);
+            context.lineTo(left + border, top + height - border);
+            context.stroke();
+        }
+    }
+
     function resizeBoard(nextSize, center) {
         const previousSize = cellSize;
-        const oldCenterX = Math.min(viewport.clientWidth, canvas.clientWidth) / 2;
-        const oldCenterY = Math.min(viewport.clientHeight, canvas.clientHeight) / 2;
-        const oldX = viewport.scrollLeft + oldCenterX;
-        const oldY = viewport.scrollTop + oldCenterY;
+        const oldX = viewport.scrollLeft + Math.min(viewport.clientWidth, canvas.clientWidth) / 2;
+        const oldY = viewport.scrollTop + Math.min(viewport.clientHeight, canvas.clientHeight) / 2;
         cellSize = nextSize;
         canvas.style.width = (widthInCells * cellSize) + 'px';
         canvas.style.height = (heightInCells * cellSize) + 'px';
+        renderBoard(true);
         if (center && previousSize) {
             const ratio = cellSize / previousSize;
             viewport.scrollLeft = oldX * ratio - Math.min(viewport.clientWidth, canvas.clientWidth) / 2;
@@ -309,11 +424,23 @@ function setupBoardZoom() {
     }
 
     const onSmallScreen = window.matchMedia('(max-width: 600px), (pointer: coarse)').matches;
-    const initialSize = onSmallScreen ? Math.max(28, Math.min(44, fit())) : Math.min(g_css, maxCellSize);
-    resizeBoard(initialSize, false);
+    resizeBoard(onSmallScreen ? Math.max(28, Math.min(44, fit())) : Math.min(initialCellSize, maxCellSize), false);
     zoomIn.onclick = () => resizeBoard(Math.min(maxCellSize, Math.ceil(cellSize * 1.25)), true);
     zoomOut.onclick = () => resizeBoard(Math.max(1, Math.floor(cellSize / 1.25)), true);
     document.getElementById('zoom-fit').onclick = () => resizeBoard(fit(), false);
+    document.getElementById('solve').onclick = () => {
+        g_drawmatrix = answer.map(row => row.slice());
+        renderBoard(true);
+    };
+    canvas.onclick = event => {
+        const cell = boardCellAt(event.clientX, event.clientY, canvas.getBoundingClientRect(),
+            widthInCells * cellSize, heightInCells * cellSize,
+            [leftClueCount * cellSize, topClueCount * cellSize], cellSize, columns, rows);
+        if (!cell) return;
+        g_drawmatrix[cell.row][cell.column] = g_selectcolor;
+        paintCell(cell.row, cell.column, g_selectcolor);
+    };
+    refreshBoard = () => renderBoard();
 }
 
 function boardCellAt(x, y, rect, bufferWidth, bufferHeight, offset, cellSize, columns, rows) {
@@ -322,48 +449,6 @@ function boardCellAt(x, y, rect, bufferWidth, bufferHeight, offset, cellSize, co
     const row = Math.floor(((y - rect.top) * bufferHeight / rect.height - offset[1]) / cellSize);
     if (row < 0 || row >= rows || column < 0 || column >= columns) return null;
     return { row, column };
-}
-
-/**
- * Nonogram描画関数
- * @param  {Number[][]} pngmatrix -  読み込んだpngのmatrix 数字はパレット番号
- * @param  {Number[][]} pngpalettecolor - 読み込んだpngのパレット 項番ごとにその色
- * @param  {Set<Number>} pngpalettecolorset - 使っているパレット番号のセット
- * @param  {Number[][],Number} numberrow - rowの数字一覧とその色、最大の数字
- * @param  {Number[][],Number} numbercolumn - columnの数字一覧とその色、最大の数字
- * @param  {Number} tRNSdata - 透過色の番号
- */
-function draw(pngmatrix, pngpalettecolor, pngpalettecolorset, numberrow, numbercolumn, tRNSdata) {
-    const canvas = document.getElementById('canvas');
-    //canvas.width = window.innerWidth;
-    //canvas.height = pngmatrix.length * g_css + numbercolumn[1] * g_css;
-
-    canvas.width = pngmatrix[0].length * g_css + numberrow[1] * g_css;
-    canvas.height = pngmatrix.length * g_css + numbercolumn[1] * g_css;
-    //背景を白に
-    const context = canvas.getContext('2d');
-    context.fillStyle = "rgb(255,255,255)";
-    context.fillRect(0, 0, canvas.width, canvas.height);
-    context.font= `${g_css}px Arial`;
-
-
-    // パレットの描画
-    //drawPalette(pngpalettecolor, pngpalettecolorset);
-    drawUnderPalette(pngpalettecolor, pngpalettecolorset,tRNSdata);
-
-    // キャンバスの描画
-    //drawCanvasfromBinary(canvas,pngmatrix,pngpalettecolor,tRNSdata,[numberrow[1]*g_css,numbercolumn[1]*g_css]);
-    drawCanvasfromBinary(canvas, g_drawmatrix, pngpalettecolor, tRNSdata, [numberrow[1] * g_css, numbercolumn[1] * g_css]);
-
-    // 縦と横の数字の描画
-    drawNumberRow(canvas, numberrow[0], pngpalettecolor, numbercolumn[1] * g_css);
-    drawNumberColumn(canvas, numbercolumn[0], pngpalettecolor, numberrow[1] * g_css);
-
-    // 解答
-    document.getElementById('solve').onclick = () => {
-        g_drawmatrix = pngmatrix.map(row => row.slice());
-        drawCanvasfromBinary(canvas, g_drawmatrix, pngpalettecolor, tRNSdata, [numberrow[1] * g_css, numbercolumn[1] * g_css]);
-    };
 }
 
 /**
@@ -390,15 +475,43 @@ function readChunk(source) {
 function makePNGMatrix(data, pngwidth, pngheight, bitdepth) {
     const pngmatrix = [];
     const depthwidth = Math.ceil(pngwidth / (8 / bitdepth));
+    let previous = new Uint8Array(depthwidth);
     for (let i = 0; i < pngheight; i++) {
-        let row = Array.from(data.slice((depthwidth + 1) * i + 1, (depthwidth + 1) * (i + 1)));
-        if (bitdepth < 8) {
-            row = optimizeData(row, bitdepth);
-        }
+        const start = (depthwidth + 1) * i;
+        const bytes = data.slice(start + 1, start + 1 + depthwidth);
+        undoIndexedPngFilter(bytes, previous, data[start]);
+        previous = bytes;
+        const row = bitdepth < 8 ? optimizeData(bytes, bitdepth) : Array.from(bytes);
         // ビット展開で生じた行末の余白を、画像の幅に合わせて取り除く。
         pngmatrix.push(row.slice(0, pngwidth));
     }
     return pngmatrix;
+}
+
+function undoIndexedPngFilter(row, previous, filter) {
+    if (filter === 0) return;
+    if (filter < 1 || filter > 4) throw new Error('PNGの行フィルターが不正です。');
+    // パレット形式はビット深度にかかわらず、フィルターの左隣は1バイト前。
+    for (let i = 0; i < row.length; i++) {
+        const left = i === 0 ? 0 : row[i - 1];
+        const above = previous[i];
+        if (filter === 1) row[i] += left;
+        if (filter === 2) row[i] += above;
+        if (filter === 3) row[i] += Math.floor((left + above) / 2);
+        if (filter === 4) {
+            const upperLeft = i === 0 ? 0 : previous[i - 1];
+            row[i] += paethPredictor(left, above, upperLeft);
+        }
+    }
+}
+
+function paethPredictor(left, above, upperLeft) {
+    const estimate = left + above - upperLeft;
+    const toLeft = Math.abs(estimate - left);
+    const toAbove = Math.abs(estimate - above);
+    const toUpperLeft = Math.abs(estimate - upperLeft);
+    if (toLeft <= toAbove && toLeft <= toUpperLeft) return left;
+    return toAbove <= toUpperLeft ? above : upperLeft;
 }
 
 /**
@@ -464,148 +577,6 @@ function makeNumber(arr, alpha) {
         maxnumber = Math.max(maxnumber, calcnum.length);
     }
     return [numberrowarray, maxnumber];
-}
-
-/**
- * Nonogram行数字マトリクス描画関数
- * @param  {HTMLElement} canvas - 描画するcanvas
- * @param  {Number[][]} arr - 描画するNonogram数字マトリクス
- * @param  {Number[][]} palette - パレット
- * @param  {Number} offset - オフセット
- */
-function drawNumberRow(canvas, arr, palette, offset) {
-    const context = canvas.getContext('2d');
-    for (let i = 0; i < arr.length; i++) {
-        for (let j = 0; j < arr[i].length; j++) {
-            drawNumberColorRow(i, j);
-        }
-    }
-    // マスの色と文字を塗る関数
-    function drawNumberColorRow(i, j) {
-        if (arr[i][j][0] >= 0) {
-            context.fillStyle = `rgb(${palette[arr[i][j][0]]})`;
-            context.fillRect(g_css * j, g_css * i + offset, g_css, g_css);
-            context.fillStyle = chooseTextColor(...palette[arr[i][j][0]]);
-        } else {
-            context.fillStyle = `rgb(0,0,0)`;
-        }
-        context.fillText(`${arr[i][j][1]}`, g_css * j, g_css * i + g_css + offset, g_css);
-    }
-}
-
-/**
- * Nonogram列数字マトリクス描画関数
- * @param  {HTMLElement} canvas - 描画するcanvas
- * @param  {Number[][]} arr - 描画するNonogram数字マトリクス
- * @param  {Number[][]} palette - パレット
- * @param  {Number} offset - オフセット
- */
-function drawNumberColumn(canvas, arr, palette, offset) {
-    const context = canvas.getContext('2d');
-    for (let i = 0; i < arr.length; i++) {
-        for (let j = 0; j < arr[i].length; j++) {
-            drawNumberColorColumn(i, j);
-        }
-    }
-
-    // マスの色と文字を塗る関数
-    function drawNumberColorColumn(i, j) {
-        if (arr[i][j][0] >= 0) {
-            context.fillStyle = `rgb(${palette[arr[i][j][0]]})`;
-            context.fillRect(g_css * i + offset, g_css * j, g_css, g_css);
-            context.fillStyle = chooseTextColor(...palette[arr[i][j][0]]);
-        } else {
-            context.fillStyle = `rgb(0,0,0)`;
-        }
-        context.fillText(`${arr[i][j][1]}`, g_css * i + offset, g_css * j + g_css, g_css);
-    }
-}
-
-/**
- * PNG描画関数
- * @param  {String} source - 画像ファイル
- */
-function drawCanvas(source) {
-    const canvas = document.getElementById('canvas');
-    if (canvas.getContext) {
-        const context = canvas.getContext('2d');
-        const image = new Image();
-        image.src = source;
-        image.onload = function () {
-            canvas.width = image.width;
-            canvas.height = image.height;
-            context.drawImage(image, 0, 0);
-        };
-    }
-}
-
-/**
- * Nonogramキャンバス描画関数
- * @param  {HTMLElement} canvas - 描画するcanvas
- * @param  {Number[][]} arr - pngマトリクス
- * @param  {Number[][]} palette - パレット
- * @param  {Number} alpha - 透過色
- * @param  {Number[]} offset - オフセット
- */
-function drawCanvasfromBinary(canvas, arr, palette, alpha, offset) {
-    const context = canvas.getContext('2d');
-
-    for (let i = 0; i < arr.length; i++) {
-        for (let j = 0; j < arr[0].length; j++) {
-            drawColor(i, j);
-        }
-    }
-
-    // ヒント欄を除き、盤面内のマスだけ塗る。
-    canvas.onclick = (e) => {
-        const cell = boardCellAt(e.clientX, e.clientY, canvas.getBoundingClientRect(),
-            canvas.width, canvas.height, offset, g_css, arr[0].length, arr.length);
-        if (!cell) return;
-        const { row, column } = cell;
-        drawSelectColor(row, column);
-        g_drawmatrix[row][column] = g_selectcolor;
-    };
-
-    /**
-     * マスの色を塗る関数
-     * @param  {Number} i y座標
-     * @param  {Number} j x座標
-     */
-    function drawColor(i, j) {
-        context.fillStyle = `rgb(0,0,0)`;
-        context.fillRect(offset[0] + g_css * j, offset[1] + g_css * i, g_css, g_css);
-        context.fillStyle = `rgb(${palette[arr[i][j]]})`;
-        if (arr[i][j] === alpha) {
-            context.fillStyle = `rgb(255,255,255)`;
-        }
-        context.fillRect(offset[0] + g_css * j + 1, offset[1] + g_css * i + 1, g_css - 2, g_css - 2);
-    }
-
-    /**
-     * 選択したマスの色を塗る関数
-     * @param  {Number} i y座標
-     * @param  {Number} j x座標
-     */
-    function drawSelectColor(i, j) {
-        context.fillStyle = `rgb(0,0,0)`;
-        context.fillRect(offset[0] + g_css * j, offset[1] + g_css * i, g_css, g_css);
-        if(g_selectcolor>=0){
-            context.fillStyle = `rgb(${palette[g_selectcolor]})`;
-            if (g_selectcolor === alpha) {
-                context.fillStyle = `rgb(255,255,255)`;
-            }
-            context.fillRect(offset[0] + g_css * j + 1, offset[1] + g_css * i + 1, g_css - 2, g_css - 2);
-        }else{
-            context.fillStyle = `rgb(255,255,255)`;
-            context.fillRect(offset[0] + g_css * j + 1, offset[1] + g_css * i + 1, g_css - 2, g_css - 2);
-            context.beginPath();
-            context.strokeStyle = `rgb(0,0,0)`;  
-            context.moveTo(offset[0] + g_css * j + 1 + g_css - 2, offset[1] + g_css * i + 1);
-            context.lineTo(offset[0] + g_css * j + 1, offset[1] + g_css * i + 1 + g_css - 2);
-            context.lineWidth = 1;
-            context.stroke();
-        }
-    }
 }
 
 // パレットを通常のボタンで表示し、指でもキーボードでも色を選べるようにする。
