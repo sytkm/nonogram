@@ -37,29 +37,46 @@ function setupImagePicker() {
     const preview = document.getElementById('image-preview');
     const canvas = document.getElementById('preview-canvas');
     const side = document.getElementById('puzzle-side');
+    const mode = document.getElementById('puzzle-mode');
     const threshold = document.getElementById('threshold');
     const resumeColor = document.getElementById('resume-color');
-    const playMonochrome = document.getElementById('play-monochrome');
+    const playPreview = document.getElementById('play-preview');
     let currentImage;
 
     function updatePreview() {
-        const matrix = makeMonochromeMatrix(currentImage.imageData, Number(threshold.value));
-        currentImage.matrix = matrix;
+        const useColor = mode.value === 'color';
+        if (useColor && !currentImage.colorPuzzle) {
+            currentImage.colorPuzzle = makeColorPuzzle(currentImage.imageData);
+        }
+        const puzzle = useColor ? currentImage.colorPuzzle : {
+            matrix: makeMonochromeMatrix(currentImage.imageData, Number(threshold.value)),
+            palette: [[255, 255, 255], [0, 0, 0]],
+            blank: 0,
+        };
+        currentImage.puzzle = puzzle;
+        const { matrix, palette } = puzzle;
+        document.getElementById('threshold-panel').hidden = useColor;
+        document.getElementById('color-note').hidden = !useColor;
         document.getElementById('threshold-value').value = threshold.value;
         canvas.width = matrix[0].length;
         canvas.height = matrix.length;
         canvas.style.width = Math.min(240, canvas.width * 8, 240 * canvas.width / canvas.height) + 'px';
         const context = canvas.getContext('2d');
+        const styles = palette.map(rgb => 'rgb(' + rgb.join(',') + ')');
         matrix.forEach((row, y) => row.forEach((value, x) => {
-            context.fillStyle = value ? '#000' : '#fff';
+            context.fillStyle = styles[value];
             context.fillRect(x, y, 1, 1);
         }));
 
         const first = matrix[0][0];
         const uniform = matrix.every(row => row.every(value => value === first));
-        document.getElementById('preview-message').textContent = uniform
-            ? '白か黒の一色になっています。境目を調整するか、明暗の差がある画像をお試しください。'
-            : '';
+        let message = '';
+        if (uniform) {
+            message = useColor
+                ? '盤面が一色になっています。別の画像やマス数をお試しください。'
+                : '白か黒の一色になっています。境目を調整するか、明暗の差がある画像をお試しください。';
+        }
+        document.getElementById('preview-message').textContent = message;
     }
 
     function resetThreshold() {
@@ -71,11 +88,12 @@ function setupImagePicker() {
         const image = currentImage.image;
         const imageData = rasterizePuzzleImage(image, side.valueAsNumber);
         currentImage.imageData = imageData;
+        currentImage.colorPuzzle = undefined;
         currentImage.suggestedThreshold = suggestMonochromeThreshold(imageData);
         document.getElementById('preview-size').textContent =
             '元画像 ' + image.naturalWidth + ' × ' + image.naturalHeight +
             ' ／ 盤面 ' + imageData.width + ' × ' + imageData.height + ' マス';
-        playMonochrome.disabled = false;
+        playPreview.disabled = false;
         resetThreshold();
     }
 
@@ -84,6 +102,9 @@ function setupImagePicker() {
         const originalSide = Math.max(image.naturalWidth, image.naturalHeight);
         side.max = String(Math.min(originalSide, MAX_PUZZLE_SIDE));
         side.value = String(originalSide <= MAX_PUZZLE_SIDE ? originalSide : SUGGESTED_PHOTO_SIDE);
+        const hasColorMode = ['jpeg', 'webp'].includes(currentImage.format);
+        document.getElementById('puzzle-mode-panel').hidden = !hasColorMode;
+        mode.value = hasColorMode ? 'color' : 'monochrome';
         updateSize();
         status.textContent = originalSide > MAX_PUZZLE_SIDE
             ? '大きな画像なので、最長辺' + SUGGESTED_PHOTO_SIDE + 'マスを提案します。' +
@@ -105,6 +126,7 @@ function setupImagePicker() {
             const decoded = await readPuzzleImage(file);
             if (currentImage !== selection) return;
             selection.image = decoded.image;
+            selection.format = decoded.format;
             if (decoded.canPlayLegacyColor) {
                 try {
                     const src = await readBase64(file);
@@ -128,19 +150,16 @@ function setupImagePicker() {
     });
 
     side.addEventListener('input', () => {
-        playMonochrome.disabled = !side.validity.valid || !side.value;
-        if (!playMonochrome.disabled) updateSize();
+        playPreview.disabled = !side.validity.valid || !side.value;
+        if (!playPreview.disabled) updateSize();
     });
+    mode.addEventListener('change', updatePreview);
     threshold.addEventListener('input', updatePreview);
     document.getElementById('reset-threshold').addEventListener('click', resetThreshold);
     document.getElementById('preview-monochrome').addEventListener('click', () => openPreview(true));
     resumeColor.addEventListener('click', () => setPlaying(true));
-    playMonochrome.addEventListener('click', () => {
-        startPuzzle({
-            matrix: currentImage.matrix,
-            palette: [[255, 255, 255], [0, 0, 0]],
-            blank: 0,
-        }, { monochrome: true });
+    playPreview.addEventListener('click', () => {
+        startPuzzle(currentImage.puzzle, { generated: true });
     });
 }
 
@@ -202,12 +221,14 @@ function decodeLegacyPng(src) {
 
 function startPuzzle({ matrix, palette, blank }, options = {}) {
     g_drawmatrix = matrix.map(row => row.map(() => 0));
-    const usedColors = new Set(options.monochrome ? [1, 0] : matrix.flat());
+    const usedColors = options.generated
+        ? new Set([...palette.slice(1).map((_, i) => i + 1), blank])
+        : new Set(matrix.flat());
     g_selectcolor = usedColors.values().next().value;
     const rowClues = makeNumber(matrix, blank);
     const columnClues = makeNumber(transpose(matrix), blank);
 
-    if (options.monochrome) {
+    if (options.generated) {
         const longestSide = Math.max(matrix.length + columnClues[1], matrix[0].length + rowClues[1]);
         g_css = Math.max(10, Math.min(40, Math.floor(500 / longestSide)));
     } else {

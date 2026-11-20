@@ -35,6 +35,44 @@ test('明るい画像でも暗い画像でも、元の輪郭に対応する境�
     }
 });
 
+test('カラー盤面は異なる色を保ち、透明と白に近い画素を空白にする', () => {
+    const image = {
+        width: 2,
+        height: 2,
+        data: Uint8ClampedArray.from([
+            230, 20, 40, 255, 0, 0, 0, 0,
+            250, 249, 246, 255, 12, 45, 235, 255,
+        ]),
+    };
+    const { matrix, palette, blank } = context.makeColorPuzzle(image);
+    assert.equal(matrix[0][1], blank);
+    assert.equal(matrix[1][0], blank);
+    assert.deepEqual([...palette[matrix[0][0]]], [230, 20, 40]);
+    assert.deepEqual([...palette[matrix[1][1]]], [12, 45, 235]);
+});
+
+test('多色の画像を7色以内に整理し、画素は有効な色を参照する', () => {
+    const data = Uint8ClampedArray.from(
+        Array.from({ length: 24 }, (_, i) => [i * 10, 200 - i * 8, 30, 255]).flat()
+    );
+    const { matrix, palette } = context.makeColorPuzzle({ width: 6, height: 4, data });
+    assert.ok(palette.length >= 3 && palette.length <= 8);
+    assert.equal(matrix.length, 4);
+    assert.ok(matrix.every(row => row.length === 6 &&
+        row.every(index => index > 0 && index < palette.length)));
+});
+
+test('圧縮で生じた近い色は同じ色として扱う', () => {
+    const { matrix, palette } = context.makeColorPuzzle({
+        width: 3,
+        height: 1,
+        data: Uint8ClampedArray.from([20, 90, 225, 255, 23, 85, 219, 255, 220, 30, 40, 255]),
+    });
+    assert.equal(palette.length, 3);
+    assert.equal(matrix[0][0], matrix[0][1]);
+    assert.notEqual(matrix[0][1], matrix[0][2]);
+});
+
 test('行順を保ち、明るさの境目と透明度を使って白黒に分ける', () => {
     const image = {
         width: 2,
