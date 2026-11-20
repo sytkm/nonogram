@@ -10,9 +10,13 @@ let g_drawmatrix = [];
 // canvas scale size 
 let g_css = 10;
 
+// 5×5の十字を描いたパレット形式のサンプルPNG。
+const samplePNG = 'iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAMAAAC6sdbXAAAABlBMVEX///8wW6NnOUAjAAAAFUlEQVR4nGNgYGBkAAEQyQgCDEgiAAClAAqu0sLdAAAAAElFTkSuQmCC';
+
 window.onload = function () {
     document.getElementById("file").addEventListener("change", function (e) {
         const file = e.target.files;
+        if (!file.length) return;
         const reader = new FileReader();
         // ファイルをDataURIで読み込み
         reader.readAsDataURL(file[0]);
@@ -24,8 +28,10 @@ window.onload = function () {
         };
     }, false);
 
-    if (window.location.search[0] === '?') {
-        document.getElementById("file").style.display = "none";
+    if (window.location.search === '?sample') {
+        document.getElementById("share").hidden = true;
+        main(samplePNG);
+    } else if (window.location.search[0] === '?') {
         document.getElementById("solve").style.display = "none";
         document.getElementById("downl").style.display = "none";
         document.getElementById("share").style.display = "none";
@@ -122,10 +128,15 @@ function main(src) {
     const numbercolumn = makeNumber(transpose(pngmatrix), tRNSdata);
 
     //キャンバス拡大倍率の計算
-    g_css = Math.max(Math.round(500/(pngmatrix.length+numbercolumn[1])),10);
+    g_css = window.location.search === '?sample' ? 40 :
+        Math.max(Math.round(500/(pngmatrix.length+numbercolumn[1])),10);
 
     // 描画
     draw(pngmatrix, pngpalettecolor, pngpalettecolorset, numberrow, numbercolumn, tRNSdata);
+    document.getElementById("start-panel").hidden = true;
+    document.getElementById("play-panel").hidden = false;
+    document.getElementById("pixelcanvas").hidden = false;
+    document.getElementById("fix-phone-under-menu").hidden = false;
 
     //Twitterシェア
     document.getElementById('share').href = `http://twitter.com/share?url=${window.location.href+"?"+encodeURIComponent(src)}&text=このNonogramが解けるかな？&related=sytkm`;

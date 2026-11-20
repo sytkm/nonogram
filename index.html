@@ -8,25 +8,34 @@
     <script src="inflate.min.js"></script>
     <script src="importfile.js"></script>
     <link rel="stylesheet" href="style.css">
-    <title>Make Nonogram from your PNG</title>
+    <title>画像でノノグラム</title>
 </head>
 
 <body>
-    <div id="fix-phone-under-menu">
-        <canvas id="underPalette"></canvas>
-    </div>
-    <div>
-    <input type="file" id="file">
-    <input type="button" value="check" id="check">
-    <input type="button" value="answer" id="solve">
-    <input type="button" value="download" id="downl" href="#">
-    <a href="" id="share" target="_blank">Twitterでシェア</a>
-    </div>
-    <div id="pixelcanvas">
+    <header>
+        <h1>画像でノノグラム</h1>
+        <div id="start-panel">
+            <p>画像からノノグラムを作れます。画像がなくても、サンプルですぐに遊べます。</p>
+            <a href="?sample">サンプル問題で遊ぶ</a>
+            <label for="file">自分の画像で作る</label>
+            <input type="file" id="file" accept=".png,image/png">
+            <p>パレット形式のPNG（インターレースなし）を選んでください。</p>
+        </div>
+        <div id="play-panel" hidden>
+            <p>上と左のヒントは、色ごとに連続して塗るマスの数です。下のパレットで色を選び、盤面のマスを押します。</p>
+            <input type="button" value="答え合わせ" id="check">
+            <input type="button" value="答えを見る" id="solve">
+            <input type="button" value="画像を保存" id="downl">
+            <a href="" id="share" target="_blank" rel="noopener">Twitterでシェア</a>
+            <a href="?">最初の画面に戻る</a>
+        </div>
+    </header>
+    <div id="pixelcanvas" hidden>
         <canvas id="canvas"></canvas>
     </div>
-    <div id="footer"></div>
-    <!-- <canvas id="paletteCanvas" width="256" height="192"style="border:1px solid #333333;"></canvas> -->
+    <div id="fix-phone-under-menu" hidden>
+        <canvas id="underPalette"></canvas>
+    </div>
 </body>
 
 </html>
