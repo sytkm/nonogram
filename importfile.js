@@ -14,156 +14,195 @@ let g_css = 10;
 const samplePNG = 'iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAMAAAC6sdbXAAAABlBMVEX///8wW6NnOUAjAAAAFUlEQVR4nGNgYGBkAAEQyQgCDEgiAAClAAqu0sLdAAAAAElFTkSuQmCC';
 
 window.onload = function () {
-    document.getElementById("file").addEventListener("change", function (e) {
-        const file = e.target.files;
-        if (!file.length) return;
-        const reader = new FileReader();
-        // ファイルをDataURIで読み込み
-        reader.readAsDataURL(file[0]);
+    setupImagePicker();
 
-        // ファイルが読み込めたら処理開始
-        reader.onload = function () {
-            const src = reader.result.split(',')[1];
-            main(src);
-        };
-    }, false);
+    const query = window.location.search;
+    if (!query) return;
 
-    if (window.location.search === '?sample') {
-        document.getElementById("share").hidden = true;
-        main(samplePNG);
-    } else if (window.location.search[0] === '?') {
-        document.getElementById("solve").style.display = "none";
-        document.getElementById("downl").style.display = "none";
-        document.getElementById("share").style.display = "none";
-        main(decodeURIComponent(window.location.search.slice(1)));
-    }
-
-}
-
-/**
- * メイン関数
- * @param  {String} src - 読み込んだファイル
- */
-function main(src) {
-    console.log(src);
-    //　読み込んだファイルをuint8arrayに入れる
-    const binary = atob(src);
-    const uint8array = Uint8Array.from(binary.split(""), e => e.charCodeAt(0));
-    const splitChunk = [];
-
-    // PNGファイルかどうかを確認
-    if (JSON.stringify(Array.from(uint8array.slice(0, 8))) === JSON.stringify([137, 80, 78, 71, 13, 10, 26, 10])) {
-        console.log('This file is PNG file');
-    } else {
-        console.log('This file is not PNG file');
-        alert(`This file is not PNG file.
-    This file cannot use this service.`);
-        return 0;
-    }
-
-    // チャンクの読み取り
-    for (let i = 8; i < uint8array.length; i += splitChunk.slice(-1)[0].chunkLength + 12) {
-        splitChunk.push(readChunk(uint8array.slice(i)));
-    }
-
-    console.log(splitChunk);
-
-    //　PNGの縦横サイズ
-    const pngwidth = new Uint32Array(splitChunk.filter(x => x.chunkType === 'IHDR')[0].chunkData.slice(0, 4).reverse().buffer)[0];
-    const pngheight = new Uint32Array(splitChunk.filter(x => x.chunkType === 'IHDR')[0].chunkData.slice(4, 8).reverse().buffer)[0];
-
-    //　読み込みに必要なデータの所得
-    const bitdepth = splitChunk.filter(x => x.chunkType === 'IHDR')[0].chunkData[8];
-    const colortype = splitChunk.filter(x => x.chunkType === 'IHDR')[0].chunkData[9];
-    let tRNSdata = 0;
-    if (splitChunk.filter(x => x.chunkType === 'tRNS').length !== 0) {
-        tRNSdata = splitChunk.filter(x => x.chunkType === 'tRNS')[0].chunkData[0];
-    }
-
-    // インタレースを使ってないか確認
-    if (splitChunk.filter(x => x.chunkType === 'IHDR')[0].chunkData[12] === 1) {
-        console.log('This PNG file use interlace.');
-        alert(`This PNG file use interlace.
-    This file cannot use this service.`);
-        return 0;
-    }
-    // パレットを使っているか確認
-    if (colortype !== 3) {
-        console.log('This PNG file does not used a palette.');
-        alert(`This PNG file does not used a palette.
-    This file cannot use this service.`);
-        return 0;
-    }
-
-    // IDATのchunkDataは圧縮されているのでzlibで展開
-    const compressed = splitChunk.filter(x => x.chunkType === 'IDAT')[0].chunkData;
-    const idatdata = new Zlib.Inflate(compressed).decompress();
-
-    // 読み込まれたPNGのPNGマトリクスの作成
-    const pngmatrix = makePNGMatrix(idatdata, pngwidth, pngheight, bitdepth);
-    const pngsplitmatrix = splitMatrix(pngmatrix, 16, 16);
-
-    // マトリクスを空にする
-    g_drawmatrix = [];
-
-    // 遊ぶための空のマトリクスを作成
-    for (let i = 0; i < pngmatrix.length; i++) {
-        const row = [];
-        for (let j = 0; j < pngmatrix[i].length; j++) {
-            row.push(0);
-        }
-        g_drawmatrix.push(row);
-    }
-    // パレットの読み込み
-    const pngpalettecolor = paletteColor(splitChunk.filter(x => x.chunkType === 'PLTE')[0].chunkData);
-
-    // デフォルト色を0番で設定
-    g_selectcolor = 0;
-
-    // 使ってる色のパレット番号の取り出し
-    const pngpalettecolorset = new Set(Array.prototype.concat.apply([], pngmatrix));
-
-    // nonogramの数字の計算
-    const numberrow = makeNumber(pngmatrix, tRNSdata);
-    const numbercolumn = makeNumber(transpose(pngmatrix), tRNSdata);
-
-    //キャンバス拡大倍率の計算
-    g_css = window.location.search === '?sample' ? 40 :
-        Math.max(Math.round(500/(pngmatrix.length+numbercolumn[1])),10);
-
-    // 描画
-    draw(pngmatrix, pngpalettecolor, pngpalettecolorset, numberrow, numbercolumn, tRNSdata);
-    document.getElementById("start-panel").hidden = true;
-    document.getElementById("play-panel").hidden = false;
-    document.getElementById("pixelcanvas").hidden = false;
-    document.getElementById("fix-phone-under-menu").hidden = false;
-
-    //Twitterシェア
-    document.getElementById('share').href = `http://twitter.com/share?url=${window.location.href+"?"+encodeURIComponent(src)}&text=このNonogramが解けるかな？&related=sytkm`;
-
-    //canvasダウンロード
-    document.getElementById('downl').addEventListener("click", function () {
-        const download_canvas = document.getElementById('canvas');
-        let link = document.createElement("a");
-        link.href = download_canvas.toDataURL("image/png");
-        link.download = "nonogram.png";
-        link.click();
-    });
-
-    //チェック
-    document.getElementById('check').addEventListener("click", function () {
-        console.log(numberrow);
-        console.log(numbercolumn);
-        console.log(g_drawmatrix);
-        if (checkNumber(numberrow, g_drawmatrix, tRNSdata) && checkNumber(numbercolumn, transpose(g_drawmatrix), tRNSdata)) {
-            alert("correct!");
-            document.getElementById("downl").style.display = "inline";
+    try {
+        if (query === '?sample') {
+            startPuzzle(decodeLegacyPng(samplePNG), { sample: true });
         } else {
-            alert("incorrect...");
+            startPuzzle(decodeLegacyPng(decodeURIComponent(query.slice(1))), { shared: true });
+        }
+    } catch {
+        document.getElementById('image-status').textContent =
+            '共有された問題を開けませんでした。リンクを確認するか、画像を選んで新しく作れます。';
+    }
+};
+
+function setupImagePicker() {
+    const input = document.getElementById('file');
+    const status = document.getElementById('image-status');
+    const preview = document.getElementById('image-preview');
+    const canvas = document.getElementById('preview-canvas');
+    const threshold = document.getElementById('threshold');
+    const color = document.getElementById('play-color');
+    let currentImage;
+
+    function updatePreview() {
+        if (!currentImage) return;
+        const matrix = makeMonochromeMatrix(currentImage.imageData, Number(threshold.value));
+        currentImage.matrix = matrix;
+        document.getElementById('threshold-value').value = threshold.value;
+        canvas.width = matrix[0].length;
+        canvas.height = matrix.length;
+        canvas.style.width = canvas.width * 8 + 'px';
+        const context = canvas.getContext('2d');
+        matrix.forEach((row, y) => row.forEach((value, x) => {
+            context.fillStyle = value ? '#000' : '#fff';
+            context.fillRect(x, y, 1, 1);
+        }));
+    }
+
+    input.addEventListener('change', async () => {
+        const file = input.files[0];
+        if (!file) return;
+        currentImage = { file };
+        const selection = currentImage;
+        preview.hidden = true;
+        status.textContent = '画像を読み込んでいます…';
+        try {
+            const image = await readPuzzleImage(file);
+            if (currentImage !== selection) return;
+            Object.assign(selection, image);
+            threshold.value = '128';
+            updatePreview();
+            document.getElementById('preview-size').textContent =
+                image.imageData.width + ' × ' + image.imageData.height + ' マス（最長辺30マスまで）';
+            color.hidden = !image.canPlayLegacyColor;
+            preview.hidden = false;
+            status.textContent = '';
+        } catch (error) {
+            if (currentImage !== selection) return;
+            currentImage = undefined;
+            input.value = '';
+            status.textContent = error.message;
+        }
+    });
+
+    threshold.addEventListener('input', updatePreview);
+    document.getElementById('play-monochrome').addEventListener('click', () => {
+        if (!currentImage?.matrix) return;
+        startPuzzle({
+            matrix: currentImage.matrix,
+            palette: [[255, 255, 255], [0, 0, 0]],
+            blank: 0,
+        }, { monochrome: true });
+    });
+    color.addEventListener('click', async () => {
+        const selection = currentImage;
+        if (!selection?.canPlayLegacyColor) return;
+        color.disabled = true;
+        try {
+            const src = await readBase64(selection.file);
+            if (currentImage !== selection || document.getElementById('start-panel').hidden) return;
+            startPuzzle(decodeLegacyPng(src), { shareSource: src });
+        } catch {
+            if (currentImage !== selection) return;
+            status.textContent = 'カラー問題を作れませんでした。白黒問題で遊ぶか、別の画像を選んでください。';
+        } finally {
+            color.disabled = false;
         }
     });
 }
 
+function readBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+    });
+}
+
+// 既存のパレット形式PNGと共有リンク向けの読み込み。
+function decodeLegacyPng(src) {
+    const bytes = Uint8Array.from(atob(src), char => char.charCodeAt(0));
+    if (detectImageFormat(bytes) !== 'png') throw new Error('PNGではありません。');
+
+    const chunks = [];
+    for (let offset = 8; offset + 12 <= bytes.length;) {
+        const chunk = readChunk(bytes.subarray(offset));
+        offset += chunk.chunkLength + 12;
+        if (offset > bytes.length) throw new Error('PNGのデータが途中で切れています。');
+        chunks.push(chunk);
+        if (chunk.chunkType === 'IEND') break;
+    }
+
+    const find = type => chunks.find(chunk => chunk.chunkType === type)?.chunkData;
+    const header = find('IHDR');
+    const colors = find('PLTE');
+    const compressed = find('IDAT');
+    if (header?.length !== 13 || header[9] !== 3 || header[12] !== 0 || !colors || !compressed) {
+        throw new Error('対応していないカラーPNGです。');
+    }
+    const view = new DataView(header.buffer, header.byteOffset, header.byteLength);
+    const width = view.getUint32(0);
+    const height = view.getUint32(4);
+    const bitDepth = header[8];
+    if (!width || !height || ![1, 2, 4, 8].includes(bitDepth)) {
+        throw new Error('PNGの寸法またはビット深度が不正です。');
+    }
+
+    const pixels = new Zlib.Inflate(compressed).decompress();
+    if (pixels.length !== height * (1 + Math.ceil(width * bitDepth / 8))) {
+        throw new Error('PNGの画素数が画像サイズと一致しません。');
+    }
+    return {
+        matrix: makePNGMatrix(pixels, width, height, bitDepth),
+        palette: paletteColor(colors),
+        blank: find('tRNS')?.[0] ?? 0,
+    };
+}
+
+function startPuzzle({ matrix, palette, blank }, options = {}) {
+    g_drawmatrix = matrix.map(row => row.map(() => 0));
+    const usedColors = new Set(options.monochrome ? [1, 0] : matrix.flat());
+    g_selectcolor = usedColors.values().next().value;
+    const rowClues = makeNumber(matrix, blank);
+    const columnClues = makeNumber(transpose(matrix), blank);
+
+    if (options.monochrome) {
+        const longestSide = Math.max(matrix.length + columnClues[1], matrix[0].length + rowClues[1]);
+        g_css = Math.max(10, Math.min(40, Math.floor(500 / longestSide)));
+    } else {
+        g_css = options.sample ? 40 : Math.max(Math.round(500 / (matrix.length + columnClues[1])), 10);
+    }
+
+    draw(matrix, palette, usedColors, rowClues, columnClues, blank);
+    document.getElementById('start-panel').hidden = true;
+    document.getElementById('play-panel').hidden = false;
+    document.getElementById('pixelcanvas').hidden = false;
+    document.getElementById('fix-phone-under-menu').hidden = false;
+
+    const share = document.getElementById('share');
+    share.hidden = !options.shareSource;
+    if (options.shareSource) {
+        const puzzleURL = new URL(window.location.href);
+        puzzleURL.search = encodeURIComponent(options.shareSource);
+        puzzleURL.hash = '';
+        const shareURL = new URL('https://twitter.com/share');
+        shareURL.searchParams.set('url', puzzleURL.href);
+        shareURL.searchParams.set('text', 'このNonogramが解けるかな？');
+        share.href = shareURL.href;
+    }
+
+    const download = document.getElementById('downl');
+    download.hidden = options.shared === true;
+    document.getElementById('solve').hidden = options.shared === true;
+    download.onclick = () => {
+        const link = document.createElement('a');
+        link.href = document.getElementById('canvas').toDataURL('image/png');
+        link.download = 'nonogram.png';
+        link.click();
+    };
+    document.getElementById('check').onclick = () => {
+        const solved = checkNumber(rowClues, g_drawmatrix, blank) &&
+            checkNumber(columnClues, transpose(g_drawmatrix), blank);
+        alert(solved ? '正解！' : 'まだ一致していません。');
+    };
+}
 
 /**
  * Nonogram描画関数
@@ -201,10 +240,10 @@ function draw(pngmatrix, pngpalettecolor, pngpalettecolorset, numberrow, numberc
     drawNumberColumn(canvas, numbercolumn[0], pngpalettecolor, numberrow[1] * g_css);
 
     // 解答
-    document.getElementById('solve').addEventListener("click", function () {
-        g_drawmatrix = JSON.parse(JSON.stringify(pngmatrix));
+    document.getElementById('solve').onclick = () => {
+        g_drawmatrix = pngmatrix.map(row => row.slice());
         drawCanvasfromBinary(canvas, g_drawmatrix, pngpalettecolor, tRNSdata, [numberrow[1] * g_css, numbercolumn[1] * g_css]);
-    });
+    };
 }
 
 /**
@@ -397,17 +436,15 @@ function drawCanvasfromBinary(canvas, arr, palette, alpha, offset) {
         }
     }
 
-    // クリック場所を現在選択した色で塗りつぶす
-    canvas.addEventListener('click', (e) => {
-        const rect = e.target.getBoundingClientRect();
-        let i, j, x, y;
-        [x, y] = [e.clientX - rect.left - offset[0], e.clientY - rect.top - offset[1]];
-        if (x > 0 && y > 0) {
-            [j, i] = [Math.floor(x / g_css), Math.floor(y / g_css)];
-            drawSelectColor(i, j);
-            g_drawmatrix[i][j] = g_selectcolor;
-        }
-    }, false);
+    // ヒント欄を除き、盤面内のマスだけ塗る。
+    canvas.onclick = (e) => {
+        const rect = canvas.getBoundingClientRect();
+        const column = Math.floor((e.clientX - rect.left - offset[0]) / g_css);
+        const row = Math.floor((e.clientY - rect.top - offset[1]) / g_css);
+        if (row < 0 || row >= arr.length || column < 0 || column >= arr[0].length) return;
+        drawSelectColor(row, column);
+        g_drawmatrix[row][column] = g_selectcolor;
+    };
 
     /**
      * マスの色を塗る関数
@@ -537,7 +574,7 @@ function drawUnderPalette(sourcepalette, usecolor, alpha) {
 
         if(i<useset.length){
             context.fillStyle = `rgb(${sourcepalette[useset[i]]})`;
-            if (i === alpha) {
+            if (useset[i] === alpha) {
                 context.fillStyle = `rgb(255,255,255)`;
             }
             context.fillRect((mag + 10) * i + 4, 5 + 4, mag - 8, mag - 8);
