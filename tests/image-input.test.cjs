@@ -7,13 +7,31 @@ const test = require('node:test');
 const context = vm.createContext({});
 vm.runInContext(fs.readFileSync(path.join(__dirname, '../image-input.js'), 'utf8'), context);
 
-test('大きな画像を縮め、小さな画像は拡大せず、細い画像も最低1マスにする', () => {
-    for (const [width, height, expected] of [
-        [600, 300, { width: 30, height: 15 }],
-        [1, 200, { width: 1, height: 30 }],
-        [8, 12, { width: 8, height: 12 }],
+test('指定した最長辺で縦横比を保ち、元画像より拡大しない', () => {
+    for (const [width, height, side, expected] of [
+        [600, 300, 40, { width: 40, height: 20 }],
+        [1, 200, 60, { width: 1, height: 60 }],
+        [64, 40, 64, { width: 64, height: 40 }],
+        [8, 12, 24, { width: 8, height: 12 }],
     ]) {
-        assert.deepEqual({ ...context.fitPuzzleSize(width, height) }, expected);
+        assert.deepEqual({ ...context.fitPuzzleSize(width, height, side) }, expected);
+    }
+});
+
+test('明るい画像でも暗い画像でも、元の輪郭に対応する境目を自動で選ぶ', () => {
+    for (const [foreground, background] of [[160, 220], [25, 85]]) {
+        const image = {
+            width: 3,
+            height: 2,
+            data: Uint8ClampedArray.from(
+                [background, foreground, background, foreground, foreground, foreground]
+                    .flatMap(value => [value, value, value, 255])
+            ),
+        };
+        const threshold = context.suggestMonochromeThreshold(image);
+        assert.ok(threshold > foreground && threshold <= background);
+        const matrix = context.makeMonochromeMatrix(image, threshold);
+        assert.deepEqual(JSON.parse(JSON.stringify(matrix)), [[0, 1, 0], [1, 1, 1]]);
     }
 });
 

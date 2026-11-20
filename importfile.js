@@ -36,43 +36,89 @@ function setupImagePicker() {
     const status = document.getElementById('image-status');
     const preview = document.getElementById('image-preview');
     const canvas = document.getElementById('preview-canvas');
+    const side = document.getElementById('puzzle-side');
     const threshold = document.getElementById('threshold');
-    const color = document.getElementById('play-color');
+    const resumeColor = document.getElementById('resume-color');
+    const playMonochrome = document.getElementById('play-monochrome');
     let currentImage;
 
     function updatePreview() {
-        if (!currentImage) return;
         const matrix = makeMonochromeMatrix(currentImage.imageData, Number(threshold.value));
         currentImage.matrix = matrix;
         document.getElementById('threshold-value').value = threshold.value;
         canvas.width = matrix[0].length;
         canvas.height = matrix.length;
-        canvas.style.width = canvas.width * 8 + 'px';
+        canvas.style.width = Math.min(240, canvas.width * 8, 240 * canvas.width / canvas.height) + 'px';
         const context = canvas.getContext('2d');
         matrix.forEach((row, y) => row.forEach((value, x) => {
             context.fillStyle = value ? '#000' : '#fff';
             context.fillRect(x, y, 1, 1);
         }));
+
+        const first = matrix[0][0];
+        const uniform = matrix.every(row => row.every(value => value === first));
+        document.getElementById('preview-message').textContent = uniform
+            ? '白か黒の一色になっています。境目を調整するか、明暗の差がある画像をお試しください。'
+            : '';
+    }
+
+    function resetThreshold() {
+        threshold.value = String(currentImage.suggestedThreshold);
+        updatePreview();
+    }
+
+    function updateSize() {
+        const image = currentImage.image;
+        const imageData = rasterizePuzzleImage(image, side.valueAsNumber);
+        currentImage.imageData = imageData;
+        currentImage.suggestedThreshold = suggestMonochromeThreshold(imageData);
+        document.getElementById('preview-size').textContent =
+            '元画像 ' + image.naturalWidth + ' × ' + image.naturalHeight +
+            ' ／ 盤面 ' + imageData.width + ' × ' + imageData.height + ' マス';
+        playMonochrome.disabled = false;
+        resetThreshold();
+    }
+
+    function openPreview(fromColor) {
+        const image = currentImage.image;
+        const originalSide = Math.max(image.naturalWidth, image.naturalHeight);
+        side.max = String(Math.min(originalSide, MAX_PUZZLE_SIDE));
+        side.value = String(originalSide <= MAX_PUZZLE_SIDE ? originalSide : SUGGESTED_PHOTO_SIDE);
+        updateSize();
+        status.textContent = originalSide > MAX_PUZZLE_SIDE
+            ? '大きな画像なので、最長辺' + SUGGESTED_PHOTO_SIDE + 'マスを提案します。' +
+              MAX_PUZZLE_SIDE + 'マスまで変更できます。'
+            : '';
+        resumeColor.hidden = !fromColor;
+        preview.hidden = false;
+        setPlaying(false);
     }
 
     input.addEventListener('change', async () => {
         const file = input.files[0];
         if (!file) return;
-        currentImage = { file };
-        const selection = currentImage;
+        const selection = {};
+        currentImage = selection;
         preview.hidden = true;
         status.textContent = '画像を読み込んでいます…';
         try {
-            const image = await readPuzzleImage(file);
+            const decoded = await readPuzzleImage(file);
             if (currentImage !== selection) return;
-            Object.assign(selection, image);
-            threshold.value = '128';
-            updatePreview();
-            document.getElementById('preview-size').textContent =
-                image.imageData.width + ' × ' + image.imageData.height + ' マス（最長辺30マスまで）';
-            color.hidden = !image.canPlayLegacyColor;
-            preview.hidden = false;
-            status.textContent = '';
+            selection.image = decoded.image;
+            if (decoded.canPlayLegacyColor) {
+                try {
+                    const src = await readBase64(file);
+                    if (currentImage !== selection) return;
+                    startPuzzle(decodeLegacyPng(src), { shareSource: src, canConvert: true });
+                    return;
+                } catch {
+                    if (currentImage !== selection) return;
+                    openPreview(false);
+                    status.textContent = 'このPNGはカラー問題にできません。白黒のプレビューを表示しました。';
+                    return;
+                }
+            }
+            openPreview(false);
         } catch (error) {
             if (currentImage !== selection) return;
             currentImage = undefined;
@@ -81,30 +127,28 @@ function setupImagePicker() {
         }
     });
 
+    side.addEventListener('input', () => {
+        playMonochrome.disabled = !side.validity.valid || !side.value;
+        if (!playMonochrome.disabled) updateSize();
+    });
     threshold.addEventListener('input', updatePreview);
-    document.getElementById('play-monochrome').addEventListener('click', () => {
-        if (!currentImage?.matrix) return;
+    document.getElementById('reset-threshold').addEventListener('click', resetThreshold);
+    document.getElementById('preview-monochrome').addEventListener('click', () => openPreview(true));
+    resumeColor.addEventListener('click', () => setPlaying(true));
+    playMonochrome.addEventListener('click', () => {
         startPuzzle({
             matrix: currentImage.matrix,
             palette: [[255, 255, 255], [0, 0, 0]],
             blank: 0,
         }, { monochrome: true });
     });
-    color.addEventListener('click', async () => {
-        const selection = currentImage;
-        if (!selection?.canPlayLegacyColor) return;
-        color.disabled = true;
-        try {
-            const src = await readBase64(selection.file);
-            if (currentImage !== selection || document.getElementById('start-panel').hidden) return;
-            startPuzzle(decodeLegacyPng(src), { shareSource: src });
-        } catch {
-            if (currentImage !== selection) return;
-            status.textContent = 'カラー問題を作れませんでした。白黒問題で遊ぶか、別の画像を選んでください。';
-        } finally {
-            color.disabled = false;
-        }
-    });
+}
+
+function setPlaying(playing) {
+    document.getElementById('start-panel').hidden = playing;
+    document.getElementById('play-panel').hidden = !playing;
+    document.getElementById('pixelcanvas').hidden = !playing;
+    document.getElementById('fix-phone-under-menu').hidden = !playing;
 }
 
 function readBase64(file) {
@@ -171,10 +215,8 @@ function startPuzzle({ matrix, palette, blank }, options = {}) {
     }
 
     draw(matrix, palette, usedColors, rowClues, columnClues, blank);
-    document.getElementById('start-panel').hidden = true;
-    document.getElementById('play-panel').hidden = false;
-    document.getElementById('pixelcanvas').hidden = false;
-    document.getElementById('fix-phone-under-menu').hidden = false;
+    setPlaying(true);
+    document.getElementById('preview-monochrome').hidden = !options.canConvert;
 
     const share = document.getElementById('share');
     share.hidden = !options.shareSource;
