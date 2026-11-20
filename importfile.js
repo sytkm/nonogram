@@ -196,8 +196,8 @@ function decodeLegacyPng(src) {
     const find = type => chunks.find(chunk => chunk.chunkType === type)?.chunkData;
     const header = find('IHDR');
     const colors = find('PLTE');
-    const compressed = find('IDAT');
-    if (header?.length !== 13 || header[9] !== 3 || header[12] !== 0 || !colors || !compressed) {
+    const dataChunks = chunks.filter(chunk => chunk.chunkType === 'IDAT');
+    if (header?.length !== 13 || header[9] !== 3 || header[12] !== 0 || !colors || !dataChunks.length) {
         throw new Error('対応していないカラーPNGです。');
     }
     const view = new DataView(header.buffer, header.byteOffset, header.byteLength);
@@ -208,19 +208,42 @@ function decodeLegacyPng(src) {
         throw new Error('PNGの寸法またはビット深度が不正です。');
     }
 
+    // PNGではすべてのIDATをつなげてから展開する。
+    const compressed = new Uint8Array(dataChunks.reduce((size, chunk) => size + chunk.chunkLength, 0));
+    let offset = 0;
+    for (const { chunkData } of dataChunks) {
+        compressed.set(chunkData, offset);
+        offset += chunkData.length;
+    }
     const pixels = new Zlib.Inflate(compressed).decompress();
     if (pixels.length !== height * (1 + Math.ceil(width * bitDepth / 8))) {
         throw new Error('PNGの画素数が画像サイズと一致しません。');
     }
-    return {
-        matrix: makePNGMatrix(pixels, width, height, bitDepth),
-        palette: paletteColor(colors),
-        blank: find('tRNS')?.[0] ?? 0,
-    };
+    const matrix = makePNGMatrix(pixels, width, height, bitDepth);
+    const palette = paletteColor(colors);
+    const alphaByIndex = find('tRNS');
+    // 透過情報のない画像では、従来どおりパレットの0番を背景として使う。
+    const blank = alphaByIndex ? palette.length : 0;
+    for (const row of matrix) {
+        for (let column = 0; column < row.length; column++) {
+            const index = row[column];
+            if (index >= palette.length) throw new Error('PNGの色番号が不正です。');
+            if (alphaByIndex?.[index] === 0) row[column] = blank;
+        }
+    }
+    if (alphaByIndex) {
+        for (let index = 0; index < palette.length; index++) {
+            const alpha = (alphaByIndex[index] ?? 255) / 255;
+            if (alpha > 0 && alpha < 1) {
+                palette[index] = palette[index].map(channel => Math.round(channel * alpha + 255 * (1 - alpha)));
+            }
+        }
+    }
+    return { matrix, palette, blank };
 }
 
 function startPuzzle({ matrix, palette, blank }, options = {}) {
-    g_drawmatrix = matrix.map(row => row.map(() => 0));
+    g_drawmatrix = matrix.map(row => row.map(() => blank));
     const usedColors = options.generated
         ? new Set([...palette.slice(1).map((_, i) => i + 1), blank])
         : new Set(matrix.flat());
@@ -452,15 +475,43 @@ function readChunk(source) {
 function makePNGMatrix(data, pngwidth, pngheight, bitdepth) {
     const pngmatrix = [];
     const depthwidth = Math.ceil(pngwidth / (8 / bitdepth));
+    let previous = new Uint8Array(depthwidth);
     for (let i = 0; i < pngheight; i++) {
-        let row = Array.from(data.slice((depthwidth + 1) * i + 1, (depthwidth + 1) * (i + 1)));
-        if (bitdepth < 8) {
-            row = optimizeData(row, bitdepth);
-        }
+        const start = (depthwidth + 1) * i;
+        const bytes = data.slice(start + 1, start + 1 + depthwidth);
+        undoIndexedPngFilter(bytes, previous, data[start]);
+        previous = bytes;
+        const row = bitdepth < 8 ? optimizeData(bytes, bitdepth) : Array.from(bytes);
         // ビット展開で生じた行末の余白を、画像の幅に合わせて取り除く。
         pngmatrix.push(row.slice(0, pngwidth));
     }
     return pngmatrix;
+}
+
+function undoIndexedPngFilter(row, previous, filter) {
+    if (filter === 0) return;
+    if (filter < 1 || filter > 4) throw new Error('PNGの行フィルターが不正です。');
+    // パレット形式はビット深度にかかわらず、フィルターの左隣は1バイト前。
+    for (let i = 0; i < row.length; i++) {
+        const left = i === 0 ? 0 : row[i - 1];
+        const above = previous[i];
+        if (filter === 1) row[i] += left;
+        if (filter === 2) row[i] += above;
+        if (filter === 3) row[i] += Math.floor((left + above) / 2);
+        if (filter === 4) {
+            const upperLeft = i === 0 ? 0 : previous[i - 1];
+            row[i] += paethPredictor(left, above, upperLeft);
+        }
+    }
+}
+
+function paethPredictor(left, above, upperLeft) {
+    const estimate = left + above - upperLeft;
+    const toLeft = Math.abs(estimate - left);
+    const toAbove = Math.abs(estimate - above);
+    const toUpperLeft = Math.abs(estimate - upperLeft);
+    if (toLeft <= toAbove && toLeft <= toUpperLeft) return left;
+    return toAbove <= toUpperLeft ? above : upperLeft;
 }
 
 /**
