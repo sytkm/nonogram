@@ -30,3 +30,16 @@ test('ヒント欄と外側は塗らず、盤面の端のマスは選べる', ()
     assert.deepEqual({ ...select(40, 40) }, { row: 0, column: 0 });
     assert.deepEqual({ ...select(119, 99) }, { row: 2, column: 3 });
 });
+
+test('通常の盤面は表示サイズと画面の画素密度の両方に合わせて描き直す', () => {
+    assert.deepEqual({ ...context.boardResolution(264, 264, 2) }, { width: 528, height: 528 });
+    assert.deepEqual({ ...context.boardResolution(330, 330, 2) }, { width: 660, height: 660 });
+    assert.deepEqual({ ...context.boardResolution(400, 320, 1.25) }, { width: 500, height: 400 });
+});
+
+test('大きな盤面でも縦横比を保ち、描画面のメモリ使用量を抑える', () => {
+    const { width, height } = context.boardResolution(12800, 6400, 3);
+    assert.ok(width <= 4096 && height <= 4096);
+    assert.ok(width * height <= 8_388_608);
+    assert.ok(Math.abs(width / height - 2) < 0.01);
+});
