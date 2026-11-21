@@ -7,7 +7,6 @@ let g_selectcolor = 0;
 let refreshBoard;
 let finishStroke;
 let playClock;
-let resetBoardQuality;
 let restoredColorSource;
 
 // 5×5の十字を描いたパレット形式のサンプルPNG。
@@ -16,6 +15,7 @@ const samplePNG = 'iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAMAAAC6sdbXAAAABlBMVEX///8wW
 window.onload = async function () {
     setupImagePicker();
     setupProgressRestore();
+    setupBoardMenus();
     window.addEventListener('resize', () => refreshBoard?.());
     window.setInterval(() => {
         if (!document.getElementById('play-panel').hidden) updatePlayTime();
@@ -210,10 +210,28 @@ function setupImagePicker() {
     });
 }
 
+function showBoardMenu(selected) {
+    for (const button of document.querySelectorAll('.board-menu-button')) {
+        const open = button === selected;
+        button.setAttribute('aria-expanded', String(open));
+        document.getElementById(button.getAttribute('aria-controls')).hidden = !open;
+    }
+}
+
+function setupBoardMenus() {
+    for (const button of document.querySelectorAll('.board-menu-button')) {
+        button.onclick = () => showBoardMenu(button.getAttribute('aria-expanded') === 'false' ? button : undefined);
+    }
+    document.getElementById('hint-tools').addEventListener('click', event => {
+        if (!event.target.closest('button[data-close-board-menu]')) return;
+        showBoardMenu();
+        document.querySelector('[aria-controls="hint-tools"]').focus({ preventScroll: true });
+    }, { capture: true });
+}
+
 function setPlaying(playing) {
     if (playing) playClock?.resume();
     else {
-        resetBoardQuality?.();
         finishStroke?.();
         playClock?.suspend();
         flushProgress();
@@ -311,13 +329,13 @@ function decodeLegacyPng(src) {
 }
 
 async function startPuzzle({ matrix, palette, blank }, options = {}) {
-    resetBoardQuality?.();
     finishStroke?.();
     playClock?.suspend();
     const board = options.board ?? {};
+    const hasSavedCells = Boolean(board.cells);
     const rowClues = makeNumber(matrix, blank);
     const columnClues = makeNumber(transpose(matrix), blank);
-    if (!board.quality && !board.cells) {
+    if (!board.quality && !hasSavedCells) {
         const preparation = document.getElementById('prepare-puzzle');
         preparation.oncancel = event => event.preventDefault();
         preparation.showModal();
@@ -359,9 +377,6 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
         ? new Set([...palette.slice(1).map((_, i) => i + 1), blank])
         : new Set(matrix.flat());
     g_selectcolor = usedColors.values().next().value;
-    resetBoardQuality = setupQualityCheck(document.getElementById('board-quality'),
-        document.getElementById('board-quality-result'),
-        () => ({ rows: rowClues[0], columns: columnClues[0], blank, fixedSlashes: [...fixedSlashes] }));
 
     const widthInCells = matrix[0].length + rowClues[1];
     const heightInCells = matrix.length + columnClues[1];
@@ -369,7 +384,7 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
         ? Math.max(10, Math.min(40, Math.floor(500 / Math.max(widthInCells, heightInCells))))
         : options.sample ? 40 : Math.max(Math.round(500 / heightInCells), 10);
 
-    document.getElementById('play-options').open = false;
+    showBoardMenu();
     for (const id of ['line-hint', 'logic-hint']) {
         document.getElementById(id).hidden = options.shared === true;
     }
@@ -409,9 +424,8 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
 
     const download = document.getElementById('downl');
     download.hidden = options.shared === true || Boolean(options.tileLabel);
-    document.getElementById('answer-controls').hidden = options.shared === true;
-    document.getElementById('answer-penalty').textContent =
-        '答えを見ると ' + matrix.length + '分加算してクリア（1行につき1分）';
+    document.getElementById('solve').hidden = options.shared === true;
+    document.getElementById('answer-penalty').textContent = '+' + matrix.length + '分';
     download.onclick = () => {
         const link = document.createElement('a');
         link.href = document.getElementById('canvas').toDataURL('image/png');
@@ -432,19 +446,16 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
         }
     }
 
-    function checkCompletion(showIncomplete = false) {
+    function checkCompletion(save = true) {
         if (board.finished) return;
         const solved = board.quality === 'unique'
             ? matchesIntendedImage(matrix, cells, blank)
             : checkNumber(rowClues, cells, blank) && checkNumber(columnClues, transpose(cells), blank);
-        if (!solved) {
-            if (showIncomplete) result.textContent = 'まだヒント数字と一致していません。';
-            return;
-        }
+        if (!solved) return;
         clock.finish();
         updatePlayTime();
         showClear();
-        queueProgressSave();
+        if (save) queueProgressSave();
         options.onSolved?.();
     }
 
@@ -453,10 +464,6 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
         checkCompletion();
     }
 
-    document.getElementById('check').onclick = () => {
-        finishStroke();
-        checkCompletion(true);
-    };
     restart.onclick = () => {
         const target = options.tileLabel ? 'この区画' : 'この問題';
         document.getElementById('restart-message').textContent =
@@ -490,6 +497,7 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
         }), options.progressId);
     }
     if (board.finished) showClear();
+    else if (!board.paused) checkCompletion(hasSavedCells);
     if (options.tileLabel) returnToMosaic.focus();
 }
 
@@ -935,7 +943,6 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         renderBoard(true);
         onEdit();
     };
-    document.getElementById('check').disabled = false;
     pauseButton.disabled = false;
     pauseButton.textContent = '一時停止';
     function togglePause() {
@@ -959,6 +966,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     pauseButton.onclick = () => {
         togglePause();
         queueProgressSave();
+        if (!board.paused) onEdit();
     };
     if (board.paused && !board.finished) togglePause();
 
@@ -1133,7 +1141,6 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     return {
         finish() {
             board.finished = true;
-            document.getElementById('check').disabled = true;
             checkConflicts.disabled = true;
             if (clearConflicts()) renderBoard(true);
             pauseButton.disabled = true;

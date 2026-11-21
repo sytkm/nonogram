@@ -27,7 +27,7 @@
                 <button type="button" id="resume-progress">前回の続きから</button>
                 <small>このブラウザに直近の1問を自動保存します。</small>
             </div>
-            <a href="?sample">サンプル問題で遊ぶ</a>
+            <a href="?sample" class="action-link">サンプル問題で遊ぶ</a>
             <label for="file">自分の画像で作る</label>
             <input type="file" id="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp">
             <p>PNG・JPEG・WebPに対応しています。カラー問題にできるPNGは、選ぶとすぐに遊べます。画像はブラウザ内で処理します。</p>
@@ -71,38 +71,37 @@
                 <p id="mosaic-tile-label" class="play-instructions" hidden></p>
                 <p class="play-instructions play-only" id="paint-instructions">下で色を選び、マスを押して塗ります。大きな盤面は上下左右にスクロールできます。</p>
                 <div class="board-tools" role="group" aria-label="盤面の操作">
-                    <button type="button" id="check" class="play-only">答え合わせ</button>
-                    <button type="button" id="check-conflicts" class="play-only">矛盾チェック</button>
-                    <button type="button" id="logic-hint" class="play-only">考え方ヒント</button>
-                    <button type="button" id="line-hint" class="play-only">行・列ヒント <small>+1分</small></button>
-                    <button type="button" id="board-undo" class="play-only" disabled>元に戻す</button>
-                    <button type="button" id="board-redo" class="play-only" disabled>やり直す</button>
-                    <button type="button" id="zoom-out" aria-label="盤面を縮小">−</button>
-                    <button type="button" id="zoom-in" aria-label="盤面を拡大">＋</button>
-                    <button type="button" id="zoom-fit">全体を表示</button>
-                    <button type="button" id="paint-mode" class="play-only" aria-pressed="false" aria-describedby="paint-instructions">なぞり塗り</button>
+                    <div class="toolbar-group" role="group" aria-label="盤面の大きさ">
+                        <button type="button" id="zoom-out" aria-label="盤面を縮小">−</button>
+                        <button type="button" id="zoom-in" aria-label="盤面を拡大">＋</button>
+                        <button type="button" id="zoom-fit">全体を表示</button>
+                    </div>
+                    <div class="toolbar-group" role="group" aria-label="操作メニュー">
+                        <button type="button" class="board-menu-button play-only" aria-controls="hint-tools" aria-expanded="false">ヒント・確認</button>
+                        <button type="button" class="board-menu-button play-only" aria-controls="view-tools" aria-expanded="false">表示設定</button>
+                        <button type="button" class="board-menu-button play-only" aria-controls="play-options" aria-expanded="false">問題</button>
+                        <button type="button" id="return-mosaic" hidden>全体図に戻る</button>
+                    </div>
+                </div>
+                <div id="hint-tools" class="board-menu play-only" role="group" aria-label="ヒント・確認" hidden>
+                    <button type="button" id="logic-hint" data-close-board-menu>考え方ヒント</button>
+                    <button type="button" id="line-hint" data-close-board-menu>行・列ヒント <small class="penalty">+1分</small></button>
+                    <button type="button" id="check-conflicts" data-close-board-menu>矛盾チェック</button>
+                    <button type="button" id="solve" data-close-board-menu>答えを見る <small class="penalty" id="answer-penalty"></small></button>
+                </div>
+                <div id="view-tools" class="board-menu play-only" role="group" aria-label="表示設定" hidden>
+                    <label class="play-only"><input type="checkbox" id="stick-clues" checked> ヒント数字を固定</label>
+                    <label class="play-only" id="color-symbol-option"><input type="checkbox" id="color-symbols"> 色の記号を表示</label>
+                </div>
+                <div id="play-options" class="board-menu play-only" role="group" aria-label="問題" hidden>
                     <button type="button" id="split-board" hidden>10×10に分けて遊ぶ</button>
-                    <button type="button" id="return-mosaic" hidden>全体図に戻る</button>
-                    <details id="play-options" class="play-only">
-                        <summary>その他</summary>
-                        <p class="play-instructions">上と左の数字は、色ごとに連続して塗るマスの数です。</p>
-                        <div class="play-options-items">
-                            <div id="answer-controls">
-                                <button type="button" id="solve" aria-describedby="answer-penalty">答えを見る</button>
-                                <span id="answer-penalty"></span>
-                            </div>
-                            <label><input type="checkbox" id="stick-clues" checked> ヒント数字を固定</label>
-                            <label><input type="checkbox" id="auto-slash"> 完成した行・列の空白に斜線</label>
-                            <label id="color-symbol-option"><input type="checkbox" id="color-symbols"> 色の記号を表示</label>
-                            <button type="button" id="board-quality">答えが一つか調べる</button>
-                            <button type="button" id="downl">画像を保存</button>
-                            <button type="button" id="preview-monochrome" hidden>同じ画像を白黒に変換</button>
-                            <a href="" id="share" target="_blank" rel="noopener">Twitterでシェア</a>
-                            <a href="?" id="board-home">最初の画面に戻る</a>
-                            <p class="play-instructions" id="keyboard-instructions">右クリックで斜線。Tab で盤面を選び、矢印キーで移動、Space または Enter で塗り、X で斜線、Delete で消去。</p>
-                        </div>
-                        <p id="board-quality-result" class="quality-result" role="status"></p>
-                    </details>
+                    <button type="button" id="downl">画像を保存</button>
+                    <button type="button" id="preview-monochrome" hidden>同じ画像を白黒に変換</button>
+                    <a href="" id="share" class="action-link" target="_blank" rel="noopener">Twitterでシェア</a>
+                    <a href="?" id="board-home" class="action-link">最初の画面に戻る</a>
+                    <label><input type="checkbox" id="auto-slash"> 完成した行・列の空白に斜線</label>
+                    <p class="play-instructions menu-note">上と左の数字は、色ごとに連続して塗るマスの数です。</p>
+                    <p class="play-instructions menu-note" id="keyboard-instructions">右クリックで斜線。Tab で盤面を選び、矢印キーで移動、Space または Enter で塗り、X で斜線、Delete で消去。</p>
                 </div>
                 <p class="play-instructions play-only">ヒント数字を押すとチェックできます。</p>
                 <p id="hint-message" class="play-only" role="status"></p>
@@ -132,11 +131,11 @@
             <h3 id="mosaic-finished-title" tabindex="-1">絵が完成しました！</h3>
             <canvas id="mosaic-image" role="img" aria-label="すべての区画をつないだ完成画像"></canvas>
             <div class="mosaic-downloads">
-                <a id="mosaic-save" download="nonogram-mosaic.png">完成画像を保存</a>
-                <a id="mosaic-save-large" download="nonogram-mosaic-large.png" hidden>拡大PNGを保存</a>
+                <a class="action-link" id="mosaic-save" download="nonogram-mosaic.png">完成画像を保存</a>
+                <a class="action-link" id="mosaic-save-large" download="nonogram-mosaic-large.png" hidden>拡大PNGを保存</a>
             </div>
         </section>
-        <p><a href="?">最初の画面に戻る</a></p>
+        <p><a href="?" class="action-link">最初の画面に戻る</a></p>
     </main>
     <dialog id="prepare-puzzle" aria-labelledby="prepare-puzzle-message">
         <p id="prepare-puzzle-message" role="status">答えが一つになるよう盤面を確認しています…</p>
@@ -158,6 +157,11 @@
         <div id="hint-line-marker" aria-hidden="true" hidden></div>
     </div>
     <div id="fix-phone-under-menu" hidden>
+        <div class="toolbar-group paint-tools" role="group" aria-label="塗りと編集">
+            <button type="button" id="paint-mode" aria-pressed="false" aria-describedby="paint-instructions">なぞり塗り</button>
+            <button type="button" id="board-undo" disabled>元に戻す</button>
+            <button type="button" id="board-redo" disabled>やり直す</button>
+        </div>
         <div id="color-palette" role="group" aria-label="塗る色"></div>
     </div>
 </body>
