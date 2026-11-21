@@ -18,12 +18,12 @@ function setupPuzzleShare(group, puzzleURL) {
     const status = group.querySelector('[data-share-status]');
     const manual = group.querySelector('[data-share-manual]');
     const field = manual.querySelector('input');
-    const composeURL = puzzleURL && blueskyComposeURL(puzzleURL);
-
     group.hidden = !puzzleURL;
-    bluesky.hidden = !composeURL;
-    if (composeURL) bluesky.href = composeURL;
-    else bluesky.removeAttribute('href');
+    if (bluesky) {
+        bluesky.hidden = !puzzleURL;
+        if (puzzleURL) bluesky.href = blueskyComposeURL(puzzleURL);
+        else bluesky.removeAttribute('href');
+    }
     status.textContent = '';
     manual.hidden = true;
     field.value = puzzleURL ?? '';

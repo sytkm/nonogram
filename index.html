@@ -12,10 +12,11 @@
     <script src="line-logic.js"></script>
     <script src="progress-store.js"></script>
     <script src="quality-controls.js?v=line-solvability-options"></script>
-    <script src="mosaic.js"></script>
-    <script src="share-controls.js?v=bluesky-links"></script>
-    <script src="importfile.js?v=share-controls"></script>
-    <link rel="stylesheet" href="style.css?v=share-controls">
+    <script src="mosaic-share.js"></script>
+    <script src="mosaic.js?v=mosaic-share"></script>
+    <script src="share-controls.js?v=mosaic-share"></script>
+    <script src="importfile.js?v=mosaic-share"></script>
+    <link rel="stylesheet" href="style.css?v=mosaic-share">
     <title>画像でノノグラム</title>
 </head>
 
@@ -149,6 +150,17 @@
             <button type="button" id="mosaic-time-toggle" aria-pressed="false">区画の時間を表示</button>
             <button type="button" id="mosaic-review-toggle" aria-pressed="false" hidden>区画を見返す</button>
         </div>
+        <div id="mosaic-share" class="puzzle-share" role="group" aria-label="分割ノノグラムを共有" hidden>
+            <p>共有リンクから完成画像を復元できます。途中経過やプレイ時間は含まれません。</p>
+            <div class="toolbar-group">
+                <button type="button" class="action-link" data-share-copy>共有リンクをコピー</button>
+            </div>
+            <p class="quality-result" data-share-status role="status"></p>
+            <div data-share-manual hidden>
+                <label>共有リンク <input type="text" readonly></label>
+            </div>
+        </div>
+        <p id="mosaic-share-message" class="quality-result" role="status"></p>
         <div class="mosaic-map" id="mosaic-map" role="region" aria-label="区画の全体図" tabindex="0">
             <div id="mosaic-grid"></div>
         </div>

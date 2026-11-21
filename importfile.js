@@ -28,7 +28,22 @@ window.onload = async function () {
         if (!document.getElementById('play-panel').hidden) updatePlayTime();
     }, 250);
 
-    const query = window.location.search;
+    // A pasted fragment can navigate within the current page without reloading it.
+    window.addEventListener('hashchange', event => {
+        if ([event.oldURL, event.newURL].some(url => new URL(url).hash.startsWith(mosaicSharePrefix))) {
+            window.location.reload();
+        }
+    });
+
+    const { search: query, hash } = window.location;
+    if (hash.startsWith(mosaicSharePrefix)) {
+        try {
+            openMosaic(await readMosaicShare(hash));
+        } catch {
+            showInvalidSharedPuzzle();
+        }
+        return;
+    }
     if (!query) return;
 
     try {
@@ -38,10 +53,14 @@ window.onload = async function () {
             await startPuzzle(decodeLegacyPng(decodeURIComponent(query.slice(1))), { shared: true });
         }
     } catch {
-        document.getElementById('image-status').textContent =
-            '共有された問題を開けませんでした。リンクを確認するか、画像を選んで新しく作れます。';
+        showInvalidSharedPuzzle();
     }
 };
+
+function showInvalidSharedPuzzle() {
+    document.getElementById('image-status').textContent =
+        '共有された問題を開けませんでした。リンクを確認するか、画像を選んで新しく作れます。';
+}
 
 function setupImagePicker() {
     const input = document.getElementById('file');
