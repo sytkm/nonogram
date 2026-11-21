@@ -15,8 +15,8 @@
     <script src="mosaic-share.js"></script>
     <script src="mosaic.js?v=mosaic-share"></script>
     <script src="share-controls.js?v=mosaic-share"></script>
-    <script src="importfile.js?v=mosaic-share"></script>
-    <link rel="stylesheet" href="style.css?v=mosaic-share">
+    <script src="importfile.js?v=start-preview-actions"></script>
+    <link rel="stylesheet" href="style.css?v=start-preview-actions">
     <title>画像でノノグラム</title>
 </head>
 
@@ -29,19 +29,21 @@
             </button>
         </div>
         <div id="start-panel">
-            <p>画像からノノグラムを作れます。画像がなくても、サンプルですぐに遊べます。</p>
-            <div id="saved-progress" hidden>
-                <button type="button" id="resume-progress">前回の続きから</button>
-                <small>このブラウザに直近の1問を自動保存します。</small>
+            <p>自分の画像で問題を作れます。画像がなければ、サンプルですぐに遊べます。</p>
+            <div class="toolbar-group" role="group" aria-label="新しい問題">
+                <button type="button" id="open-image" class="action-link action-primary" aria-describedby="image-formats">自分の画像で作る</button>
+                <a href="?sample" class="action-link">サンプル問題で遊ぶ</a>
+                <button type="button" class="action-link" data-open-play-guide aria-haspopup="dialog" aria-controls="play-guide-dialog">遊び方</button>
             </div>
-            <a href="?sample" class="action-link">サンプル問題で遊ぶ</a>
-            <button type="button" class="action-link" data-open-play-guide aria-haspopup="dialog" aria-controls="play-guide-dialog">遊び方</button>
-            <label for="file">自分の画像で作る</label>
-            <input type="file" id="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp">
-            <p>PNG・JPEG・WebPに対応しています。カラー問題にできるPNGは、選ぶとすぐに遊べます。画像はブラウザ内で処理します。</p>
+            <input type="file" id="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" hidden>
+            <p id="image-formats">PNG・JPEG・WebPに対応しています。画像はブラウザ内で処理します。</p>
+            <div id="saved-progress" class="toolbar-group" hidden>
+                <button type="button" id="resume-progress" class="action-link">前回の続きから</button>
+                <small>このブラウザに自動保存した問題を再開します。</small>
+            </div>
             <p id="image-status" role="status"></p>
             <div id="image-preview" hidden>
-                <h2>ノノグラムのプレビュー</h2>
+                <h2 id="preview-heading" tabindex="-1">ノノグラムのプレビュー</h2>
                 <div id="puzzle-mode-panel" hidden>
                     <label for="puzzle-mode">遊び方</label>
                     <select id="puzzle-mode">
@@ -57,22 +59,26 @@
                     <label for="threshold">黒にする明るさの境目</label>
                     <input id="threshold" type="range" min="1" max="255" value="128">
                     <output id="threshold-value" for="threshold">128</output>
-                    <button type="button" id="reset-threshold">自動設定に戻す</button>
+                    <button type="button" id="reset-threshold" class="action-link">自動設定に戻す</button>
                     <p>境目は画像に合わせて自動で選びます。値を上げると、より明るい部分も黒になります。</p>
                 </div>
                 <p id="color-note" hidden>近い色を最大7色にまとめます。白に近い部分は空白になります。</p>
                 <p id="preview-message" role="status"></p>
-                <button type="button" id="preview-quality">答えが一つか調べる</button>
-                <p id="preview-quality-result" class="quality-result" role="status"></p>
-                <details class="advanced-options">
-                    <summary>高度なオプション</summary>
-                    <p>「考え方ヒント」と同じ方法で、確実に分かるマスを繰り返し埋めると、最後まで解けるか調べます。</p>
-                    <button type="button" id="preview-logic">行・列の推理で解けるか調べる</button>
-                    <p id="preview-logic-result" class="quality-result" role="status"></p>
-                </details>
-                <button type="button" id="play-preview">この問題で遊ぶ</button>
-                <button type="button" id="split-preview" hidden>10×10に分けて遊ぶ</button>
-                <button type="button" id="resume-color" hidden>カラー問題に戻る</button>
+                <div class="toolbar-group" role="group" aria-label="プレビューした問題で遊ぶ">
+                    <button type="button" id="play-preview" class="action-link action-primary">この問題で遊ぶ</button>
+                    <button type="button" id="split-preview" class="action-link" hidden>10×10に分けて遊ぶ</button>
+                    <button type="button" id="resume-color" class="action-link" hidden>カラー問題に戻る</button>
+                </div>
+                <div class="preview-checks">
+                    <button type="button" id="preview-quality" class="action-link">答えが一つか調べる</button>
+                    <p id="preview-quality-result" class="quality-result" role="status"></p>
+                    <details class="advanced-options">
+                        <summary>高度なオプション</summary>
+                        <p>「考え方ヒント」と同じ方法で、確実に分かるマスを繰り返し埋めると、最後まで解けるか調べます。</p>
+                        <button type="button" id="preview-logic" class="action-link">行・列の推理で解けるか調べる</button>
+                        <p id="preview-logic-result" class="quality-result" role="status"></p>
+                    </details>
+                </div>
             </div>
         </div>
         <div id="play-panel" hidden>

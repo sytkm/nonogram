@@ -35,7 +35,7 @@ h1 {
     font-size: 1.5rem;
 }
 
-#start-panel label {
+#image-preview label {
     display: block;
     margin-top: 1rem;
 }
@@ -48,8 +48,13 @@ h1 {
     image-rendering: pixelated;
 }
 
-#image-preview button {
-    margin-bottom: 0.5rem;
+#preview-canvas,
+.preview-checks {
+    margin-block: 0.75rem;
+}
+
+#threshold-panel input {
+    vertical-align: middle;
 }
 
 #pixelcanvas {
@@ -186,7 +191,7 @@ h1 {
 }
 
 .board-tools,
-.toolbar-group,
+.toolbar-group:not([hidden]),
 .board-menu:not([hidden]) {
     display: flex;
     flex-wrap: wrap;
@@ -269,7 +274,7 @@ h1 {
 .board-menu button:hover:not(:disabled),
 #open-settings:hover,
 .settings-heading button:hover,
-.action-link:hover,
+.action-link:hover:not(:disabled),
 .board-menu-button[aria-expanded="true"] {
     background: #e1ebf8;
     border-color: #6685ae;
@@ -277,6 +282,17 @@ h1 {
 
 #clue-mode-label {
     font-size: 0.875rem;
+}
+
+.action-link.action-primary:not(:disabled) {
+    border-color: #174d85;
+    background: #174d85;
+    color: #fff;
+}
+
+.action-link.action-primary:hover:not(:disabled),
+.action-link.action-primary:active:not(:disabled) {
+    background: #103b67;
 }
 
 .board-tools .clue-mode[aria-pressed="true"] {
@@ -299,7 +315,8 @@ h1 {
 .play-clock button:disabled,
 .paint-tools button:disabled,
 .board-tools button:disabled,
-.board-menu button:disabled {
+.board-menu button:disabled,
+.action-link:disabled {
     color: #677788;
     border-color: #ccd4de;
     cursor: default;

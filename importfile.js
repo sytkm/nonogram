@@ -64,6 +64,7 @@ function showInvalidSharedPuzzle() {
 
 function setupImagePicker() {
     const input = document.getElementById('file');
+    document.getElementById('open-image').onclick = () => input.click();
     const status = document.getElementById('image-status');
     const preview = document.getElementById('image-preview');
     const canvas = document.getElementById('preview-canvas');
@@ -173,6 +174,7 @@ function setupImagePicker() {
         resumeColor.hidden = !fromColor;
         preview.hidden = false;
         setPlaying(false);
+        document.getElementById('preview-heading').focus();
     }
 
     input.addEventListener('change', async () => {
