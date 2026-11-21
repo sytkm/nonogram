@@ -102,3 +102,10 @@ test('色やかたまりが一致しない行・列や、斜線の消去では�
     const result = context.findCompletedLineBlanks(cells, [[[1, 2]]], columns, 9, erasure);
     assert.deepEqual(Array.from(result), []);
 });
+
+test('元画像に合わせたクリア判定は別解を除外し、空白と斜線を同じ扱いにする', () => {
+    const answer = [[1, 0], [0, 1]];
+    assert.equal(context.matchesIntendedImage(answer, [[1, -1], [0, 1]], 0), true);
+    assert.equal(context.matchesIntendedImage(answer, [[0, 1], [1, 0]], 0), false);
+    assert.equal(context.matchesIntendedImage(answer, [[2, -1], [0, 1]], 0), false);
+});

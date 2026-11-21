@@ -72,7 +72,7 @@ function setupProgressRestore() {
             flushProgress();
         }
     });
-    button.onclick = () => {
+    button.onclick = async () => {
         const saved = readProgress();
         if (!saved) {
             updateResumeButton();
@@ -82,7 +82,7 @@ function setupProgressRestore() {
             if (saved.kind === 'mosaic') {
                 openMosaic(saved.puzzle, saved);
             } else {
-                startPuzzle(saved.puzzle, {
+                await startPuzzle(saved.puzzle, {
                     ...saved.options,
                     board: saved.board,
                     clock: createPlayClock(undefined, saved.clock),
