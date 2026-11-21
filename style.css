@@ -236,6 +236,16 @@ h1 {
     border-color: #6685ae;
 }
 
+#clue-mode-label {
+    font-size: 0.875rem;
+}
+
+.board-tools .clue-mode[aria-pressed="true"] {
+    border-color: #174d85;
+    background: #174d85;
+    color: #fff;
+}
+
 .play-clock button:focus-visible,
 .paint-tools button:focus-visible,
 .board-tools button:focus-visible,

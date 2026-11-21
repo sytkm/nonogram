@@ -7,7 +7,7 @@ let g_selectcolor = 0;
 let refreshBoard;
 let refreshBoardSettings;
 let boardForSettings;
-const boardSettingDefaults = { stickClues: true, showSymbols: false, autoSlash: false };
+const boardSettingDefaults = { stickClues: true, showSymbols: false, autoSlash: false, pickClueColor: false };
 const boardSettings = {};
 const boardSettingsKey = 'nonogram.settings';
 let finishStroke;
@@ -240,6 +240,15 @@ function boardSetting(name, board) {
     return boardSettings[name] ?? board?.[name] ?? boardSettingDefaults[name];
 }
 
+function saveBoardSetting(name, value) {
+    boardSettings[name] = value;
+    try {
+        localStorage.setItem(boardSettingsKey, JSON.stringify(boardSettings));
+    } catch {
+        // Keep the setting in memory for this page.
+    }
+}
+
 function setupSettings() {
     const dialog = document.getElementById('settings-dialog');
     const playPanel = document.getElementById('play-panel');
@@ -250,7 +259,7 @@ function setupSettings() {
     };
     try {
         const saved = JSON.parse(localStorage.getItem(boardSettingsKey));
-        for (const name of Object.keys(settingsInputs)) {
+        for (const name of Object.keys(boardSettingDefaults)) {
             if (typeof saved?.[name] === 'boolean') boardSettings[name] = saved[name];
         }
     } catch {
@@ -258,12 +267,7 @@ function setupSettings() {
     }
     for (const [name, input] of Object.entries(settingsInputs)) {
         input.onchange = () => {
-            boardSettings[name] = input.checked;
-            try {
-                localStorage.setItem(boardSettingsKey, JSON.stringify(boardSettings));
-            } catch {
-                // Keep the setting in memory for this page.
-            }
+            saveBoardSetting(name, input.checked);
             if (!playPanel.hidden) refreshBoardSettings?.();
         };
     }
@@ -438,9 +442,9 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
     setPlaying(true);
     let controls;
     try {
-        drawUnderPalette(palette, usedColors, blank);
+        const selectColor = drawUnderPalette(palette, usedColors, blank);
         controls = setupBoard(matrix, palette, blank, rowClues, columnClues, initialCellSize, clock, board,
-            [...usedColors].filter(color => color !== blank).length > 1, onEdit, fixedSlashes);
+            [...usedColors].filter(color => color !== blank).length > 1, onEdit, fixedSlashes, selectColor);
     } catch (error) {
         setPlaying(false);
         throw error;
@@ -557,7 +561,7 @@ function boardResolution(width, height, pixelRatio) {
     };
 }
 
-function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSize, clock, board, multiColor, onEdit, fixedSlashes) {
+function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSize, clock, board, multiColor, onEdit, fixedSlashes, selectColor) {
     const { cells } = board;
     const viewport = document.getElementById('pixelcanvas');
     const canvas = document.getElementById('canvas');
@@ -572,6 +576,22 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     keyboardMarker.hidden = true;
     let showSymbols = multiColor && boardSetting('showSymbols', board);
     const palettePanel = document.getElementById('color-palette');
+    const clueMarkMode = document.getElementById('clue-mark-mode');
+    const clueColorMode = document.getElementById('clue-color-mode');
+    function updateClueMode() {
+        const pickColor = boardSetting('pickClueColor', board);
+        clueMarkMode.setAttribute('aria-pressed', String(!pickColor));
+        clueColorMode.setAttribute('aria-pressed', String(pickColor));
+    }
+    clueMarkMode.onclick = () => {
+        saveBoardSetting('pickClueColor', false);
+        updateClueMode();
+    };
+    clueColorMode.onclick = () => {
+        saveBoardSetting('pickClueColor', true);
+        updateClueMode();
+    };
+    updateClueMode();
     palettePanel.classList.toggle('show-symbols', showSymbols);
     const zoomIn = document.getElementById('zoom-in');
     const zoomOut = document.getElementById('zoom-out');
@@ -1083,8 +1103,13 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     canvas.onclick = event => {
         if (board.finished || !event.detail) return;
         const point = pointFor(event);
-        const key = boardClueAt(point, rowsOfClues, columnsOfClues);
-        if (key && key === pressedClue) {
+        const clue = boardClueAt(point, rowsOfClues, columnsOfClues);
+        if (clue && clue.key === pressedClue) {
+            if (boardSetting('pickClueColor', board)) {
+                if (clue.color >= 0) selectColor(clue.color);
+                return;
+            }
+            const { key } = clue;
             const before = Boolean(board.marks[key]);
             if (before) delete board.marks[key];
             else board.marks[key] = true;
@@ -1140,7 +1165,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     canvas.onpointerdown = event => {
         if (board.finished || stroke || !event.isPrimary || event.button !== 0) return;
         const point = pointFor(event);
-        pressedClue = boardClueAt(point, rowsOfClues, columnsOfClues);
+        pressedClue = boardClueAt(point, rowsOfClues, columnsOfClues)?.key;
         if (!tracing) return;
         const cell = boardCellAt(point, columns, rows);
         if (!cell) return;
@@ -1432,7 +1457,13 @@ function drawUnderPalette(palette, usedColors, blank) {
     if (!usedColors.has(blank)) colors.push(blank);
     colors.push(-1);
 
-    let selected;
+    const buttons = new Map();
+    function selectColor(color) {
+        buttons.get(g_selectcolor)?.setAttribute('aria-pressed', 'false');
+        buttons.get(color).setAttribute('aria-pressed', 'true');
+        g_selectcolor = color;
+    }
+
     for (const color of colors) {
         const button = document.createElement('button');
         const swatch = document.createElement('span');
@@ -1459,16 +1490,12 @@ function drawUnderPalette(palette, usedColors, blank) {
         button.title = label;
         button.setAttribute('aria-label', label);
         button.setAttribute('aria-pressed', String(g_selectcolor === color));
-        if (g_selectcolor === color) selected = button;
         button.append(swatch);
-        button.onclick = () => {
-            selected?.setAttribute('aria-pressed', 'false');
-            selected = button;
-            button.setAttribute('aria-pressed', 'true');
-            g_selectcolor = color;
-        };
+        button.onclick = () => selectColor(color);
+        buttons.set(color, button);
         container.append(button);
     }
+    return selectColor;
 }
 
 /**

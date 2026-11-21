@@ -7,15 +7,20 @@ const test = require('node:test');
 const context = vm.createContext({});
 vm.runInContext(fs.readFileSync(path.join(__dirname, '../board-tools.js'), 'utf8'), context);
 
-test('行・列の数字だけをその位置で選べる', () => {
-    const rows = [[[1, 3]], [[1, 1], [2, 1]]];
+test('行・列の数字の位置と色を取得できる', () => {
+    const rows = [[[1, 3]], [[1, 1], [2, 1]], [[-1, 0]]];
     const columns = [[[1, 1], [2, 1]], [[2, 1]]];
     const locate = (x, y) => context.boardClueAt({ x, y }, rows, columns);
-    assert.equal(locate(-0.5, 0.5), 'row:0:0');
-    assert.equal(locate(-1.5, 1.5), 'row:1:0');
-    assert.equal(locate(-0.5, 1.5), 'row:1:1');
-    assert.equal(locate(0.5, -1.5), 'column:0:0');
-    assert.equal(locate(1.5, -0.5), 'column:1:0');
+    for (const [x, y, key, color] of [
+        [-0.5, 0.5, 'row:0:0', 1],
+        [-1.5, 1.5, 'row:1:0', 1],
+        [-0.5, 1.5, 'row:1:1', 2],
+        [-0.5, 2.5, 'row:2:0', -1],
+        [0.5, -1.5, 'column:0:0', 1],
+        [1.5, -0.5, 'column:1:0', 2],
+    ]) {
+        assert.deepEqual({ ...locate(x, y) }, { key, color });
+    }
     for (const point of [[-1.5, 0.5], [1.5, -1.5], [-0.5, -0.5], [0, 0], [-1, 3]]) {
         assert.equal(locate(...point), null);
     }
