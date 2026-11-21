@@ -240,6 +240,15 @@ function boardSetting(name, board) {
     return boardSettings[name] ?? board?.[name] ?? boardSettingDefaults[name];
 }
 
+function saveBoardSetting(name, value) {
+    boardSettings[name] = value;
+    try {
+        localStorage.setItem(boardSettingsKey, JSON.stringify(boardSettings));
+    } catch {
+        // Keep the setting in memory for this page.
+    }
+}
+
 function setupSettings() {
     const dialog = document.getElementById('settings-dialog');
     const playPanel = document.getElementById('play-panel');
@@ -247,11 +256,10 @@ function setupSettings() {
         stickClues: document.getElementById('stick-clues'),
         showSymbols: document.getElementById('color-symbols'),
         autoSlash: document.getElementById('auto-slash'),
-        pickClueColor: document.getElementById('pick-clue-color'),
     };
     try {
         const saved = JSON.parse(localStorage.getItem(boardSettingsKey));
-        for (const name of Object.keys(settingsInputs)) {
+        for (const name of Object.keys(boardSettingDefaults)) {
             if (typeof saved?.[name] === 'boolean') boardSettings[name] = saved[name];
         }
     } catch {
@@ -259,12 +267,7 @@ function setupSettings() {
     }
     for (const [name, input] of Object.entries(settingsInputs)) {
         input.onchange = () => {
-            boardSettings[name] = input.checked;
-            try {
-                localStorage.setItem(boardSettingsKey, JSON.stringify(boardSettings));
-            } catch {
-                // Keep the setting in memory for this page.
-            }
+            saveBoardSetting(name, input.checked);
             if (!playPanel.hidden) refreshBoardSettings?.();
         };
     }
@@ -573,13 +576,22 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     keyboardMarker.hidden = true;
     let showSymbols = multiColor && boardSetting('showSymbols', board);
     const palettePanel = document.getElementById('color-palette');
-    const clueInstructions = document.getElementById('clue-instructions');
-    function updateClueInstructions() {
-        clueInstructions.textContent = boardSetting('pickClueColor', board)
-            ? 'ヒント数字を押すと、その色を選べます。'
-            : 'ヒント数字を押すとチェックできます。';
+    const clueMarkMode = document.getElementById('clue-mark-mode');
+    const clueColorMode = document.getElementById('clue-color-mode');
+    function updateClueMode() {
+        const pickColor = boardSetting('pickClueColor', board);
+        clueMarkMode.setAttribute('aria-pressed', String(!pickColor));
+        clueColorMode.setAttribute('aria-pressed', String(pickColor));
     }
-    updateClueInstructions();
+    clueMarkMode.onclick = () => {
+        saveBoardSetting('pickClueColor', false);
+        updateClueMode();
+    };
+    clueColorMode.onclick = () => {
+        saveBoardSetting('pickClueColor', true);
+        updateClueMode();
+    };
+    updateClueMode();
     palettePanel.classList.toggle('show-symbols', showSymbols);
     const zoomIn = document.getElementById('zoom-in');
     const zoomOut = document.getElementById('zoom-out');
@@ -1177,7 +1189,6 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     viewport.onscroll = renderFixedClues;
     boardForSettings = board;
     refreshBoardSettings = () => {
-        updateClueInstructions();
         showSymbols = multiColor && boardSetting('showSymbols', board);
         palettePanel.classList.toggle('show-symbols', showSymbols);
         renderBoard(true);
