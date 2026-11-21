@@ -311,6 +311,8 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     const context = canvas.getContext('2d');
     const zoomIn = document.getElementById('zoom-in');
     const zoomOut = document.getElementById('zoom-out');
+    const paintMode = document.getElementById('paint-mode');
+    const instructions = document.getElementById('paint-instructions');
     const columns = answer[0].length;
     const rows = answer.length;
     const [rowsOfClues, leftClueCount] = rowClues;
@@ -322,6 +324,8 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         viewport.clientWidth / widthInCells, viewport.clientHeight / heightInCells
     ))));
     let cellSize;
+    let tracing = false;
+    let stroke;
 
     function renderBoard(force = false) {
         const size = boardResolution(widthInCells * cellSize, heightInCells * cellSize,
@@ -404,6 +408,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     }
 
     function resizeBoard(nextSize, center) {
+        stopStroke();
         const previousSize = cellSize;
         const oldX = viewport.scrollLeft + Math.min(viewport.clientWidth, canvas.clientWidth) / 2;
         const oldY = viewport.scrollTop + Math.min(viewport.clientHeight, canvas.clientHeight) / 2;
@@ -429,26 +434,117 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     zoomOut.onclick = () => resizeBoard(Math.max(1, Math.floor(cellSize / 1.25)), true);
     document.getElementById('zoom-fit').onclick = () => resizeBoard(fit(), false);
     document.getElementById('solve').onclick = () => {
+        stopStroke();
         g_drawmatrix = answer.map(row => row.slice());
         renderBoard(true);
     };
+
+    function setTracing(enabled) {
+        stopStroke();
+        tracing = enabled;
+        paintMode.setAttribute('aria-pressed', String(enabled));
+        canvas.classList.toggle('is-painting', enabled);
+        instructions.textContent = enabled
+            ? '指やマウスでなぞるとまとめて塗れます。盤面を移動するには「なぞり塗り」をオフにします。'
+            : '下で色を選び、マスを押して塗ります。大きな盤面は上下左右にスクロールできます。';
+    }
+
+    function pointFor(event) {
+        return boardPointAt(event.clientX, event.clientY, canvas.getBoundingClientRect(),
+            widthInCells, heightInCells, [leftClueCount, topClueCount]);
+    }
+
+    function applyColor({ row, column }, color) {
+        if (g_drawmatrix[row][column] === color) return;
+        g_drawmatrix[row][column] = color;
+        paintCell(row, column, color);
+    }
+
+    function continueStroke(event) {
+        if (!stroke || event.pointerId !== stroke.id) return;
+        const point = pointFor(event);
+        if (!point) return;
+        for (const cell of traceBoardCells(stroke.point, point, columns, rows)) {
+            applyColor(cell, stroke.color);
+        }
+        stroke.point = point;
+    }
+
+    function stopStroke() {
+        const id = stroke?.id;
+        stroke = undefined;
+        if (id !== undefined && canvas.hasPointerCapture(id)) canvas.releasePointerCapture(id);
+    }
+
+    setTracing(false);
+    paintMode.onclick = () => setTracing(!tracing);
     canvas.onclick = event => {
-        const cell = boardCellAt(event.clientX, event.clientY, canvas.getBoundingClientRect(),
-            widthInCells * cellSize, heightInCells * cellSize,
-            [leftClueCount * cellSize, topClueCount * cellSize], cellSize, columns, rows);
+        if (tracing) return;
+        const cell = boardCellAt(pointFor(event), columns, rows);
         if (!cell) return;
-        g_drawmatrix[cell.row][cell.column] = g_selectcolor;
-        paintCell(cell.row, cell.column, g_selectcolor);
+        applyColor(cell, g_selectcolor);
+    };
+    canvas.onpointerdown = event => {
+        if (!tracing || stroke || !event.isPrimary || event.button !== 0) return;
+        const point = pointFor(event);
+        const cell = boardCellAt(point, columns, rows);
+        if (!cell) return;
+        canvas.setPointerCapture(event.pointerId);
+        stroke = { id: event.pointerId, point, color: g_selectcolor };
+        applyColor(cell, stroke.color);
+    };
+    canvas.onpointermove = event => {
+        if (!stroke || event.pointerId !== stroke.id) return;
+        for (const move of event.getCoalescedEvents?.() ?? []) continueStroke(move);
+        continueStroke(event);
+    };
+    canvas.onpointerup = event => {
+        if (!stroke || event.pointerId !== stroke.id) return;
+        continueStroke(event);
+        stopStroke();
+    };
+    canvas.onpointercancel = canvas.onlostpointercapture = event => {
+        if (event.pointerId === stroke?.id) stopStroke();
     };
     refreshBoard = () => renderBoard();
 }
 
-function boardCellAt(x, y, rect, bufferWidth, bufferHeight, offset, cellSize, columns, rows) {
+function boardPointAt(x, y, rect, widthInCells, heightInCells, offset) {
     if (!rect.width || !rect.height) return null;
-    const column = Math.floor(((x - rect.left) * bufferWidth / rect.width - offset[0]) / cellSize);
-    const row = Math.floor(((y - rect.top) * bufferHeight / rect.height - offset[1]) / cellSize);
+    return {
+        x: (x - rect.left) * widthInCells / rect.width - offset[0],
+        y: (y - rect.top) * heightInCells / rect.height - offset[1],
+    };
+}
+
+function boardCellAt(point, columns, rows) {
+    if (!point) return null;
+    const column = Math.floor(point.x);
+    const row = Math.floor(point.y);
     if (row < 0 || row >= rows || column < 0 || column >= columns) return null;
     return { row, column };
+}
+
+function traceBoardCells(from, to, columns, rows) {
+    const cells = [];
+    const dx = to.x - from.x;
+    const dy = to.y - from.y;
+    let column = Math.floor(from.x);
+    let row = Math.floor(from.y);
+    const endColumn = Math.floor(to.x);
+    const endRow = Math.floor(to.y);
+    const stepX = Math.sign(dx);
+    const stepY = Math.sign(dy);
+
+    // 次に横切る罫線を順にたどる。移動イベントの間に飛び越えたマスも塗る。
+    while (true) {
+        if (column >= 0 && column < columns && row >= 0 && row < rows) cells.push({ row, column });
+        if (column === endColumn && row === endRow) return cells;
+        const crossX = column === endColumn ? Infinity : (column + (stepX > 0 ? 1 : 0) - from.x) / dx;
+        const crossY = row === endRow ? Infinity : (row + (stepY > 0 ? 1 : 0) - from.y) / dy;
+        if (crossX < crossY || Math.abs(crossX - crossY) < 1e-9) column += stepX;
+        if (crossY < crossX || Math.abs(crossX - crossY) < 1e-9) row += stepY;
+    }
 }
 
 /**
