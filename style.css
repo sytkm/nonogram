@@ -153,26 +153,107 @@ header:has(#start-panel:not([hidden]) #image-preview[hidden]) h1 {
     }
 }
 
-#image-preview label {
-    display: block;
-    margin-top: 1rem;
+body:has(#mosaic-panel:not([hidden])),
+header:has(#start-panel:not([hidden]) #image-preview:not([hidden])) {
+    background: var(--puzzle-paper);
+    color: var(--puzzle-ink);
+}
+
+header:has(#start-panel:not([hidden]) #image-preview:not([hidden])) {
+    flex: 1 1 auto;
+}
+
+header:has(#start-panel:not([hidden]) #image-preview:not([hidden])) .site-heading,
+#start-panel:has(#image-preview:not([hidden])),
+body:has(#mosaic-panel:not([hidden])) .site-heading {
+    max-width: 59rem;
+    margin-inline: auto;
+}
+
+#start-panel:has(#image-preview:not([hidden])) .home-copy > p {
+    display: none;
+}
+
+#start-panel:has(#image-preview:not([hidden])) .home-copy .toolbar-group {
+    margin-block-start: 0.5rem;
+}
+
+#preview-heading,
+#mosaic-title {
+    margin-block: 1.1rem 0.85rem;
+    padding-block-end: 0.6rem;
+    border-bottom: 1px solid var(--puzzle-rule);
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+    font-size: clamp(1.25rem, 3vw, 1.65rem);
+}
+
+#preview-heading:focus-visible,
+#mosaic-title:focus-visible,
+#mosaic-finished-title:focus-visible {
+    outline: 2px solid var(--puzzle-accent);
+    outline-offset: 2px;
+}
+
+.preview-layout {
+    display: grid;
+    align-items: start;
+    gap: 1rem 2rem;
+}
+
+.preview-image {
+    min-width: 0;
+    margin: 0;
+}
+
+.preview-image figcaption {
+    margin-block-start: 0.45rem;
+    font-size: 0.875rem;
+    font-variant-numeric: tabular-nums;
 }
 
 #preview-canvas {
     display: block;
     max-width: 100%;
     height: auto;
-    border: 1px solid #777;
+    border: 1px solid var(--puzzle-major-rule);
     image-rendering: pixelated;
 }
 
-#preview-canvas,
-.preview-checks {
-    margin-block: 0.75rem;
+#image-preview label {
+    display: block;
+    margin-block: 0.65rem 0.25rem;
+    font-weight: 600;
 }
 
-#threshold-panel input {
+.preview-settings input[type="number"],
+.preview-settings select {
+    box-sizing: border-box;
+    max-width: 100%;
+    min-height: 44px;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid var(--puzzle-rule);
+    border-radius: 0.25rem;
+    background: #fff;
+    color: var(--puzzle-ink);
+    font: inherit;
+}
+
+.preview-settings input[type="range"] {
+    max-width: 100%;
+    accent-color: var(--puzzle-accent);
     vertical-align: middle;
+}
+
+.preview-checks {
+    margin-block: 0.85rem;
+    padding-block-start: 0.85rem;
+    border-top: 1px solid var(--puzzle-rule);
+}
+
+@media (min-width: 48rem) {
+    .preview-layout {
+        grid-template-columns: minmax(14rem, 16rem) minmax(0, 1fr);
+    }
 }
 
 #pixelcanvas {
@@ -400,13 +481,17 @@ header:has(#play-panel:not([hidden])) {
     background: #103b67;
 }
 
-#start-panel:has(#image-preview[hidden]) .action-primary:not(:disabled) {
+#start-panel .action-primary:not(:disabled),
+#mosaic-panel .action-primary:not(:disabled),
+#mosaic-panel .action-link[aria-pressed="true"] {
     border-color: var(--puzzle-accent);
     background: var(--puzzle-accent);
 }
 
-#start-panel:has(#image-preview[hidden]) .action-primary:hover:not(:disabled),
-#start-panel:has(#image-preview[hidden]) .action-primary:active:not(:disabled) {
+#start-panel .action-primary:hover:not(:disabled),
+#start-panel .action-primary:active:not(:disabled),
+#mosaic-panel .action-primary:hover:not(:disabled),
+#mosaic-panel .action-primary:active:not(:disabled) {
     background: var(--puzzle-accent-active);
 }
 
@@ -415,12 +500,6 @@ header:has(#play-panel:not([hidden])) {
 .board-tools .clue-mode[aria-pressed="true"] {
     border-color: var(--puzzle-accent);
     background: var(--puzzle-accent);
-    color: #fff;
-}
-
-#mosaic-panel .action-link[aria-pressed="true"] {
-    border-color: #174d85;
-    background: #174d85;
     color: #fff;
 }
 
@@ -638,13 +717,22 @@ header:has(#play-panel:not([hidden])) {
 
 #mosaic-panel {
     box-sizing: border-box;
+    width: 100%;
+    max-width: 61rem;
+    margin-inline: auto;
     flex: 1 1 auto;
     min-height: 0;
     overflow: auto;
     padding: 0 1rem 1rem;
 }
 
+#mosaic-instructions p {
+    margin-block: 0.5rem;
+    line-height: 1.5;
+}
+
 .mosaic-map {
+    margin-block-start: 0.4rem;
     overflow: auto;
     padding: 0.25rem;
 }
@@ -660,9 +748,9 @@ header:has(#play-panel:not([hidden])) {
     height: 50px;
     padding: 0;
     border: 0;
-    box-shadow: inset 0 0 0 1px #777;
-    background: #eaf2fc;
-    color: #163759;
+    box-shadow: inset 0 0 0 1px var(--puzzle-rule);
+    background: #fff;
+    color: var(--puzzle-ink);
     font: inherit;
     cursor: pointer;
 }
@@ -673,8 +761,13 @@ header:has(#play-panel:not([hidden])) {
     opacity: 1;
 }
 
+.mosaic-tile:hover:not(.mosaic-complete),
+.mosaic-tile:active:not(.mosaic-complete) {
+    background: #e7eee5;
+}
+
 .mosaic-tile:focus-visible {
-    outline: 2px solid #164c83;
+    outline: 2px solid var(--puzzle-accent);
     outline-offset: -3px;
 }
 
@@ -700,7 +793,7 @@ header:has(#play-panel:not([hidden])) {
 }
 
 #mosaic-grid.show-times .mosaic-tile {
-    box-shadow: inset 0 0 0 1px #b3bbc3;
+    box-shadow: inset 0 0 0 1px var(--puzzle-rule);
 }
 
 #mosaic-image {
@@ -713,6 +806,8 @@ header:has(#play-panel:not([hidden])) {
 
 #mosaic-share {
     margin-block: 1rem;
+    padding-block-start: 0.6rem;
+    border-top: 1px solid var(--puzzle-rule);
 }
 
 #keyboard-cell-marker {

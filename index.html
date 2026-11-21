@@ -16,7 +16,7 @@
     <script src="mosaic.js?v=mosaic-share"></script>
     <script src="share-controls.js?v=mosaic-share"></script>
     <script src="importfile.js?v=puzzle-paper-board"></script>
-    <link rel="stylesheet" href="style.css?v=puzzle-paper-board">
+    <link rel="stylesheet" href="style.css?v=puzzle-paper-workflow">
     <title>画像でノノグラム</title>
 </head>
 
@@ -63,40 +63,46 @@
             <p id="image-status" role="status"></p>
             <div id="image-preview" hidden>
                 <h2 id="preview-heading" tabindex="-1">ノノグラムのプレビュー</h2>
-                <div id="puzzle-mode-panel" hidden>
-                    <label for="puzzle-mode">遊び方</label>
-                    <select id="puzzle-mode">
-                        <option value="color">カラー</option>
-                        <option value="monochrome">白黒</option>
-                    </select>
-                </div>
-                <label for="puzzle-side">盤面の最長辺（マス）</label>
-                <input id="puzzle-side" type="number" min="1" step="1" inputmode="numeric">
-                <p id="preview-size"></p>
-                <canvas id="preview-canvas" role="img" aria-label="変換した画像"></canvas>
-                <div id="threshold-panel">
-                    <label for="threshold">黒にする明るさの境目</label>
-                    <input id="threshold" type="range" min="1" max="255" value="128">
-                    <output id="threshold-value" for="threshold">128</output>
-                    <button type="button" id="reset-threshold" class="action-link">自動設定に戻す</button>
-                    <p>境目は画像に合わせて自動で選びます。値を上げると、より明るい部分も黒になります。</p>
-                </div>
-                <p id="color-note" hidden>近い色を最大7色にまとめます。白に近い部分は空白になります。</p>
-                <p id="preview-message" role="status"></p>
-                <div class="toolbar-group" role="group" aria-label="プレビューした問題で遊ぶ">
-                    <button type="button" id="play-preview" class="action-link action-primary">この問題で遊ぶ</button>
-                    <button type="button" id="split-preview" class="action-link" hidden>10×10に分けて遊ぶ</button>
-                    <button type="button" id="resume-color" class="action-link" hidden>カラー問題に戻る</button>
-                </div>
-                <div class="preview-checks">
-                    <button type="button" id="preview-quality" class="action-link">答えが一つか調べる</button>
-                    <p id="preview-quality-result" class="quality-result" role="status"></p>
-                    <details class="advanced-options">
-                        <summary>高度なオプション</summary>
-                        <p>「考え方ヒント」と同じ方法で、確実に分かるマスを繰り返し埋めると、最後まで解けるか調べます。</p>
-                        <button type="button" id="preview-logic" class="action-link">行・列の推理で解けるか調べる</button>
-                        <p id="preview-logic-result" class="quality-result" role="status"></p>
-                    </details>
+                <div class="preview-layout">
+                    <figure class="preview-image">
+                        <canvas id="preview-canvas" role="img" aria-label="変換した画像"></canvas>
+                        <figcaption id="preview-size"></figcaption>
+                    </figure>
+                    <div class="preview-settings">
+                        <div id="puzzle-mode-panel" hidden>
+                            <label for="puzzle-mode">遊び方</label>
+                            <select id="puzzle-mode">
+                                <option value="color">カラー</option>
+                                <option value="monochrome">白黒</option>
+                            </select>
+                        </div>
+                        <label for="puzzle-side">盤面の最長辺（マス）</label>
+                        <input id="puzzle-side" type="number" min="1" step="1" inputmode="numeric">
+                        <div id="threshold-panel">
+                            <label for="threshold">黒にする明るさの境目</label>
+                            <input id="threshold" type="range" min="1" max="255" value="128">
+                            <output id="threshold-value" for="threshold">128</output>
+                            <button type="button" id="reset-threshold" class="action-link">自動設定に戻す</button>
+                            <p>境目は画像に合わせて自動で選びます。値を上げると、より明るい部分も黒になります。</p>
+                        </div>
+                        <p id="color-note" hidden>近い色を最大7色にまとめます。白に近い部分は空白になります。</p>
+                        <p id="preview-message" role="status"></p>
+                        <div class="toolbar-group" role="group" aria-label="プレビューした問題で遊ぶ">
+                            <button type="button" id="play-preview" class="action-link action-primary">この問題で遊ぶ</button>
+                            <button type="button" id="split-preview" class="action-link" hidden>10×10に分けて遊ぶ</button>
+                            <button type="button" id="resume-color" class="action-link" hidden>カラー問題に戻る</button>
+                        </div>
+                        <div class="preview-checks">
+                            <button type="button" id="preview-quality" class="action-link">答えが一つか調べる</button>
+                            <p id="preview-quality-result" class="quality-result" role="status"></p>
+                            <details class="advanced-options">
+                                <summary>高度なオプション</summary>
+                                <p>「考え方ヒント」と同じ方法で、確実に分かるマスを繰り返し埋めると、最後まで解けるか調べます。</p>
+                                <button type="button" id="preview-logic" class="action-link">行・列の推理で解けるか調べる</button>
+                                <p id="preview-logic-result" class="quality-result" role="status"></p>
+                            </details>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
