@@ -597,6 +597,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     const zoomIn = document.getElementById('zoom-in');
     const zoomOut = document.getElementById('zoom-out');
     const paintMode = document.getElementById('paint-mode');
+    const pickPaintedColor = document.getElementById('pick-painted-color');
     const instructions = document.getElementById('paint-instructions');
     const pauseButton = document.getElementById('pause-play');
     const pauseMessage = document.getElementById('pause-message');
@@ -617,7 +618,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         viewport.clientWidth / widthInCells, viewport.clientHeight / heightInCells
     ))));
     let cellSize;
-    let tracing = false;
+    let inputMode;
     let stroke;
     let pressedClue;
     let pausedPosition;
@@ -1032,14 +1033,26 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     };
     if (board.paused && !board.finished) togglePause();
 
-    function setTracing(enabled) {
+    function setInputMode(mode) {
         stopStroke();
-        tracing = enabled;
-        paintMode.setAttribute('aria-pressed', String(enabled));
-        canvas.classList.toggle('is-painting', enabled);
-        instructions.textContent = enabled
-            ? '指やマウスでなぞるとまとめて塗れます。盤面を移動するには「なぞり塗り」をオフにします。'
-            : '下で色を選び、マスを押して塗ります。大きな盤面は上下左右にスクロールできます。';
+        inputMode = mode;
+        paintMode.setAttribute('aria-pressed', String(mode === 'trace'));
+        pickPaintedColor.setAttribute('aria-pressed', String(mode === 'pick'));
+        canvas.classList.toggle('is-painting', mode === 'trace');
+
+        const messages = {
+            paint: '下で色を選び、マスを押して塗ります。大きな盤面は上下左右にスクロールできます。',
+            trace: '指やマウスでなぞるとまとめて塗れます。盤面を移動するには「なぞり塗り」をオフにします。',
+            pick: '塗ったマスを押すと色を拾えます。キーボードでは Space または Enter を押します。',
+        };
+        instructions.textContent = messages[mode];
+    }
+
+    function pickCellColor({ row, column }) {
+        const color = cells[row][column];
+        if (color === blank || color < 0) return;
+        selectColor(color)?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        setInputMode('paint');
     }
 
     function pointFor(event, painting = false) {
@@ -1084,8 +1097,10 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         return record(changes, true);
     }
 
-    setTracing(false);
-    paintMode.onclick = () => setTracing(!tracing);
+    setInputMode('paint');
+    pickPaintedColor.disabled = false;
+    paintMode.onclick = () => setInputMode(inputMode === 'trace' ? 'paint' : 'trace');
+    pickPaintedColor.onclick = () => setInputMode(inputMode === 'pick' ? 'paint' : 'pick');
     function editCell(cell, color) {
         if (board.finished) return;
         stopStroke();
@@ -1106,6 +1121,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         const point = pointFor(event);
         const clue = boardClueAt(point, rowsOfClues, columnsOfClues);
         if (clue && clue.key === pressedClue) {
+            if (inputMode === 'pick') return;
             if (boardSetting('pickClueColor', board)) {
                 if (clue.color >= 0) selectColor(clue.color);
                 return;
@@ -1122,14 +1138,15 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         if (!cell) return;
         keyboardCell = cell;
         positionKeyboardCell();
-        if (!tracing) editCell(cell, g_selectcolor);
+        if (inputMode === 'pick') pickCellColor(cell);
+        else if (inputMode === 'paint') editCell(cell, g_selectcolor);
     };
     canvas.oncontextmenu = event => {
         if (event.pointerType === 'touch') return;
         const cell = boardCellAt(pointFor(event), columns, rows);
         if (!cell || board.finished) return;
         event.preventDefault();
-        toggleSlash(cell);
+        if (inputMode !== 'pick') toggleSlash(cell);
     };
     canvas.onfocus = () => {
         keyboardCell ??= { row: 0, column: 0 };
@@ -1155,7 +1172,9 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
             positionKeyboardCell(true);
         } else if ([' ', 'enter', 'x', 'delete', 'backspace'].includes(key)) {
             event.preventDefault();
-            if (key === 'x') {
+            if (inputMode === 'pick') {
+                if (!event.repeat && (key === ' ' || key === 'enter')) pickCellColor(keyboardCell);
+            } else if (key === 'x') {
                 if (!event.repeat) toggleSlash(keyboardCell);
             } else {
                 editCell(keyboardCell, key === 'delete' || key === 'backspace' ? blank : g_selectcolor);
@@ -1167,7 +1186,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         if (board.finished || stroke || !event.isPrimary || event.button !== 0) return;
         const point = pointFor(event);
         pressedClue = boardClueAt(point, rowsOfClues, columnsOfClues)?.key;
-        if (!tracing) return;
+        if (inputMode !== 'trace') return;
         const cell = boardCellAt(point, columns, rows);
         if (!cell) return;
         canvas.setPointerCapture(event.pointerId);
@@ -1199,6 +1218,8 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     return {
         finish() {
             board.finished = true;
+            if (inputMode === 'pick') setInputMode('paint');
+            pickPaintedColor.disabled = true;
             checkConflicts.disabled = true;
             if (clearConflicts()) renderBoard(true);
             pauseButton.disabled = true;
@@ -1460,9 +1481,12 @@ function drawUnderPalette(palette, usedColors, blank) {
 
     const buttons = new Map();
     function selectColor(color) {
+        const button = buttons.get(color);
+        if (!button) return;
         buttons.get(g_selectcolor)?.setAttribute('aria-pressed', 'false');
-        buttons.get(color).setAttribute('aria-pressed', 'true');
+        button.setAttribute('aria-pressed', 'true');
         g_selectcolor = color;
+        return button;
     }
 
     for (const color of colors) {

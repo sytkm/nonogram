@@ -135,7 +135,8 @@ h1 {
     cursor: crosshair;
 }
 
-#paint-mode[aria-pressed="true"] {
+#paint-mode[aria-pressed="true"],
+#pick-painted-color[aria-pressed="true"] {
     border-color: #174d85;
     background: #174d85;
     color: #fff;
