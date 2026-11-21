@@ -8,13 +8,13 @@
     <script src="inflate.min.js"></script>
     <script src="image-input.js"></script>
     <script src="play-clock.js"></script>
-    <script src="board-tools.js"></script>
+    <script src="board-tools.js?v=clue-eyedropper"></script>
     <script src="line-logic.js"></script>
     <script src="progress-store.js"></script>
     <script src="quality-controls.js"></script>
     <script src="mosaic.js"></script>
-    <script src="importfile.js"></script>
-    <link rel="stylesheet" href="style.css">
+    <script src="importfile.js?v=initial-paint-color"></script>
+    <link rel="stylesheet" href="style.css?v=clue-mode-controls">
     <title>画像でノノグラム</title>
 </head>
 
@@ -86,6 +86,11 @@
                         <button type="button" class="board-menu-button play-only" aria-controls="play-options" aria-expanded="false">問題</button>
                         <button type="button" id="return-mosaic" hidden>全体図に戻る</button>
                     </div>
+                    <div class="toolbar-group play-only" role="group" aria-labelledby="clue-mode-label">
+                        <span id="clue-mode-label">ヒント数字</span>
+                        <button type="button" class="clue-mode" id="clue-mark-mode" aria-pressed="true">チェック</button>
+                        <button type="button" class="clue-mode" id="clue-color-mode" aria-pressed="false">色を選ぶ</button>
+                    </div>
                 </div>
                 <div id="hint-tools" class="board-menu play-only" role="group" aria-label="ヒント・確認" hidden>
                     <button type="button" id="logic-hint" data-close-board-menu>考え方ヒント</button>
@@ -100,7 +105,6 @@
                     <a href="" id="share" class="action-link" target="_blank" rel="noopener">Twitterでシェア</a>
                     <a href="?" id="board-home" class="action-link">最初の画面に戻る</a>
                 </div>
-                <p class="play-instructions play-only">ヒント数字を押すとチェックできます。</p>
                 <p id="hint-message" class="play-only" role="status"></p>
                 <p id="conflict-message" role="status"></p>
                 <p id="board-result" role="status"></p>
@@ -148,7 +152,7 @@
         <section aria-labelledby="play-guide-title">
             <h3 id="play-guide-title">遊び方</h3>
             <p>上と左の数字は、同じ色で連続して塗るマスの数です。同じ色のまとまりの間には、少なくとも空白が1マス入ります。違う色のまとまりは隣り合うことがあります。</p>
-            <p>色パレットで色を選び、マスを押すと塗れます。空白だと分かったマスには斜線を付けられます。ヒント数字を押すと、解いた数字に印を付けられます。</p>
+            <p>色パレットで色を選び、マスを押すと塗れます。空白だと分かったマスには斜線を付けられます。盤面上の「ヒント数字」で、押した数字に印を付ける「チェック」と、その数字の色を選ぶ「色を選ぶ」を切り替えられます。「0」を押しても色は変わりません。</p>
             <p>「なぞり塗り」をオンにすると、指やマウスでなぞって複数のマスを塗れます。指で盤面を移動するときはオフにします。</p>
             <p id="keyboard-instructions">右クリックで斜線。Tabで盤面を選び、矢印キーで移動、SpaceまたはEnterで塗り、Xで斜線、Deleteで消去します。</p>
             <p>行・列ヒントはプレイ時間に1分、答えを見ると1行につき1分が加わります。</p>

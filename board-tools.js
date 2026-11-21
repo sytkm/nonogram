@@ -7,10 +7,12 @@ function boardClueAt(point, rows, columns) {
     const row = Math.floor(point.y);
     const column = Math.floor(point.x);
     if (row >= 0 && column < 0 && rows[row]?.length + column >= 0) {
-        return boardClueKey('row', row, rows[row].length + column);
+        const index = rows[row].length + column;
+        return { key: boardClueKey('row', row, index), color: rows[row][index][0] };
     }
     if (column >= 0 && row < 0 && columns[column]?.length + row >= 0) {
-        return boardClueKey('column', column, columns[column].length + row);
+        const index = columns[column].length + row;
+        return { key: boardClueKey('column', column, index), color: columns[column][index][0] };
     }
     return null;
 }
