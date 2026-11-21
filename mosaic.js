@@ -31,20 +31,41 @@ function splitMosaic(matrix, blank) {
     return { width, height, columns, tiles };
 }
 
+function mosaicExportScale(width, height) {
+    return Math.max(1, Math.min(32, Math.floor(1024 / Math.max(width, height))));
+}
+
+function prepareMosaicDownload(link, canvas) {
+    canvas.toBlob(blob => {
+        link.href = blob ? URL.createObjectURL(blob) : canvas.toDataURL('image/png');
+        link.hidden = false;
+    }, 'image/png');
+}
+
 function openMosaic({ matrix, palette, blank }) {
     const mosaic = splitMosaic(matrix, blank);
     const panel = document.getElementById('mosaic-panel');
     const title = document.getElementById('mosaic-title');
     const progress = document.getElementById('mosaic-progress');
     const grid = document.getElementById('mosaic-grid');
+    const map = document.getElementById('mosaic-map');
+    const instructions = document.getElementById('mosaic-instructions');
     const finished = document.getElementById('mosaic-finished');
     const canvas = document.getElementById('mosaic-image');
     const save = document.getElementById('mosaic-save');
+    const saveLarge = document.getElementById('mosaic-save-large');
     const styles = palette.map(color => 'rgb(' + color.join(',') + ')');
     let completedCount = mosaic.tiles.filter(tile => tile.complete).length;
     grid.replaceChildren();
     grid.style.setProperty('--mosaic-columns', mosaic.columns);
     finished.hidden = true;
+    map.hidden = false;
+    instructions.hidden = false;
+    for (const link of [save, saveLarge]) {
+        if (link.href.startsWith('blob:')) URL.revokeObjectURL(link.href);
+        link.removeAttribute('href');
+        link.hidden = true;
+    }
 
     function updateOverview(focusTarget) {
         setPlaying(false);
@@ -54,10 +75,22 @@ function openMosaic({ matrix, palette, blank }) {
         if (completedCount === mosaic.tiles.length && finished.hidden) {
             canvas.width = mosaic.width;
             canvas.height = mosaic.height;
-            canvas.style.width = Math.min(320, 320 * mosaic.width / mosaic.height) + 'px';
+            canvas.style.width = Math.min(480, 480 * mosaic.width / mosaic.height) + 'px';
             const context = canvas.getContext('2d');
             for (const tile of mosaic.tiles) drawPiece(context, tile, tile.left, tile.top);
-            save.href = canvas.toDataURL('image/png');
+            prepareMosaicDownload(save, canvas);
+            const scale = mosaicExportScale(mosaic.width, mosaic.height);
+            if (scale > 1) {
+                const enlarged = document.createElement('canvas');
+                enlarged.width = mosaic.width * scale;
+                enlarged.height = mosaic.height * scale;
+                const enlargedContext = enlarged.getContext('2d');
+                enlargedContext.imageSmoothingEnabled = false;
+                enlargedContext.drawImage(canvas, 0, 0, enlarged.width, enlarged.height);
+                prepareMosaicDownload(saveLarge, enlarged);
+            }
+            map.hidden = true;
+            instructions.hidden = true;
             finished.hidden = false;
             focusTarget = document.getElementById('mosaic-finished-title');
         }

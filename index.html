@@ -77,17 +77,22 @@
     </header>
     <main id="mosaic-panel" hidden>
         <h2 id="mosaic-title" tabindex="-1">分割ノノグラム</h2>
-        <p>区画を選んで遊びます。クリアした区画がつながって、一枚の絵になります。</p>
-        <p>元の画像からはみ出す端のマスは空白です。空白だけの区画は最初から完成しています。</p>
-        <p>途中の状態は、このページを開いている間だけ残ります。</p>
+        <div id="mosaic-instructions">
+            <p>区画を選んで遊びます。クリアした区画がつながって、一枚の絵になります。</p>
+            <p>元の画像からはみ出す端のマスは空白です。空白だけの区画は最初から完成しています。</p>
+            <p>途中の状態は、このページを開いている間だけ残ります。</p>
+        </div>
         <p id="mosaic-progress" role="status"></p>
-        <div class="mosaic-map" role="region" aria-label="区画の全体図" tabindex="0">
+        <div class="mosaic-map" id="mosaic-map" role="region" aria-label="区画の全体図" tabindex="0">
             <div id="mosaic-grid"></div>
         </div>
         <section id="mosaic-finished" hidden>
             <h3 id="mosaic-finished-title" tabindex="-1">絵が完成しました！</h3>
             <canvas id="mosaic-image" role="img" aria-label="すべての区画をつないだ完成画像"></canvas>
-            <a id="mosaic-save" download="nonogram-mosaic.png">完成画像を保存</a>
+            <div class="mosaic-downloads">
+                <a id="mosaic-save" download="nonogram-mosaic.png">完成画像を保存</a>
+                <a id="mosaic-save-large" download="nonogram-mosaic-large.png" hidden>拡大PNGを保存</a>
+            </div>
         </section>
         <p><a href="?">最初の画面に戻る</a></p>
     </main>

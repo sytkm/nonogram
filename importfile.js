@@ -298,7 +298,7 @@ function startPuzzle({ matrix, palette, blank }, options = {}) {
 
     const download = document.getElementById('downl');
     download.hidden = options.shared === true || Boolean(options.tileLabel);
-    document.getElementById('solve').hidden = options.shared === true || Boolean(options.tileLabel);
+    document.getElementById('solve').hidden = options.shared === true;
     download.onclick = () => {
         const link = document.createElement('a');
         link.href = document.getElementById('canvas').toDataURL('image/png');

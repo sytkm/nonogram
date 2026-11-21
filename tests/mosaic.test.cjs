@@ -47,3 +47,9 @@ test('1区画だけの画像や、400区画を超える画像には分割を出�
     assert.equal(context.canSplitPuzzle(image(200, 200)), true);
     assert.equal(context.canSplitPuzzle(image(201, 200)), false);
 });
+
+test('拡大PNGは整数倍のまま最長辺を抑え、すでに大きい画像は拡大しない', () => {
+    assert.equal(context.mosaicExportScale(22, 5), 32);
+    assert.equal(context.mosaicExportScale(125, 400), 2);
+    assert.equal(context.mosaicExportScale(1025, 10), 1);
+});
