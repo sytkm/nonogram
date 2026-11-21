@@ -80,12 +80,14 @@ h1 {
     pointer-events: none;
 }
 
-#hint-message {
+#hint-message,
+#conflict-message {
     margin: 0.4rem 0 0;
     font-size: 0.875rem;
 }
 
-#hint-message:empty {
+#hint-message:empty,
+#conflict-message:empty {
     display: none;
 }
 

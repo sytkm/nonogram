@@ -424,6 +424,8 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     const pauseMessage = document.getElementById('pause-message');
     const hint = document.getElementById('line-hint');
     const hintMessage = document.getElementById('hint-message');
+    const checkConflicts = document.getElementById('check-conflicts');
+    const conflictMessage = document.getElementById('conflict-message');
     const hintMarker = document.getElementById('hint-line-marker');
     const columns = answer[0].length;
     const rows = answer.length;
@@ -441,14 +443,23 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     let pressedClue;
     let pausedPosition;
     let highlightedHint;
+    let conflicts;
 
     function updateHistoryButtons() {
         undo.disabled = board.finished || !history.canUndo();
         redo.disabled = board.finished || !history.canRedo();
     }
 
+    function clearConflicts() {
+        const redraw = conflicts?.rows.size || conflicts?.columns.size;
+        conflicts = undefined;
+        conflictMessage.textContent = '';
+        return redraw;
+    }
+
     function record(changes) {
         history.record(changes);
+        if (conflicts && changes.some(change => 'row' in change) && clearConflicts()) renderBoard(true);
         updateHistoryButtons();
         queueProgressSave();
     }
@@ -458,6 +469,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         if (board.finished || !history[action]()) return;
         highlightedHint = undefined;
         hintMessage.textContent = '';
+        clearConflicts();
         positionHintMarker();
         renderBoard(true);
         updateHistoryButtons();
@@ -557,10 +569,12 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
 
         // ヒントを盤面側に揃え、どの行・列の数字か追いやすくする。
         rowsOfClues.forEach((clues, y) => clues.forEach((clue, x) =>
-            paintClue(leftClueCount - clues.length + x, topClueCount + y, clue, boardClueKey('row', y, x))
+            paintClue(leftClueCount - clues.length + x, topClueCount + y, clue,
+                boardClueKey('row', y, x), conflicts?.rows.has(y))
         ));
         columnsOfClues.forEach((clues, x) => clues.forEach((clue, y) =>
-            paintClue(leftClueCount + x, topClueCount - clues.length + y, clue, boardClueKey('column', x, y))
+            paintClue(leftClueCount + x, topClueCount - clues.length + y, clue,
+                boardClueKey('column', x, y), conflicts?.columns.has(x))
         ));
         renderFixedClues();
     }
@@ -577,7 +591,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         };
     }
 
-    function paintClue(column, row, [color, count], key) {
+    function paintClue(column, row, [color, count], key, hasConflict) {
         const { left, top, width, height } = rectangle(column, row);
         if (!width || !height) return;
         if (color >= 0) {
@@ -595,6 +609,13 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
             // Keep the number legible by striking through its lower half.
             const thickness = Math.max(1, Math.floor(height / 12));
             context.fillRect(left + width * 0.1, top + height * 0.60, width * 0.8, thickness);
+        }
+        if (hasConflict) {
+            const border = Math.max(1, Math.floor(Math.min(width, height) / 10));
+            context.fillStyle = '#a00020';
+            context.fillRect(left, top, width, border);
+            context.fillStyle = '#fff';
+            if (height >= 8) context.fillRect(left, top + border, width, 1);
         }
     }
 
@@ -657,6 +678,24 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     document.getElementById('zoom-fit').onclick = () => resizeBoard(fit(), false);
     const solve = document.getElementById('solve');
     hintMessage.textContent = '';
+    conflictMessage.textContent = '';
+    checkConflicts.disabled = false;
+    checkConflicts.onclick = () => {
+        stopStroke();
+        conflicts = findBoardConflicts(cells, rowsOfClues, columnsOfClues, blank);
+        const rowCount = conflicts.rows.size;
+        const columnCount = conflicts.columns.size;
+        if (rowCount || columnCount) {
+            const first = [];
+            if (rowCount) first.push('上から' + (conflicts.rows.values().next().value + 1) + '行目');
+            if (columnCount) first.push('左から' + (conflicts.columns.values().next().value + 1) + '列目');
+            conflictMessage.textContent = '矛盾があります（' + rowCount + '行・' + columnCount + '列）。' +
+                '最初の印は' + first.join('と') + 'です。';
+        } else {
+            conflictMessage.textContent = '今のところ、ヒント数字と矛盾する行・列はありません。';
+        }
+        renderBoard(true);
+    };
     hint.disabled = false;
     hint.onclick = () => {
         const result = pickLineHint(answer, cells, blank);
@@ -895,6 +934,8 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         finish() {
             board.finished = true;
             document.getElementById('check').disabled = true;
+            checkConflicts.disabled = true;
+            if (clearConflicts()) renderBoard(true);
             pauseButton.disabled = true;
             hint.disabled = true;
             solve.disabled = true;
