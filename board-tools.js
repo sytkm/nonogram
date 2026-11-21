@@ -1,0 +1,58 @@
+function boardClueKey(axis, line, index) {
+    return axis + ':' + line + ':' + index;
+}
+
+function boardClueAt(point, rows, columns) {
+    if (!point) return null;
+    const row = Math.floor(point.y);
+    const column = Math.floor(point.x);
+    if (row >= 0 && column < 0 && rows[row]?.length + column >= 0) {
+        return boardClueKey('row', row, rows[row].length + column);
+    }
+    if (column >= 0 && row < 0 && columns[column]?.length + row >= 0) {
+        return boardClueKey('column', column, columns[column].length + row);
+    }
+    return null;
+}
+
+function createBoardHistory(state) {
+    // Board changes are kept in place so switching tiles preserves their state.
+    const past = state.past ??= [];
+    const future = state.future ??= [];
+
+    function apply(change, value) {
+        if ('key' in change) {
+            if (value) state.marks[change.key] = true;
+            else delete state.marks[change.key];
+        } else {
+            state.cells[change.row][change.column] = value;
+        }
+    }
+
+    return {
+        canUndo: () => past.length > 0,
+        canRedo: () => future.length > 0,
+        record(changes) {
+            if (!changes.length) return;
+            past.push(changes);
+            if (past.length > 50) past.shift();
+            future.length = 0;
+        },
+        undo() {
+            const action = past.pop();
+            if (!action) return false;
+            for (let index = action.length - 1; index >= 0; index--) {
+                apply(action[index], action[index].before);
+            }
+            future.push(action);
+            return true;
+        },
+        redo() {
+            const action = future.pop();
+            if (!action) return false;
+            for (const change of action) apply(change, change.after);
+            past.push(action);
+            return true;
+        },
+    };
+}

@@ -8,6 +8,7 @@
     <script src="inflate.min.js"></script>
     <script src="image-input.js"></script>
     <script src="play-clock.js"></script>
+    <script src="board-tools.js"></script>
     <script src="mosaic.js"></script>
     <script src="importfile.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -62,6 +63,8 @@
                 <div class="board-tools" role="group" aria-label="盤面の操作">
                     <button type="button" id="check">答え合わせ</button>
                     <button type="button" id="line-hint">ヒント <small>+1分</small></button>
+                    <button type="button" id="board-undo" disabled>元に戻す</button>
+                    <button type="button" id="board-redo" disabled>やり直す</button>
                     <button type="button" id="zoom-out" aria-label="盤面を縮小">−</button>
                     <button type="button" id="zoom-in" aria-label="盤面を拡大">＋</button>
                     <button type="button" id="zoom-fit">全体を表示</button>
@@ -83,6 +86,7 @@
                         </div>
                     </details>
                 </div>
+                <p class="play-instructions">ヒント数字を押すとチェックできます。</p>
                 <p id="hint-message" role="status"></p>
             </div>
         </div>
