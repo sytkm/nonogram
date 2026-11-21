@@ -447,9 +447,11 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     const context = canvas.getContext('2d');
     const keyboardMarker = document.getElementById('keyboard-cell-marker');
     const stickClues = document.getElementById('stick-clues');
+    const autoSlash = document.getElementById('auto-slash');
     const clueOverlay = document.getElementById('fixed-clues');
     const clueContext = clueOverlay.getContext('2d');
     stickClues.checked = board.stickClues !== false;
+    autoSlash.checked = board.autoSlash === true;
     const symbols = document.getElementById('color-symbols');
     const undo = document.getElementById('board-undo');
     const redo = document.getElementById('board-redo');
@@ -503,7 +505,11 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         return redraw;
     }
 
-    function record(changes) {
+    function record(changes, assist = false) {
+        if (assist && autoSlash.checked) {
+            const remaining = findCompletedLineBlanks(cells, rowsOfClues, columnsOfClues, blank, changes);
+            for (const cell of remaining) applyColor(cell, -1, changes);
+        }
         history.record(changes);
         const cellsChanged = changes.some(change => 'row' in change);
         if (cellsChanged) {
@@ -832,7 +838,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         const { axis, index, changes } = result;
         const action = [];
         for (const { row, column, color } of changes) applyColor({ row, column }, color, action);
-        record(action);
+        record(action, true);
         highlightedHint = { axis, index };
         const lineLabel = axis === 'row' ? '上から' + (index + 1) + '行目' : '左から' + (index + 1) + '列目';
         hintMessage.textContent = lineLabel + 'をヒントで埋めました（1分加算）。';
@@ -940,7 +946,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         const { id, changes } = stroke;
         stroke = undefined;
         if (canvas.hasPointerCapture(id)) canvas.releasePointerCapture(id);
-        return record(changes);
+        return record(changes, true);
     }
 
     setTracing(false);
@@ -950,7 +956,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         stopStroke();
         const action = [];
         applyColor(cell, color, action);
-        if (record(action)) onEdit();
+        if (record(action, true)) onEdit();
     }
 
     function toggleSlash(cell) {
@@ -1051,6 +1057,10 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     stickClues.onchange = () => {
         board.stickClues = stickClues.checked;
         renderFixedClues();
+        queueProgressSave();
+    };
+    autoSlash.onchange = () => {
+        board.autoSlash = autoSlash.checked;
         queueProgressSave();
     };
     refreshBoard = () => renderBoard();
@@ -1235,7 +1245,40 @@ function calcNumber(arr) {
 function checkNumber(checkarr, targetmatrix, alpha) {
     const [lines] = checkarr;
     return lines.length === targetmatrix.length && lines.every((expected, index) =>
-        String(expected) === String(lineClues(targetmatrix[index], alpha)));
+        lineMatchesClues(targetmatrix[index], expected, alpha));
+}
+
+function lineMatchesClues(line, clues, blank) {
+    return String(clues) === String(lineClues(line, blank));
+}
+
+function findCompletedLineBlanks(cells, rowsOfClues, columnsOfClues, blank, changes) {
+    const rows = new Set();
+    const columns = new Set();
+    for (const { row, column, after } of changes) {
+        if (after !== blank && after >= 0) {
+            rows.add(row);
+            columns.add(column);
+        }
+    }
+
+    const remaining = new Map();
+    const width = cells[0].length;
+    for (const row of rows) {
+        const line = cells[row];
+        if (!line.includes(blank) || !lineMatchesClues(line, rowsOfClues[row], blank)) continue;
+        line.forEach((color, column) => {
+            if (color === blank) remaining.set(row * width + column, { row, column });
+        });
+    }
+    for (const column of columns) {
+        const line = cells.map(row => row[column]);
+        if (!line.includes(blank) || !lineMatchesClues(line, columnsOfClues[column], blank)) continue;
+        line.forEach((color, row) => {
+            if (color === blank) remaining.set(row * width + column, { row, column });
+        });
+    }
+    return remaining.values();
 }
 
 function lineClues(line, blank) {

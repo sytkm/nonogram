@@ -77,3 +77,28 @@ test('クリア判定は元画像と別の配置でも行・列のヒントが�
     assert.equal(context.checkNumber(rowClues, wrongColumns, 0), true);
     assert.equal(context.checkNumber(columnClues, context.transpose(wrongColumns), 0), false);
 });
+
+test('新しく塗ったマスの行・列が完成したら、残りの未入力マスを重複なく選ぶ', () => {
+    const cells = [[0, 1, -1], [1, 0, 0], [0, 0, 0]];
+    const rows = [[[1, 1]], [[1, 3]], [[1, 1]]];
+    const columns = [[[1, 1]], [[1, 3]], [[1, 1]]];
+    const changes = [{ row: 0, column: 1, before: 0, after: 1 },
+        { row: 1, column: 0, before: 0, after: 1 }];
+    const result = context.findCompletedLineBlanks(cells, rows, columns, 0, changes);
+    assert.deepEqual(Array.from(result, ({ row, column }) => [row, column]), [[0, 0], [2, 0]]);
+    assert.deepEqual(cells, [[0, 1, -1], [1, 0, 0], [0, 0, 0]]);
+});
+
+test('色やかたまりが一致しない行・列や、斜線の消去では補助を適用しない', () => {
+    const cells = [[9, 1, 1, 9]];
+    const columns = [[[2, 1]], [[2, 1]], [[2, 1]], [[2, 1]]];
+    const changes = [{ row: 0, column: 1, before: 9, after: 1 }];
+    for (const clues of [[[1, 1], [1, 1]], [[2, 2]]]) {
+        const result = context.findCompletedLineBlanks(cells, [clues], columns, 9, changes);
+        assert.deepEqual(Array.from(result), []);
+    }
+
+    const erasure = [{ row: 0, column: 0, before: -1, after: 9 }];
+    const result = context.findCompletedLineBlanks(cells, [[[1, 2]]], columns, 9, erasure);
+    assert.deepEqual(Array.from(result), []);
+});
