@@ -7,12 +7,14 @@ let g_selectcolor = 0;
 let refreshBoard;
 let finishStroke;
 let playClock;
+let restoredColorSource;
 
 // 5×5の十字を描いたパレット形式のサンプルPNG。
 const samplePNG = 'iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAMAAAC6sdbXAAAABlBMVEX///8wW6NnOUAjAAAAFUlEQVR4nGNgYGBkAAEQyQgCDEgiAAClAAqu0sLdAAAAAElFTkSuQmCC';
 
 window.onload = function () {
     setupImagePicker();
+    setupProgressRestore();
     window.addEventListener('resize', () => refreshBoard?.());
     window.setInterval(() => {
         if (!document.getElementById('play-panel').hidden) updatePlayTime();
@@ -162,7 +164,23 @@ function setupImagePicker() {
     mode.addEventListener('change', updatePreview);
     threshold.addEventListener('input', updatePreview);
     document.getElementById('reset-threshold').addEventListener('click', resetThreshold);
-    document.getElementById('preview-monochrome').addEventListener('click', () => openPreview(true));
+    document.getElementById('preview-monochrome').addEventListener('click', async () => {
+        const source = restoredColorSource;
+        if (!source) {
+            openPreview(true);
+            return;
+        }
+        const selection = currentImage;
+        try {
+            const bytes = Uint8Array.from(atob(source), character => character.charCodeAt(0));
+            const decoded = await readPuzzleImage(new Blob([bytes], { type: 'image/png' }));
+            if (source !== restoredColorSource || selection !== currentImage) return;
+            currentImage = { image: decoded.image, format: decoded.format };
+            openPreview(true);
+        } catch {
+            document.getElementById('progress-warning').textContent = '元の画像を開けませんでした。';
+        }
+    });
     resumeColor.addEventListener('click', () => setPlaying(true));
     playPreview.addEventListener('click', () => {
         startPuzzle(currentImage.puzzle, { generated: true });
@@ -175,6 +193,7 @@ function setPlaying(playing) {
     else {
         finishStroke?.();
         playClock?.suspend();
+        flushProgress();
     }
     document.getElementById('start-panel').hidden = playing;
     document.getElementById('mosaic-panel').hidden = true;
@@ -273,6 +292,7 @@ function startPuzzle({ matrix, palette, blank }, options = {}) {
     playClock?.suspend();
     const clock = options.clock ?? createPlayClock();
     playClock = clock;
+    restoredColorSource = options.progressId && options.canConvert ? options.shareSource : undefined;
     const board = options.board ?? {};
     const cells = board.cells ??= matrix.map(row => row.map(() => blank));
     board.marks ??= {};
@@ -345,6 +365,7 @@ function startPuzzle({ matrix, palette, blank }, options = {}) {
             clock.finish();
             updatePlayTime();
             controls.finish();
+            queueProgressSave();
             if (options.onSolved) {
                 options.onSolved();
                 return;
@@ -352,6 +373,17 @@ function startPuzzle({ matrix, palette, blank }, options = {}) {
         }
         alert(solved ? '正解！' : 'まだ一致していません。');
     };
+    if (!options.onReturn) {
+        const { sample, shared, generated, shareSource, canConvert } = options;
+        setProgressSource(() => ({
+            kind: 'board',
+            puzzle: { matrix, palette, blank },
+            options: { sample, shared, generated, shareSource, canConvert },
+            board,
+            clock: clock.snapshot(),
+        }), options.progressId);
+    }
+    if (board.finished) controls.finish();
     if (options.tileLabel) returnToMosaic.focus();
 }
 
@@ -414,6 +446,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     function record(changes) {
         history.record(changes);
         updateHistoryButtons();
+        queueProgressSave();
     }
 
     function moveHistory(action) {
@@ -424,6 +457,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         positionHintMarker();
         renderBoard(true);
         updateHistoryButtons();
+        queueProgressSave();
     }
 
     function positionKeyboardCell(scroll = false) {
@@ -617,7 +651,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     document.getElementById('check').disabled = false;
     pauseButton.disabled = false;
     pauseButton.textContent = '一時停止';
-    pauseButton.onclick = () => {
+    function togglePause() {
         if (pausedPosition) {
             setPlayAreaVisible(true);
             viewport.scrollLeft = pausedPosition.left;
@@ -632,8 +666,14 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         }
         pauseMessage.hidden = !pausedPosition;
         pauseButton.textContent = pausedPosition ? '再開' : '一時停止';
+        board.paused = Boolean(pausedPosition);
         updatePlayTime();
+    }
+    pauseButton.onclick = () => {
+        togglePause();
+        queueProgressSave();
     };
+    if (board.paused && !board.finished) togglePause();
 
     function setTracing(enabled) {
         stopStroke();
@@ -698,6 +738,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         board.showSymbols = symbols.checked;
         palettePanel.classList.toggle('show-symbols', symbols.checked);
         renderBoard(true);
+        queueProgressSave();
     };
     canvas.onclick = event => {
         if (board.finished || !event.detail) return;

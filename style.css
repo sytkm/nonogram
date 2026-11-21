@@ -324,3 +324,12 @@ h1 {
 #color-palette:not(.show-symbols) .palette-symbol {
     display: none;
 }
+
+#progress-warning {
+    margin: 0.25rem 1rem;
+    font-size: 0.875rem;
+}
+
+#progress-warning:empty {
+    display: none;
+}
