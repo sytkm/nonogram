@@ -25,9 +25,9 @@ function createPlayClock(now = () => performance.now()) {
         elapsed() {
             return saved + (startedAt === null ? 0 : now() - startedAt);
         },
-        addAnswerPenalty(rows) {
+        addPenalty(minutes) {
             if (finished) return;
-            saved += rows * 60_000;
+            saved += minutes * 60_000;
             start();
         },
         finish() {
