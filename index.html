@@ -20,7 +20,12 @@
 
 <body>
     <header>
-        <h1>画像でノノグラム</h1>
+        <div class="site-heading">
+            <h1>画像でノノグラム</h1>
+            <button type="button" id="open-settings" aria-haspopup="dialog" aria-controls="settings-dialog">
+                <span aria-hidden="true">⚙</span> 設定
+            </button>
+        </div>
         <div id="start-panel">
             <p>画像からノノグラムを作れます。画像がなくても、サンプルですぐに遊べます。</p>
             <div id="saved-progress" hidden>
@@ -78,7 +83,6 @@
                     </div>
                     <div class="toolbar-group" role="group" aria-label="操作メニュー">
                         <button type="button" class="board-menu-button play-only" aria-controls="hint-tools" aria-expanded="false">ヒント・確認</button>
-                        <button type="button" class="board-menu-button play-only" aria-controls="view-tools" aria-expanded="false">表示設定</button>
                         <button type="button" class="board-menu-button play-only" aria-controls="play-options" aria-expanded="false">問題</button>
                         <button type="button" id="return-mosaic" hidden>全体図に戻る</button>
                     </div>
@@ -89,19 +93,12 @@
                     <button type="button" id="check-conflicts" data-close-board-menu>矛盾チェック</button>
                     <button type="button" id="solve" data-close-board-menu>答えを見る <small class="penalty" id="answer-penalty"></small></button>
                 </div>
-                <div id="view-tools" class="board-menu play-only" role="group" aria-label="表示設定" hidden>
-                    <label class="play-only"><input type="checkbox" id="stick-clues" checked> ヒント数字を固定</label>
-                    <label class="play-only" id="color-symbol-option"><input type="checkbox" id="color-symbols"> 色の記号を表示</label>
-                </div>
                 <div id="play-options" class="board-menu play-only" role="group" aria-label="問題" hidden>
                     <button type="button" id="split-board" hidden>10×10に分けて遊ぶ</button>
                     <button type="button" id="downl">画像を保存</button>
                     <button type="button" id="preview-monochrome" hidden>同じ画像を白黒に変換</button>
                     <a href="" id="share" class="action-link" target="_blank" rel="noopener">Twitterでシェア</a>
                     <a href="?" id="board-home" class="action-link">最初の画面に戻る</a>
-                    <label><input type="checkbox" id="auto-slash"> 完成した行・列の空白に斜線</label>
-                    <p class="play-instructions menu-note">上と左の数字は、色ごとに連続して塗るマスの数です。</p>
-                    <p class="play-instructions menu-note" id="keyboard-instructions">右クリックで斜線。Tab で盤面を選び、矢印キーで移動、Space または Enter で塗り、X で斜線、Delete で消去。</p>
                 </div>
                 <p class="play-instructions play-only">ヒント数字を押すとチェックできます。</p>
                 <p id="hint-message" class="play-only" role="status"></p>
@@ -137,6 +134,26 @@
         </section>
         <p><a href="?" class="action-link">最初の画面に戻る</a></p>
     </main>
+    <dialog id="settings-dialog" aria-labelledby="settings-title">
+        <div class="settings-heading">
+            <h2 id="settings-title">設定</h2>
+            <form method="dialog"><button type="submit" autofocus>閉じる</button></form>
+        </div>
+        <fieldset>
+            <legend>共通設定</legend>
+            <label><input type="checkbox" id="stick-clues" checked> ヒント数字を固定</label>
+            <label><input type="checkbox" id="color-symbols"> 色の記号を表示（カラー問題）</label>
+            <label><input type="checkbox" id="auto-slash"> 完成した行・列の空白に斜線</label>
+        </fieldset>
+        <section aria-labelledby="play-guide-title">
+            <h3 id="play-guide-title">遊び方</h3>
+            <p>上と左の数字は、同じ色で連続して塗るマスの数です。同じ色のまとまりの間には、少なくとも空白が1マス入ります。違う色のまとまりは隣り合うことがあります。</p>
+            <p>色パレットで色を選び、マスを押すと塗れます。空白だと分かったマスには斜線を付けられます。ヒント数字を押すと、解いた数字に印を付けられます。</p>
+            <p>「なぞり塗り」をオンにすると、指やマウスでなぞって複数のマスを塗れます。指で盤面を移動するときはオフにします。</p>
+            <p id="keyboard-instructions">右クリックで斜線。Tabで盤面を選び、矢印キーで移動、SpaceまたはEnterで塗り、Xで斜線、Deleteで消去します。</p>
+            <p>行・列ヒントはプレイ時間に1分、答えを見ると1行につき1分が加わります。</p>
+        </section>
+    </dialog>
     <dialog id="prepare-puzzle" aria-labelledby="prepare-puzzle-message">
         <p id="prepare-puzzle-message" role="status">答えが一つになるよう盤面を確認しています…</p>
     </dialog>

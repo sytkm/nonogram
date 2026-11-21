@@ -202,6 +202,8 @@ h1 {
 .paint-tools button,
 .board-tools button,
 .board-menu button,
+#open-settings,
+.settings-heading button,
 .action-link {
     box-sizing: border-box;
     min-height: 44px;
@@ -226,6 +228,8 @@ h1 {
 .paint-tools button:hover:not(:disabled),
 .board-tools button:hover:not(:disabled),
 .board-menu button:hover:not(:disabled),
+#open-settings:hover,
+.settings-heading button:hover,
 .action-link:hover,
 .board-menu-button[aria-expanded="true"] {
     background: #e1ebf8;
@@ -236,6 +240,8 @@ h1 {
 .paint-tools button:focus-visible,
 .board-tools button:focus-visible,
 .board-menu button:focus-visible,
+#open-settings:focus-visible,
+.settings-heading button:focus-visible,
 .action-link:focus-visible {
     outline: 2px solid #175caa;
     outline-offset: 2px;
@@ -250,17 +256,54 @@ h1 {
     cursor: default;
 }
 
-.board-menu label:not([hidden]) {
-    display: inline-flex;
+.site-heading,
+.settings-heading {
+    display: flex;
     align-items: center;
-    min-height: 44px;
-    font-size: 0.875rem;
+    justify-content: space-between;
+    gap: 0.5rem;
 }
 
-.menu-note {
-    flex-basis: 100%;
-    margin: 0.25rem 0 0;
-    font-size: 0.875rem;
+#open-settings,
+.settings-heading button {
+    flex: none;
+}
+
+#settings-dialog {
+    box-sizing: border-box;
+    width: min(34rem, calc(100% - 2rem));
+    max-height: calc(100% - 2rem);
+    padding: 1rem;
+    border: 1px solid #aebccc;
+    border-radius: 0.5rem;
+    color: #203751;
+}
+
+#settings-dialog::backdrop {
+    background: rgb(20 35 55 / 45%);
+}
+
+.settings-heading h2 {
+    margin: 0;
+    font-size: 1.25rem;
+}
+
+#settings-dialog fieldset {
+    margin: 0.75rem 0 0;
+    padding: 0.25rem 0.65rem;
+    border: 1px solid #d3dce8;
+    border-radius: 0.35rem;
+}
+
+#settings-dialog label {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    gap: 0.5rem;
+}
+
+#settings-dialog p {
+    margin: 0.5rem 0;
 }
 
 .penalty {

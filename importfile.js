@@ -5,6 +5,11 @@ let g_selectcolor = 0;
 
 // 表示中の盤面だけ、画面の解像度が変わったときに描き直す。
 let refreshBoard;
+let refreshBoardSettings;
+let boardForSettings;
+const boardSettingDefaults = { stickClues: true, showSymbols: false, autoSlash: false };
+const boardSettings = {};
+const boardSettingsKey = 'nonogram.settings';
 let finishStroke;
 let playClock;
 let restoredColorSource;
@@ -16,6 +21,7 @@ window.onload = async function () {
     setupImagePicker();
     setupProgressRestore();
     setupBoardMenus();
+    setupSettings();
     window.addEventListener('resize', () => refreshBoard?.());
     window.setInterval(() => {
         if (!document.getElementById('play-panel').hidden) updatePlayTime();
@@ -199,6 +205,7 @@ function setupImagePicker() {
     resumeColor.addEventListener('click', () => {
         resetPreviewQuality();
         setPlaying(true);
+        refreshBoardSettings?.();
     });
     playPreview.addEventListener('click', () => {
         resetPreviewQuality();
@@ -227,6 +234,46 @@ function setupBoardMenus() {
         showBoardMenu();
         document.querySelector('[aria-controls="hint-tools"]').focus({ preventScroll: true });
     }, { capture: true });
+}
+
+function boardSetting(name, board) {
+    return boardSettings[name] ?? board?.[name] ?? boardSettingDefaults[name];
+}
+
+function setupSettings() {
+    const dialog = document.getElementById('settings-dialog');
+    const playPanel = document.getElementById('play-panel');
+    const settingsInputs = {
+        stickClues: document.getElementById('stick-clues'),
+        showSymbols: document.getElementById('color-symbols'),
+        autoSlash: document.getElementById('auto-slash'),
+    };
+    try {
+        const saved = JSON.parse(localStorage.getItem(boardSettingsKey));
+        for (const name of Object.keys(settingsInputs)) {
+            if (typeof saved?.[name] === 'boolean') boardSettings[name] = saved[name];
+        }
+    } catch {
+        // Play with defaults when browser storage is unavailable.
+    }
+    for (const [name, input] of Object.entries(settingsInputs)) {
+        input.onchange = () => {
+            boardSettings[name] = input.checked;
+            try {
+                localStorage.setItem(boardSettingsKey, JSON.stringify(boardSettings));
+            } catch {
+                // Keep the setting in memory for this page.
+            }
+            if (!playPanel.hidden) refreshBoardSettings?.();
+        };
+    }
+    document.getElementById('open-settings').onclick = () => {
+        showBoardMenu();
+        for (const [name, input] of Object.entries(settingsInputs)) {
+            input.checked = boardSetting(name, playPanel.hidden ? undefined : boardForSettings);
+        }
+        dialog.showModal();
+    };
 }
 
 function setPlaying(playing) {
@@ -516,22 +563,16 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     const canvas = document.getElementById('canvas');
     const context = canvas.getContext('2d');
     const keyboardMarker = document.getElementById('keyboard-cell-marker');
-    const stickClues = document.getElementById('stick-clues');
-    const autoSlash = document.getElementById('auto-slash');
     const clueOverlay = document.getElementById('fixed-clues');
     const clueContext = clueOverlay.getContext('2d');
-    stickClues.checked = board.stickClues !== false;
-    autoSlash.checked = board.autoSlash === true;
-    const symbols = document.getElementById('color-symbols');
     const undo = document.getElementById('board-undo');
     const redo = document.getElementById('board-redo');
     const history = createBoardHistory(board);
     let keyboardCell;
     keyboardMarker.hidden = true;
-    symbols.checked = multiColor && Boolean(board.showSymbols);
-    document.getElementById('color-symbol-option').hidden = !multiColor;
+    let showSymbols = multiColor && boardSetting('showSymbols', board);
     const palettePanel = document.getElementById('color-palette');
-    palettePanel.classList.toggle('show-symbols', symbols.checked);
+    palettePanel.classList.toggle('show-symbols', showSymbols);
     const zoomIn = document.getElementById('zoom-in');
     const zoomOut = document.getElementById('zoom-out');
     const paintMode = document.getElementById('paint-mode');
@@ -576,7 +617,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     }
 
     function record(changes, assist = false) {
-        if (assist && autoSlash.checked) {
+        if (assist && boardSetting('autoSlash', board)) {
             const remaining = findCompletedLineBlanks(cells, rowsOfClues, columnsOfClues, blank, changes);
             for (const cell of remaining) applyColor(cell, -1, changes);
         }
@@ -613,7 +654,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     }
 
     function clueGutters() {
-        return stickClues.checked
+        return boardSetting('stickClues', board)
             ? fixedClueGutters(viewport.scrollLeft, viewport.scrollTop, viewport.clientWidth,
                 viewport.clientHeight, leftClueCount * cellSize, topClueCount * cellSize)
             : { left: 0, top: 0 };
@@ -745,7 +786,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
             context.fillStyle = '#111';
         }
         if (cellSize >= 6 && width >= 4 && height >= 4) {
-            const text = symbols.checked && color >= 0 ? count + '·' + paletteSymbol(color, blank) : String(count);
+            const text = showSymbols && color >= 0 ? count + '·' + paletteSymbol(color, blank) : String(count);
             context.fillText(text, left + width / 2, top + height / 2, width * 0.9);
         }
         if (board.marks[key]) {
@@ -785,7 +826,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
             if (row === rows - 1) context.fillRect(left, top + height - border, width, border);
             if (column === columns - 1) context.fillRect(left + width - border, top, border, height);
         }
-        if (symbols.checked && color >= 0 && color !== blank && cellSize >= 6 && width >= 4 && height >= 4) {
+        if (showSymbols && color >= 0 && color !== blank && cellSize >= 6 && width >= 4 && height >= 4) {
             context.fillStyle = chooseTextColor(...palette[color]);
             context.fillText(paletteSymbol(color, blank), left + width / 2, top + height / 2, width * 0.85);
         }
@@ -1039,12 +1080,6 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     undo.onclick = () => moveHistory('undo');
     redo.onclick = () => moveHistory('redo');
     updateHistoryButtons();
-    symbols.onchange = () => {
-        board.showSymbols = symbols.checked;
-        palettePanel.classList.toggle('show-symbols', symbols.checked);
-        renderBoard(true);
-        queueProgressSave();
-    };
     canvas.onclick = event => {
         if (board.finished || !event.detail) return;
         const point = pointFor(event);
@@ -1127,14 +1162,11 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         if (event.pointerId === stroke?.id && stopStroke()) onEdit();
     };
     viewport.onscroll = renderFixedClues;
-    stickClues.onchange = () => {
-        board.stickClues = stickClues.checked;
-        renderFixedClues();
-        queueProgressSave();
-    };
-    autoSlash.onchange = () => {
-        board.autoSlash = autoSlash.checked;
-        queueProgressSave();
+    boardForSettings = board;
+    refreshBoardSettings = () => {
+        showSymbols = multiColor && boardSetting('showSymbols', board);
+        palettePanel.classList.toggle('show-symbols', showSymbols);
+        renderBoard(true);
     };
     refreshBoard = () => renderBoard();
     finishStroke = stopStroke;
