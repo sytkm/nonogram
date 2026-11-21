@@ -103,7 +103,8 @@ h1 {
 #hint-message,
 #conflict-message,
 #board-result,
-#quality-play-note {
+#quality-play-note,
+#board-logic-result {
     margin: 0.4rem 0 0;
     font-size: 0.875rem;
 }

@@ -13,6 +13,7 @@ const boardSettingsKey = 'nonogram.settings';
 let finishStroke;
 let playClock;
 let restoredColorSource;
+let boardLogicRequest;
 
 // 5×5の十字を描いたパレット形式のサンプルPNG。
 const samplePNG = 'iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAMAAAC6sdbXAAAABlBMVEX///8wW6NnOUAjAAAAFUlEQVR4nGNgYGBkAAEQyQgCDEgiAAClAAqu0sLdAAAAAElFTkSuQmCC';
@@ -55,15 +56,33 @@ function setupImagePicker() {
     const splitPreview = document.getElementById('split-preview');
     let currentImage;
     const previewQuality = document.getElementById('preview-quality');
+    const previewLogic = document.getElementById('preview-logic');
+    let previewLogicResult;
+    function readPreviewClues() {
+        const { matrix, blank } = currentImage.puzzle;
+        return { rows: makeNumber(matrix, blank)[0], columns: makeNumber(transpose(matrix), blank)[0], blank };
+    }
     const resetPreviewQuality = setupQualityCheck(previewQuality,
-        document.getElementById('preview-quality-result'), () => {
-            const { matrix, blank } = currentImage.puzzle;
-            return { rows: makeNumber(matrix, blank)[0], columns: makeNumber(transpose(matrix), blank)[0], blank };
-        });
+        document.getElementById('preview-quality-result'), readPreviewClues);
+    const resetPreviewLogic = setupQualityCheck(previewLogic,
+        document.getElementById('preview-logic-result'),
+        () => ({ ...readPreviewClues(), check: 'logic', answer: currentImage.puzzle.matrix }),
+        result => {
+            previewLogicResult = result?.preparation ? result : undefined;
+            const fixed = result?.preparation?.fixedSlashes.length;
+            return lineSolvabilityMessage(result) + (fixed ? ' 最初からある青い斜線を含めて調べました。' : '');
+        }, '行・列の推理で解けるか調べています…');
+
+    function resetPreviewChecks() {
+        resetPreviewQuality();
+        resetPreviewLogic();
+        previewQuality.disabled = playPreview.disabled;
+        previewLogic.disabled = playPreview.disabled;
+        previewLogicResult = undefined;
+    }
 
     function updatePreview() {
-        resetPreviewQuality();
-        previewQuality.disabled = playPreview.disabled;
+        resetPreviewChecks();
         const useColor = mode.value === 'color';
         if (useColor && !currentImage.colorPuzzle) {
             currentImage.colorPuzzle = makeColorPuzzle(currentImage.imageData);
@@ -142,7 +161,7 @@ function setupImagePicker() {
         if (!file) return;
         const selection = {};
         currentImage = selection;
-        resetPreviewQuality();
+        resetPreviewChecks();
         preview.hidden = true;
         status.textContent = '画像を読み込んでいます…';
         try {
@@ -176,8 +195,7 @@ function setupImagePicker() {
         playPreview.disabled = !side.validity.valid || !side.value;
         splitPreview.disabled = playPreview.disabled;
         if (playPreview.disabled) {
-            resetPreviewQuality();
-            previewQuality.disabled = true;
+            resetPreviewChecks();
         } else {
             updateSize();
         }
@@ -203,16 +221,17 @@ function setupImagePicker() {
         }
     });
     resumeColor.addEventListener('click', () => {
-        resetPreviewQuality();
+        resetPreviewChecks();
         setPlaying(true);
         refreshBoardSettings?.();
     });
     playPreview.addEventListener('click', () => {
-        resetPreviewQuality();
-        startPuzzle(currentImage.puzzle, { generated: true });
+        const initialCheck = previewLogicResult;
+        resetPreviewChecks();
+        startPuzzle(currentImage.puzzle, { generated: true, initialCheck });
     });
     splitPreview.addEventListener('click', () => {
-        resetPreviewQuality();
+        resetPreviewChecks();
         openMosaic(currentImage.puzzle);
     });
 }
@@ -387,9 +406,15 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
     finishStroke?.();
     playClock?.suspend();
     const board = options.board ?? {};
+    boardLogicRequest?.cancel();
+    boardLogicRequest = undefined;
     const hasSavedCells = Boolean(board.cells);
     const rowClues = makeNumber(matrix, blank);
     const columnClues = makeNumber(transpose(matrix), blank);
+    if (options.initialCheck) {
+        board.quality = options.initialCheck.preparation.quality;
+        board.fixedSlashes = options.initialCheck.preparation.fixedSlashes;
+    }
     if (!board.quality && !hasSavedCells) {
         const preparation = document.getElementById('prepare-puzzle');
         preparation.oncancel = event => event.preventDefault();
@@ -428,6 +453,25 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
             ? '答えが一つか確認できなかったため、ヒント数字に合う配置でクリアになります。'
             : '';
     qualityNote.hidden = !qualityNote.textContent;
+    const logicResult = document.getElementById('board-logic-result');
+    logicResult.textContent = '';
+    if (!options.review && !options.sample) {
+        if (options.initialCheck) {
+            logicResult.textContent = lineSolvabilityMessage(options.initialCheck);
+        } else {
+            logicResult.textContent = '行・列の推理で解けるか調べています…';
+            const request = requestPuzzleQuality({
+                rows: rowClues[0], columns: columnClues[0], blank,
+                fixedSlashes: board.fixedSlashes, check: 'logic',
+            });
+            boardLogicRequest = request;
+            request.result.then(outcome => {
+                if (boardLogicRequest !== request) return;
+                boardLogicRequest = undefined;
+                logicResult.textContent = lineSolvabilityMessage(outcome);
+            });
+        }
+    }
     const usedColors = options.generated
         ? new Set([...palette.slice(1).map((_, i) => i + 1), blank])
         : new Set(matrix.flat());

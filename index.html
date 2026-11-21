@@ -11,10 +11,10 @@
     <script src="board-tools.js?v=clue-eyedropper"></script>
     <script src="line-logic.js"></script>
     <script src="progress-store.js"></script>
-    <script src="quality-controls.js"></script>
+    <script src="quality-controls.js?v=line-solvability"></script>
     <script src="mosaic.js"></script>
-    <script src="importfile.js?v=first-play-guide"></script>
-    <link rel="stylesheet" href="style.css?v=first-play-guide">
+    <script src="importfile.js?v=line-solvability"></script>
+    <link rel="stylesheet" href="style.css?v=line-solvability">
     <title>画像でノノグラム</title>
 </head>
 
@@ -62,6 +62,8 @@
                 <p id="preview-message" role="status"></p>
                 <button type="button" id="preview-quality">答えが一つか調べる</button>
                 <p id="preview-quality-result" class="quality-result" role="status"></p>
+                <button type="button" id="preview-logic">行・列の推理で解けるか調べる</button>
+                <p id="preview-logic-result" class="quality-result" role="status"></p>
                 <button type="button" id="play-preview">この問題で遊ぶ</button>
                 <button type="button" id="split-preview" hidden>10×10に分けて遊ぶ</button>
                 <button type="button" id="resume-color" hidden>カラー問題に戻る</button>
@@ -76,6 +78,7 @@
             <div id="play-actions">
                 <p id="mosaic-tile-label" class="play-instructions" hidden></p>
                 <p class="play-instructions play-only" id="paint-instructions">下で色を選び、マスを押して塗ります。大きな盤面は上下左右にスクロールできます。</p>
+                <p id="board-logic-result" class="quality-result" role="status"></p>
                 <div class="board-tools" role="group" aria-label="盤面の操作">
                     <div class="toolbar-group" role="group" aria-label="盤面の大きさ">
                         <button type="button" id="zoom-out" aria-label="盤面を縮小">−</button>
