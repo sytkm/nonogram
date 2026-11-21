@@ -95,7 +95,8 @@ h1 {
 
 #hint-message,
 #conflict-message,
-#board-result {
+#board-result,
+#quality-play-note {
     margin: 0.4rem 0 0;
     font-size: 0.875rem;
 }

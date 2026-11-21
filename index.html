@@ -108,6 +108,7 @@
                 <p id="hint-message" role="status"></p>
                 <p id="conflict-message" role="status"></p>
                 <p id="board-result" role="status"></p>
+                <p id="quality-play-note" role="status" hidden></p>
             </div>
         </div>
     </header>
@@ -136,6 +137,9 @@
         </section>
         <p><a href="?">最初の画面に戻る</a></p>
     </main>
+    <dialog id="prepare-puzzle" aria-labelledby="prepare-puzzle-message">
+        <p id="prepare-puzzle-message" role="status">答えが一つになるよう盤面を確認しています…</p>
+    </dialog>
     <dialog id="restart-dialog" aria-labelledby="restart-title" aria-describedby="restart-message">
         <form method="dialog">
             <h2 id="restart-title">最初からやり直す</h2>

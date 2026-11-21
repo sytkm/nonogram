@@ -13,7 +13,7 @@ let restoredColorSource;
 // 5×5の十字を描いたパレット形式のサンプルPNG。
 const samplePNG = 'iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAMAAAC6sdbXAAAABlBMVEX///8wW6NnOUAjAAAAFUlEQVR4nGNgYGBkAAEQyQgCDEgiAAClAAqu0sLdAAAAAElFTkSuQmCC';
 
-window.onload = function () {
+window.onload = async function () {
     setupImagePicker();
     setupProgressRestore();
     window.addEventListener('resize', () => refreshBoard?.());
@@ -26,9 +26,9 @@ window.onload = function () {
 
     try {
         if (query === '?sample') {
-            startPuzzle(decodeLegacyPng(samplePNG), { sample: true });
+            await startPuzzle(decodeLegacyPng(samplePNG), { sample: true });
         } else {
-            startPuzzle(decodeLegacyPng(decodeURIComponent(query.slice(1))), { shared: true });
+            await startPuzzle(decodeLegacyPng(decodeURIComponent(query.slice(1))), { shared: true });
         }
     } catch {
         document.getElementById('image-status').textContent =
@@ -148,7 +148,7 @@ function setupImagePicker() {
                 try {
                     const src = await readBase64(file);
                     if (currentImage !== selection) return;
-                    startPuzzle(decodeLegacyPng(src), { shareSource: src, canConvert: true });
+                    await startPuzzle(decodeLegacyPng(src), { shareSource: src, canConvert: true });
                     return;
                 } catch {
                     if (currentImage !== selection) return;
@@ -310,31 +310,56 @@ function decodeLegacyPng(src) {
     return { matrix, palette, blank };
 }
 
-function startPuzzle({ matrix, palette, blank }, options = {}) {
+async function startPuzzle({ matrix, palette, blank }, options = {}) {
     resetBoardQuality?.();
     finishStroke?.();
     playClock?.suspend();
+    const board = options.board ?? {};
+    const rowClues = makeNumber(matrix, blank);
+    const columnClues = makeNumber(transpose(matrix), blank);
+    if (!board.quality && !board.cells) {
+        const preparation = document.getElementById('prepare-puzzle');
+        preparation.oncancel = event => event.preventDefault();
+        preparation.showModal();
+        try {
+            const { result } = requestPuzzleQuality({
+                rows: rowClues[0], columns: columnClues[0], blank, answer: matrix,
+            });
+            const checked = await result;
+            board.quality = checked?.quality ?? 'inconclusive';
+            board.fixedSlashes = checked?.fixedSlashes ?? [];
+        } finally {
+            preparation.close();
+        }
+    }
+
     const clock = options.clock ?? createPlayClock();
     playClock = clock;
     restoredColorSource = options.progressId && options.canConvert ? options.shareSource : undefined;
-    const board = options.board ?? {};
     const result = document.getElementById('board-result');
     const restart = document.getElementById('restart-board');
     const restartDialog = document.getElementById('restart-dialog');
     restart.textContent = '最初からやり直す';
     result.textContent = '';
     result.classList.remove('is-complete');
-    const cells = board.cells ??= matrix.map(row => row.map(() => blank));
+    const fixedSlashes = new Set(board.fixedSlashes);
+    const cells = board.cells ??= matrix.map((row, y) => row.map((_, x) =>
+        fixedSlashes.has(y * row.length + x) ? -1 : blank));
     board.marks ??= {};
+    const qualityNote = document.getElementById('quality-play-note');
+    qualityNote.textContent = fixedSlashes.size
+        ? '青い斜線は、答えが一つに決まるための空白マスです。'
+        : board.quality === 'inconclusive'
+            ? '答えが一つか確認できなかったため、ヒント数字に合う配置でクリアになります。'
+            : '';
+    qualityNote.hidden = !qualityNote.textContent;
     const usedColors = options.generated
         ? new Set([...palette.slice(1).map((_, i) => i + 1), blank])
         : new Set(matrix.flat());
     g_selectcolor = usedColors.values().next().value;
-    const rowClues = makeNumber(matrix, blank);
-    const columnClues = makeNumber(transpose(matrix), blank);
     resetBoardQuality = setupQualityCheck(document.getElementById('board-quality'),
         document.getElementById('board-quality-result'),
-        () => ({ rows: rowClues[0], columns: columnClues[0], blank }));
+        () => ({ rows: rowClues[0], columns: columnClues[0], blank, fixedSlashes: [...fixedSlashes] }));
 
     const widthInCells = matrix[0].length + rowClues[1];
     const heightInCells = matrix.length + columnClues[1];
@@ -351,7 +376,7 @@ function startPuzzle({ matrix, palette, blank }, options = {}) {
     try {
         drawUnderPalette(palette, usedColors, blank);
         controls = setupBoard(matrix, palette, blank, rowClues, columnClues, initialCellSize, clock, board,
-            [...usedColors].filter(color => color !== blank).length > 1, onEdit);
+            [...usedColors].filter(color => color !== blank).length > 1, onEdit, fixedSlashes);
     } catch (error) {
         setPlaying(false);
         throw error;
@@ -400,8 +425,9 @@ function startPuzzle({ matrix, palette, blank }, options = {}) {
 
     function checkCompletion(showIncomplete = false) {
         if (board.finished) return;
-        const solved = checkNumber(rowClues, cells, blank) &&
-            checkNumber(columnClues, transpose(cells), blank);
+        const solved = board.quality === 'unique'
+            ? matchesIntendedImage(matrix, cells, blank)
+            : checkNumber(rowClues, cells, blank) && checkNumber(columnClues, transpose(cells), blank);
         if (!solved) {
             if (showIncomplete) result.textContent = 'まだヒント数字と一致していません。';
             return;
@@ -429,7 +455,7 @@ function startPuzzle({ matrix, palette, blank }, options = {}) {
         restartDialog.returnValue = '';
         restartDialog.showModal();
     };
-    restartDialog.onclose = () => {
+    restartDialog.onclose = async () => {
         if (restartDialog.returnValue !== 'restart') return;
         finishStroke();
         // Keep the same board object so a mosaic retains the fresh state for this tile.
@@ -440,7 +466,7 @@ function startPuzzle({ matrix, palette, blank }, options = {}) {
         delete board.finished;
         delete board.paused;
         clock.reset();
-        startPuzzle({ matrix, palette, blank }, { ...options, board, clock });
+        await startPuzzle({ matrix, palette, blank }, { ...options, board, clock });
         queueProgressSave();
         document.getElementById('canvas').focus({ preventScroll: true });
     };
@@ -467,7 +493,7 @@ function boardResolution(width, height, pixelRatio) {
     };
 }
 
-function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSize, clock, board, multiColor, onEdit) {
+function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSize, clock, board, multiColor, onEdit, fixedSlashes) {
     const { cells } = board;
     const viewport = document.getElementById('pixelcanvas');
     const canvas = document.getElementById('canvas');
@@ -729,7 +755,9 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     function paintCell(row, column, color) {
         const { left, top, width, height } = rectangle(leftClueCount + column, topClueCount + row);
         if (!width || !height) return;
-        context.fillStyle = color === blank || color < 0 ? '#fff' : 'rgb(' + palette[color].join(',') + ')';
+        const fixed = fixedSlashes.has(row * columns + column);
+        context.fillStyle = fixed ? '#e4efff' : color === blank || color < 0
+            ? '#fff' : 'rgb(' + palette[color].join(',') + ')';
         context.fillRect(left, top, width, height);
 
         const border = Math.min(width, height) >= 24 ? 2 : 1;
@@ -745,8 +773,8 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
             context.fillText(paletteSymbol(color, blank), left + width / 2, top + height / 2, width * 0.85);
         }
         if (color < 0 && Math.min(width, height) >= 4) {
-            context.strokeStyle = '#222';
-            context.lineWidth = border;
+            context.strokeStyle = fixed ? '#225494' : '#222';
+            context.lineWidth = fixed ? border + 1 : border;
             context.beginPath();
             context.moveTo(left + width - border, top + border);
             context.lineTo(left + border, top + height - border);
@@ -946,6 +974,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     }
 
     function applyColor({ row, column }, color, action) {
+        if (fixedSlashes.has(row * columns + column)) return;
         clock.start();
         const before = cells[row][column];
         if (before === color) return;
@@ -1105,6 +1134,13 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
             updateHistoryButtons();
         },
     };
+}
+
+function matchesIntendedImage(answer, board, blank) {
+    return answer.every((line, row) => line.every((color, column) => {
+        const painted = board[row][column];
+        return painted === color || (color === blank && painted === -1);
+    }));
 }
 
 function pickLineHint(answer, board, blank, random = Math.random) {
