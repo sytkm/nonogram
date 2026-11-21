@@ -287,7 +287,8 @@ h1 {
     flex: none;
 }
 
-#settings-dialog {
+#settings-dialog,
+#play-guide-dialog {
     box-sizing: border-box;
     width: min(34rem, calc(100% - 2rem));
     max-height: calc(100% - 2rem);
@@ -297,7 +298,8 @@ h1 {
     color: #203751;
 }
 
-#settings-dialog::backdrop {
+#settings-dialog::backdrop,
+#play-guide-dialog::backdrop {
     background: rgb(20 35 55 / 45%);
 }
 
@@ -320,8 +322,42 @@ h1 {
     gap: 0.5rem;
 }
 
-#settings-dialog p {
+#play-guide-dialog p {
     margin: 0.5rem 0;
+}
+
+#settings-dialog [data-open-play-guide],
+.guide-more {
+    margin-top: 0.75rem;
+}
+
+.guide-example {
+    border-collapse: collapse;
+}
+
+.guide-example th {
+    padding-inline-end: 0.6rem;
+    text-align: right;
+    white-space: nowrap;
+}
+
+.guide-example td {
+    box-sizing: border-box;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: 1px solid #5c6b7a;
+    color: #111;
+    text-align: center;
+}
+
+.guide-example .guide-filled {
+    background: #111;
+    border-color: #808080;
+}
+
+.guide-more summary {
+    padding-block: 0.65rem;
+    cursor: pointer;
 }
 
 .penalty {

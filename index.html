@@ -13,8 +13,8 @@
     <script src="progress-store.js"></script>
     <script src="quality-controls.js"></script>
     <script src="mosaic.js"></script>
-    <script src="importfile.js?v=pick-painted-color"></script>
-    <link rel="stylesheet" href="style.css?v=pick-painted-color">
+    <script src="importfile.js?v=first-play-guide"></script>
+    <link rel="stylesheet" href="style.css?v=first-play-guide">
     <title>画像でノノグラム</title>
 </head>
 
@@ -33,6 +33,7 @@
                 <small>このブラウザに直近の1問を自動保存します。</small>
             </div>
             <a href="?sample" class="action-link">サンプル問題で遊ぶ</a>
+            <button type="button" class="action-link" data-open-play-guide aria-haspopup="dialog" aria-controls="play-guide-dialog">遊び方</button>
             <label for="file">自分の画像で作る</label>
             <input type="file" id="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp">
             <p>PNG・JPEG・WebPに対応しています。カラー問題にできるPNGは、選ぶとすぐに遊べます。画像はブラウザ内で処理します。</p>
@@ -149,15 +150,40 @@
             <label><input type="checkbox" id="color-symbols"> 色の記号を表示（カラー問題）</label>
             <label><input type="checkbox" id="auto-slash"> 完成した行・列の空白に斜線</label>
         </fieldset>
-        <section aria-labelledby="play-guide-title">
-            <h3 id="play-guide-title">遊び方</h3>
-            <p>上と左の数字は、同じ色で連続して塗るマスの数です。同じ色のまとまりの間には、少なくとも空白が1マス入ります。違う色のまとまりは隣り合うことがあります。</p>
-            <p>色パレットで色を選び、マスを押すと塗れます。空白だと分かったマスには斜線を付けられます。盤面上の「ヒント数字」で、押した数字に印を付ける「チェック」と、その数字の色を選ぶ「色を選ぶ」を切り替えられます。「0」を押しても色は変わりません。</p>
-            <p>「なぞり塗り」をオンにすると、指やマウスでなぞって複数のマスを塗れます。指で盤面を移動するときはオフにします。</p>
-            <p>「スポイト」をオンにして塗ったマスを選ぶと、その色をパレットで選べます。色を拾うとスポイトはオフになります。</p>
-            <p id="keyboard-instructions">右クリックで斜線。Tabで盤面を選び、矢印キーで移動、SpaceまたはEnterで塗り、Xで斜線、Deleteで消去します。</p>
+        <button type="button" class="action-link" data-open-play-guide aria-haspopup="dialog" aria-controls="play-guide-dialog">遊び方</button>
+    </dialog>
+    <dialog id="play-guide-dialog" aria-labelledby="play-guide-title">
+        <div class="settings-heading">
+            <h2 id="play-guide-title">遊び方</h2>
+            <form method="dialog"><button type="submit" autofocus>閉じる</button></form>
+        </div>
+        <p>盤面の左の数字は横一行、上の数字は縦一列のヒントです。数字は、続けて塗るマスの数を表します。</p>
+        <table class="guide-example" aria-label="3マスの横一行の例">
+            <tbody>
+                <tr>
+                    <th scope="row">3</th>
+                    <td class="guide-filled" aria-label="塗る"></td>
+                    <td class="guide-filled" aria-label="塗る"></td>
+                    <td class="guide-filled" aria-label="塗る"></td>
+                </tr>
+                <tr>
+                    <th scope="row">1 1</th>
+                    <td class="guide-filled" aria-label="塗る"></td>
+                    <td aria-label="空白"><span aria-hidden="true">／</span></td>
+                    <td class="guide-filled" aria-label="塗る"></td>
+                </tr>
+            </tbody>
+        </table>
+        <p>「3」は3マス続けて塗ります。「1 1」は1マスずつのまとまりが2つです。同じ色のまとまりの間には、空白が少なくとも1マス入ります。空白だと分かったマスには、パレットで斜線を選んで印を付けられます。</p>
+        <p>サンプルは横5マスです。左に「5」とある真ん中の行は、下のパレットで青を選び、5マスすべてを塗れます。</p>
+        <a href="?sample" class="action-link">サンプル問題で遊ぶ</a>
+        <details class="guide-more">
+            <summary>カラー・分割・ヒント・キーボード操作</summary>
+            <p>カラー問題では、ヒント数字と同じ色を塗ります。違う色のまとまりは隣り合うことがあります。「ヒント数字」で、数字のチェックと色選択を切り替えられます。「0」を押しても色は変わりません。「スポイト」では、塗ったマスから色を選べます。</p>
+            <p>大きな画像は「10×10に分けて遊ぶ」で区画ごとに解けます。「なぞり塗り」をオンにすると複数のマスをまとめて塗れます。指で盤面を移動するときはオフにします。</p>
             <p>行・列ヒントはプレイ時間に1分、答えを見ると1行につき1分が加わります。</p>
-        </section>
+            <p id="keyboard-instructions">右クリックで斜線。Tabで盤面を選び、矢印キーで移動、SpaceまたはEnterで塗り、Xで斜線、Deleteで消去します。</p>
+        </details>
     </dialog>
     <dialog id="prepare-puzzle" aria-labelledby="prepare-puzzle-message">
         <p id="prepare-puzzle-message" role="status">答えが一つになるよう盤面を確認しています…</p>
