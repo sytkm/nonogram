@@ -13,8 +13,8 @@
     <script src="progress-store.js"></script>
     <script src="quality-controls.js"></script>
     <script src="mosaic.js"></script>
-    <script src="importfile.js?v=initial-paint-color"></script>
-    <link rel="stylesheet" href="style.css?v=horizontal-palette">
+    <script src="importfile.js?v=pick-painted-color"></script>
+    <link rel="stylesheet" href="style.css?v=pick-painted-color">
     <title>画像でノノグラム</title>
 </head>
 
@@ -154,6 +154,7 @@
             <p>上と左の数字は、同じ色で連続して塗るマスの数です。同じ色のまとまりの間には、少なくとも空白が1マス入ります。違う色のまとまりは隣り合うことがあります。</p>
             <p>色パレットで色を選び、マスを押すと塗れます。空白だと分かったマスには斜線を付けられます。盤面上の「ヒント数字」で、押した数字に印を付ける「チェック」と、その数字の色を選ぶ「色を選ぶ」を切り替えられます。「0」を押しても色は変わりません。</p>
             <p>「なぞり塗り」をオンにすると、指やマウスでなぞって複数のマスを塗れます。指で盤面を移動するときはオフにします。</p>
+            <p>「スポイト」をオンにして塗ったマスを選ぶと、その色をパレットで選べます。色を拾うとスポイトはオフになります。</p>
             <p id="keyboard-instructions">右クリックで斜線。Tabで盤面を選び、矢印キーで移動、SpaceまたはEnterで塗り、Xで斜線、Deleteで消去します。</p>
             <p>行・列ヒントはプレイ時間に1分、答えを見ると1行につき1分が加わります。</p>
         </section>
@@ -180,6 +181,7 @@
     <div id="fix-phone-under-menu" hidden>
         <div class="toolbar-group paint-tools" role="group" aria-label="塗りと編集">
             <button type="button" id="paint-mode" aria-pressed="false" aria-describedby="paint-instructions">なぞり塗り</button>
+            <button type="button" id="pick-painted-color" aria-pressed="false" aria-describedby="paint-instructions">スポイト</button>
             <button type="button" id="board-undo" disabled>元に戻す</button>
             <button type="button" id="board-redo" disabled>やり直す</button>
         </div>
