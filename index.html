@@ -49,12 +49,13 @@
             </div>
         </div>
         <div id="play-panel" hidden>
-            <p class="play-instructions">下で色を選び、マスを押して塗ります。大きな盤面は上下左右にスクロールできます。</p>
+            <p class="play-instructions" id="paint-instructions">下で色を選び、マスを押して塗ります。大きな盤面は上下左右にスクロールできます。</p>
             <div class="board-tools" role="group" aria-label="盤面の操作">
                 <button type="button" id="check">答え合わせ</button>
                 <button type="button" id="zoom-out" aria-label="盤面を縮小">−</button>
                 <button type="button" id="zoom-in" aria-label="盤面を拡大">＋</button>
                 <button type="button" id="zoom-fit">全体を表示</button>
+                <button type="button" id="paint-mode" aria-pressed="false" aria-describedby="paint-instructions">なぞり塗り</button>
                 <details id="play-options">
                     <summary>その他</summary>
                     <p class="play-instructions">上と左の数字は、色ごとに連続して塗るマスの数です。</p>
