@@ -157,16 +157,13 @@ function openMosaic({ matrix, palette, blank }) {
             tile.clock ??= createPlayClock();
             startPuzzle({ matrix: tile.answer, palette, blank }, {
                 tileLabel: label + ' / ' + mosaic.tiles.length,
-                initialBoard: tile.progress,
+                board: tile.board ??= {},
                 clock: tile.clock,
-                onReturn: () => {
-                    tile.progress = g_drawmatrix;
-                    updateOverview(button);
-                },
+                onReturn: () => updateOverview(button),
                 onSolved: () => {
                     tile.complete = true;
                     completedCount++;
-                    tile.progress = undefined;
+                    tile.board = undefined;
                     reveal(tile, button);
                     updateOverview(grid.querySelector('button:not(:disabled)') ?? title);
                 },
