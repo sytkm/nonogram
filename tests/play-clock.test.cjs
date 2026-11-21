@@ -90,3 +90,20 @@ test('プレイ時間の保存から復元し、ページを閉じていた時�
     now += 4000;
     assert.equal(finished.elapsed(), 64_000);
 });
+
+test('クリア後に再スタートすると経過時間と加算を消し、初回操作から計測できる', () => {
+    let now = 1000;
+    const clock = context.createPlayClock(() => now);
+    clock.addPenalty(5);
+    now += 2000;
+    clock.finish();
+    assert.equal(clock.elapsed(), 302_000);
+
+    clock.reset();
+    clock.resume();
+    now += 3000;
+    assert.deepEqual({ ...clock.snapshot() }, { elapsed: 0, started: false, finished: false });
+    clock.start();
+    now += 1100;
+    assert.equal(clock.elapsed(), 1100);
+});

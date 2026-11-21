@@ -294,6 +294,12 @@ function startPuzzle({ matrix, palette, blank }, options = {}) {
     playClock = clock;
     restoredColorSource = options.progressId && options.canConvert ? options.shareSource : undefined;
     const board = options.board ?? {};
+    const result = document.getElementById('board-result');
+    const restart = document.getElementById('restart-board');
+    const restartDialog = document.getElementById('restart-dialog');
+    restart.textContent = '最初からやり直す';
+    result.textContent = '';
+    result.classList.remove('is-complete');
     const cells = board.cells ??= matrix.map(row => row.map(() => blank));
     board.marks ??= {};
     const usedColors = options.generated
@@ -317,7 +323,7 @@ function startPuzzle({ matrix, palette, blank }, options = {}) {
     try {
         drawUnderPalette(palette, usedColors, blank);
         controls = setupBoard(matrix, palette, blank, rowClues, columnClues, initialCellSize, clock, board,
-            [...usedColors].filter(color => color !== blank).length > 1);
+            [...usedColors].filter(color => color !== blank).length > 1, onEdit);
     } catch (error) {
         setPlaying(false);
         throw error;
@@ -350,28 +356,65 @@ function startPuzzle({ matrix, palette, blank }, options = {}) {
     download.hidden = options.shared === true || Boolean(options.tileLabel);
     document.getElementById('answer-controls').hidden = options.shared === true;
     document.getElementById('answer-penalty').textContent =
-        '答えを見るたび ' + matrix.length + '分加算（1行につき1分）';
+        '答えを見ると ' + matrix.length + '分加算してクリア（1行につき1分）';
     download.onclick = () => {
         const link = document.createElement('a');
         link.href = document.getElementById('canvas').toDataURL('image/png');
         link.download = 'nonogram.png';
         link.click();
     };
-    document.getElementById('check').onclick = () => {
-        finishStroke();
+    function showClear() {
+        controls.finish();
+        result.textContent = 'クリア！';
+        result.classList.add('is-complete');
+        restart.textContent = 'もう一度遊ぶ';
+    }
+
+    function checkCompletion(showIncomplete = false) {
+        if (board.finished) return;
         const solved = checkNumber(rowClues, cells, blank) &&
             checkNumber(columnClues, transpose(cells), blank);
-        if (solved) {
-            clock.finish();
-            updatePlayTime();
-            controls.finish();
-            queueProgressSave();
-            if (options.onSolved) {
-                options.onSolved();
-                return;
-            }
+        if (!solved) {
+            if (showIncomplete) result.textContent = 'まだヒント数字と一致していません。';
+            return;
         }
-        alert(solved ? '正解！' : 'まだ一致していません。');
+        clock.finish();
+        updatePlayTime();
+        showClear();
+        queueProgressSave();
+        options.onSolved?.();
+    }
+
+    function onEdit() {
+        result.textContent = '';
+        checkCompletion();
+    }
+
+    document.getElementById('check').onclick = () => {
+        finishStroke();
+        checkCompletion(true);
+    };
+    restart.onclick = () => {
+        const target = options.tileLabel ? 'この区画' : 'この問題';
+        document.getElementById('restart-message').textContent =
+            target + 'の入力とプレイ時間をリセットします。';
+        restartDialog.returnValue = '';
+        restartDialog.showModal();
+    };
+    restartDialog.onclose = () => {
+        if (restartDialog.returnValue !== 'restart') return;
+        finishStroke();
+        // Keep the same board object so a mosaic retains the fresh state for this tile.
+        delete board.cells;
+        delete board.marks;
+        delete board.past;
+        delete board.future;
+        delete board.finished;
+        delete board.paused;
+        clock.reset();
+        startPuzzle({ matrix, palette, blank }, { ...options, board, clock });
+        queueProgressSave();
+        document.getElementById('canvas').focus({ preventScroll: true });
     };
     if (!options.onReturn) {
         const { sample, shared, generated, shareSource, canConvert } = options;
@@ -383,7 +426,7 @@ function startPuzzle({ matrix, palette, blank }, options = {}) {
             clock: clock.snapshot(),
         }), options.progressId);
     }
-    if (board.finished) controls.finish();
+    if (board.finished) showClear();
     if (options.tileLabel) returnToMosaic.focus();
 }
 
@@ -396,7 +439,7 @@ function boardResolution(width, height, pixelRatio) {
     };
 }
 
-function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSize, clock, board, multiColor) {
+function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSize, clock, board, multiColor, onEdit) {
     const { cells } = board;
     const viewport = document.getElementById('pixelcanvas');
     const canvas = document.getElementById('canvas');
@@ -459,9 +502,11 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
 
     function record(changes) {
         history.record(changes);
-        if (conflicts && changes.some(change => 'row' in change) && clearConflicts()) renderBoard(true);
+        const cellsChanged = changes.some(change => 'row' in change);
+        if (conflicts && cellsChanged && clearConflicts()) renderBoard(true);
         updateHistoryButtons();
         queueProgressSave();
+        return cellsChanged;
     }
 
     function moveHistory(action) {
@@ -474,6 +519,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         renderBoard(true);
         updateHistoryButtons();
         queueProgressSave();
+        onEdit();
     }
 
     function clueGutters() {
@@ -700,7 +746,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     hint.onclick = () => {
         const result = pickLineHint(answer, cells, blank);
         if (!result) {
-            hintMessage.textContent = 'すべてのマスがそろっています。答え合わせを押してください。';
+            onEdit();
             return;
         }
         stopStroke();
@@ -726,6 +772,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
                 viewport.scrollLeft = left - Math.max(0, (viewport.clientWidth - cellSize) / 2);
             }
         }
+        onEdit();
     };
     solve.disabled = false;
     solve.onclick = () => {
@@ -739,6 +786,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         hintMessage.textContent = '';
         positionHintMarker();
         renderBoard(true);
+        onEdit();
     };
     document.getElementById('check').disabled = false;
     pauseButton.disabled = false;
@@ -815,7 +863,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         const { id, changes } = stroke;
         stroke = undefined;
         if (canvas.hasPointerCapture(id)) canvas.releasePointerCapture(id);
-        record(changes);
+        return record(changes);
     }
 
     setTracing(false);
@@ -825,7 +873,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         stopStroke();
         const action = [];
         applyColor(cell, color, action);
-        record(action);
+        if (record(action)) onEdit();
     }
 
     function toggleSlash(cell) {
@@ -917,10 +965,10 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     canvas.onpointerup = event => {
         if (!stroke || event.pointerId !== stroke.id) return;
         continueStroke(event);
-        stopStroke();
+        if (stopStroke()) onEdit();
     };
     canvas.onpointercancel = canvas.onlostpointercapture = event => {
-        if (event.pointerId === stroke?.id) stopStroke();
+        if (event.pointerId === stroke?.id && stopStroke()) onEdit();
     };
     viewport.onscroll = renderFixedClues;
     stickClues.onchange = () => {
@@ -1089,8 +1137,9 @@ function optimizeData(source, bitdepth) {
 function calcNumber(arr) {
     const calculated = [[arr[0], 1]];
     for (let i = 1; i < arr.length; i++) {
-        if (calculated.slice(-1)[0][0] === arr[i]) {
-            calculated.slice(-1)[0][1]++;
+        const last = calculated[calculated.length - 1];
+        if (last[0] === arr[i]) {
+            last[1]++;
         } else {
             calculated.push([arr[i], 1]);
         }
@@ -1106,7 +1155,14 @@ function calcNumber(arr) {
  * @return {Boolean} - 合っているか間違っているか
  */
 function checkNumber(checkarr, targetmatrix, alpha) {
-    return String(checkarr) === String(makeNumber(targetmatrix, alpha));
+    const [lines] = checkarr;
+    return lines.length === targetmatrix.length && lines.every((expected, index) =>
+        String(expected) === String(lineClues(targetmatrix[index], alpha)));
+}
+
+function lineClues(line, blank) {
+    const clues = calcNumber(line).filter(([color]) => color !== blank && color !== -1);
+    return clues.length ? clues : [[-1, 0]];
 }
 
 /**
@@ -1119,11 +1175,7 @@ function makeNumber(arr, alpha) {
     const numberrowarray = [];
     let maxnumber = 0;
     for (let i = 0; i < arr.length; i++) {
-        let calcnum = calcNumber(arr[i]);
-        calcnum = calcnum.filter(x => (x[0] !== alpha)&&(x[0] !== -1));
-        if (calcnum.length === 0) {
-            calcnum.push([-1, 0]);
-        }
+        const calcnum = lineClues(arr[i], alpha);
         numberrowarray.push(calcnum);
         maxnumber = Math.max(maxnumber, calcnum.length);
     }

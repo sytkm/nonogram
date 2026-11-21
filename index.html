@@ -62,6 +62,7 @@
             <div class="play-clock">
                 <div>プレイ時間 <span id="play-time" role="timer" aria-label="プレイ時間">00:00</span></div>
                 <button type="button" id="pause-play">一時停止</button>
+                <button type="button" id="restart-board">最初からやり直す</button>
             </div>
             <div id="play-actions">
                 <p id="mosaic-tile-label" class="play-instructions" hidden></p>
@@ -99,6 +100,7 @@
                 <p class="play-instructions">ヒント数字を押すとチェックできます。</p>
                 <p id="hint-message" role="status"></p>
                 <p id="conflict-message" role="status"></p>
+                <p id="board-result" role="status"></p>
             </div>
         </div>
     </header>
@@ -127,6 +129,14 @@
         </section>
         <p><a href="?">最初の画面に戻る</a></p>
     </main>
+    <dialog id="restart-dialog" aria-labelledby="restart-title" aria-describedby="restart-message">
+        <form method="dialog">
+            <h2 id="restart-title">最初からやり直す</h2>
+            <p id="restart-message"></p>
+            <button value="cancel" autofocus>キャンセル</button>
+            <button value="restart">やり直す</button>
+        </form>
+    </dialog>
     <p id="progress-warning" role="status"></p>
     <p id="pause-message" role="status" hidden>一時停止中です。「再開」を押すと盤面が表示されます。</p>
     <div id="pixelcanvas" hidden>

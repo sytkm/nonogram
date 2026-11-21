@@ -33,6 +33,12 @@ function createPlayClock(now = () => performance.now(), state = {}) {
             saved += minutes * 60_000;
             start();
         },
+        reset() {
+            saved = 0;
+            startedAt = null;
+            started = false;
+            finished = false;
+        },
         finish() {
             suspend();
             finished = true;

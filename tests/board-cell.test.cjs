@@ -64,3 +64,16 @@ test('斜めの線が途中で通るマスだけを塗り、盤面の外とヒ�
         [[1, 3], [1, 2], [1, 1], [1, 0]]);
     assert.deepEqual(trace({ x: -1, y: -1 }, { x: 0.5, y: -1 }), []);
 });
+
+test('クリア判定は元画像と別の配置でも行・列のヒントが一致すれば受け入れる', () => {
+    const original = [[1, 0], [0, 1]];
+    const alternate = [[-1, 1], [1, 0]];
+    const rowClues = context.makeNumber(original, 0);
+    const columnClues = context.makeNumber(context.transpose(original), 0);
+    assert.equal(context.checkNumber(rowClues, alternate, 0), true);
+    assert.equal(context.checkNumber(columnClues, context.transpose(alternate), 0), true);
+
+    const wrongColumns = [[1, 0], [1, 0]];
+    assert.equal(context.checkNumber(rowClues, wrongColumns, 0), true);
+    assert.equal(context.checkNumber(columnClues, context.transpose(wrongColumns), 0), false);
+});
