@@ -7,6 +7,7 @@ let g_selectcolor = 0;
 let refreshBoard;
 let finishStroke;
 let playClock;
+let resetBoardQuality;
 let restoredColorSource;
 
 // 5×5の十字を描いたパレット形式のサンプルPNG。
@@ -47,8 +48,16 @@ function setupImagePicker() {
     const playPreview = document.getElementById('play-preview');
     const splitPreview = document.getElementById('split-preview');
     let currentImage;
+    const previewQuality = document.getElementById('preview-quality');
+    const resetPreviewQuality = setupQualityCheck(previewQuality,
+        document.getElementById('preview-quality-result'), () => {
+            const { matrix, blank } = currentImage.puzzle;
+            return { rows: makeNumber(matrix, blank)[0], columns: makeNumber(transpose(matrix), blank)[0], blank };
+        });
 
     function updatePreview() {
+        resetPreviewQuality();
+        previewQuality.disabled = playPreview.disabled;
         const useColor = mode.value === 'color';
         if (useColor && !currentImage.colorPuzzle) {
             currentImage.colorPuzzle = makeColorPuzzle(currentImage.imageData);
@@ -127,6 +136,7 @@ function setupImagePicker() {
         if (!file) return;
         const selection = {};
         currentImage = selection;
+        resetPreviewQuality();
         preview.hidden = true;
         status.textContent = '画像を読み込んでいます…';
         try {
@@ -159,7 +169,12 @@ function setupImagePicker() {
     side.addEventListener('input', () => {
         playPreview.disabled = !side.validity.valid || !side.value;
         splitPreview.disabled = playPreview.disabled;
-        if (!playPreview.disabled) updateSize();
+        if (playPreview.disabled) {
+            resetPreviewQuality();
+            previewQuality.disabled = true;
+        } else {
+            updateSize();
+        }
     });
     mode.addEventListener('change', updatePreview);
     threshold.addEventListener('input', updatePreview);
@@ -181,16 +196,24 @@ function setupImagePicker() {
             document.getElementById('progress-warning').textContent = '元の画像を開けませんでした。';
         }
     });
-    resumeColor.addEventListener('click', () => setPlaying(true));
+    resumeColor.addEventListener('click', () => {
+        resetPreviewQuality();
+        setPlaying(true);
+    });
     playPreview.addEventListener('click', () => {
+        resetPreviewQuality();
         startPuzzle(currentImage.puzzle, { generated: true });
     });
-    splitPreview.addEventListener('click', () => openMosaic(currentImage.puzzle));
+    splitPreview.addEventListener('click', () => {
+        resetPreviewQuality();
+        openMosaic(currentImage.puzzle);
+    });
 }
 
 function setPlaying(playing) {
     if (playing) playClock?.resume();
     else {
+        resetBoardQuality?.();
         finishStroke?.();
         playClock?.suspend();
         flushProgress();
@@ -288,6 +311,7 @@ function decodeLegacyPng(src) {
 }
 
 function startPuzzle({ matrix, palette, blank }, options = {}) {
+    resetBoardQuality?.();
     finishStroke?.();
     playClock?.suspend();
     const clock = options.clock ?? createPlayClock();
@@ -308,6 +332,9 @@ function startPuzzle({ matrix, palette, blank }, options = {}) {
     g_selectcolor = usedColors.values().next().value;
     const rowClues = makeNumber(matrix, blank);
     const columnClues = makeNumber(transpose(matrix), blank);
+    resetBoardQuality = setupQualityCheck(document.getElementById('board-quality'),
+        document.getElementById('board-quality-result'),
+        () => ({ rows: rowClues[0], columns: columnClues[0], blank }));
 
     const widthInCells = matrix[0].length + rowClues[1];
     const heightInCells = matrix.length + columnClues[1];
