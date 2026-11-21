@@ -13,8 +13,9 @@
     <script src="progress-store.js"></script>
     <script src="quality-controls.js?v=line-solvability-options"></script>
     <script src="mosaic.js"></script>
-    <script src="importfile.js?v=line-solvability-options"></script>
-    <link rel="stylesheet" href="style.css?v=line-solvability-options">
+    <script src="share-controls.js"></script>
+    <script src="importfile.js?v=share-controls"></script>
+    <link rel="stylesheet" href="style.css?v=share-controls">
     <title>画像でノノグラム</title>
 </head>
 
@@ -109,8 +110,19 @@
                     <button type="button" id="split-board" hidden>10×10に分けて遊ぶ</button>
                     <button type="button" id="downl">画像を保存</button>
                     <button type="button" id="preview-monochrome" hidden>同じ画像を白黒に変換</button>
-                    <a href="" id="share" class="action-link" target="_blank" rel="noopener">Twitterでシェア</a>
                     <a href="?" id="board-home" class="action-link">最初の画面に戻る</a>
+                    <div id="board-share" class="puzzle-share" role="group" aria-label="問題を共有" hidden>
+                        <p>共有リンクには元のPNGが含まれ、リンクを受け取った人は画像や答えを復元できます。</p>
+                        <div class="toolbar-group">
+                            <a class="action-link" data-share-bluesky target="_blank" rel="noopener noreferrer" hidden>Blueskyで共有</a>
+                            <button type="button" data-share-copy>共有リンクをコピー</button>
+                        </div>
+                        <p data-share-long-link hidden>Blueskyの文字数に収まらないため、共有リンクをコピーしてお使いください。</p>
+                        <p class="quality-result" data-share-status role="status"></p>
+                        <div data-share-manual hidden>
+                            <label>共有リンク <input type="text" readonly></label>
+                        </div>
+                    </div>
                     <details id="board-advanced-options" class="advanced-options">
                         <summary>高度なオプション</summary>
                         <p>「考え方ヒント」と同じ方法で、開始時の盤面から最後まで解けるか調べます。</p>
