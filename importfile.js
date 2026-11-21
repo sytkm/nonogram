@@ -566,9 +566,9 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
     }
 
     restart.onclick = () => {
-        const target = options.tileLabel ? 'この区画' : 'この問題';
-        document.getElementById('restart-message').textContent =
-            target + 'の入力とプレイ時間をリセットします。';
+        document.getElementById('restart-message').textContent = options.tileLabel
+            ? 'この区画だけ、塗ったマスや印、プレイ時間を消して最初から始めます。'
+            : 'この問題の塗ったマスや印、プレイ時間を消して最初から始めます。';
         restartDialog.returnValue = '';
         restartDialog.showModal();
     };
