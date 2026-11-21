@@ -29,15 +29,23 @@ test('最初の操作で計測し、一時停止と再開を繰り返しても�
 test('答えを見た回数と行数に応じて加算し、クリア後の時刻は変わらない', () => {
     let now = 0;
     const clock = context.createPlayClock(() => now);
-    clock.addAnswerPenalty(10);
+    clock.addPenalty(10);
     now = 2000;
-    clock.addAnswerPenalty(10);
+    clock.addPenalty(10);
     clock.finish();
     now = 80_000;
     clock.resume();
     clock.start();
-    clock.addAnswerPenalty(10);
+    clock.addPenalty(10);
     assert.equal(clock.elapsed(), 1_202_000);
+});
+
+test('行または列のヒントと答え表示の加算を合計する', () => {
+    const clock = context.createPlayClock(() => 1000);
+    clock.addPenalty(1);
+    clock.addPenalty(1);
+    clock.addPenalty(5);
+    assert.equal(context.formatPlayTime(clock.elapsed()), '07:00');
 });
 
 test('別の区画を遊んでいる時間は元の区画の時計に加算しない', () => {

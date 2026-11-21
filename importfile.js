@@ -286,7 +286,7 @@ function startPuzzle({ matrix, palette, blank }, options = {}) {
         : options.sample ? 40 : Math.max(Math.round(500 / heightInCells), 10);
 
     document.getElementById('play-options').open = false;
-    const hint = document.getElementById('row-hint');
+    const hint = document.getElementById('line-hint');
     hint.hidden = options.shared === true;
     setPlaying(true);
     try {
@@ -370,9 +370,9 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     const instructions = document.getElementById('paint-instructions');
     const pauseButton = document.getElementById('pause-play');
     const pauseMessage = document.getElementById('pause-message');
-    const hint = document.getElementById('row-hint');
+    const hint = document.getElementById('line-hint');
     const hintMessage = document.getElementById('hint-message');
-    const hintMarker = document.getElementById('hint-row-marker');
+    const hintMarker = document.getElementById('hint-line-marker');
     const columns = answer[0].length;
     const rows = answer.length;
     const [rowsOfClues, leftClueCount] = rowClues;
@@ -387,15 +387,17 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     let tracing = false;
     let stroke;
     let pausedPosition;
-    let hintedRow;
+    let highlightedHint;
 
     function positionHintMarker() {
-        hintMarker.hidden = hintedRow === undefined;
-        if (hintedRow === undefined) return;
-        hintMarker.style.left = (leftClueCount * cellSize) + 'px';
-        hintMarker.style.top = ((topClueCount + hintedRow) * cellSize) + 'px';
-        hintMarker.style.width = (columns * cellSize) + 'px';
-        hintMarker.style.height = cellSize + 'px';
+        hintMarker.hidden = !highlightedHint;
+        if (!highlightedHint) return;
+        const { axis, index } = highlightedHint;
+        const row = axis === 'row';
+        hintMarker.style.left = ((leftClueCount + (row ? 0 : index)) * cellSize) + 'px';
+        hintMarker.style.top = ((topClueCount + (row ? index : 0)) * cellSize) + 'px';
+        hintMarker.style.width = ((row ? columns : 1) * cellSize) + 'px';
+        hintMarker.style.height = ((row ? 1 : rows) * cellSize) + 'px';
         hintMarker.style.borderWidth = Math.max(1, Math.min(2, Math.floor(cellSize / 2))) + 'px';
     }
 
@@ -510,32 +512,42 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     hintMessage.textContent = '';
     hint.disabled = false;
     hint.onclick = () => {
-        const result = pickRowHint(answer, g_drawmatrix, blank);
+        const result = pickLineHint(answer, g_drawmatrix, blank);
         if (!result) {
-            hintMessage.textContent = 'すべての行がそろっています。答え合わせを押してください。';
+            hintMessage.textContent = 'すべてのマスがそろっています。答え合わせを押してください。';
             return;
         }
         stopStroke();
-        clock.start();
+        clock.addPenalty(1);
         updatePlayTime();
-        const { row, colors } = result;
-        g_drawmatrix[row] = colors;
-        colors.forEach((color, column) => paintCell(row, column, color));
-        hintedRow = row;
-        hintMessage.textContent = '上から' + (row + 1) + '行目をヒントで埋めました。';
+        const { axis, index, changes } = result;
+        for (const { row, column, color } of changes) {
+            g_drawmatrix[row][column] = color;
+            paintCell(row, column, color);
+        }
+        highlightedHint = { axis, index };
+        const lineLabel = axis === 'row' ? '上から' + (index + 1) + '行目' : '左から' + (index + 1) + '列目';
+        hintMessage.textContent = lineLabel + 'をヒントで埋めました（1分加算）。';
         positionHintMarker();
-        const top = (topClueCount + row) * cellSize;
-        if (top < viewport.scrollTop || top + cellSize > viewport.scrollTop + viewport.clientHeight) {
-            viewport.scrollTop = top - Math.max(0, (viewport.clientHeight - cellSize) / 2);
+        if (axis === 'row') {
+            const top = (topClueCount + index) * cellSize;
+            if (top < viewport.scrollTop || top + cellSize > viewport.scrollTop + viewport.clientHeight) {
+                viewport.scrollTop = top - Math.max(0, (viewport.clientHeight - cellSize) / 2);
+            }
+        } else {
+            const left = (leftClueCount + index) * cellSize;
+            if (left < viewport.scrollLeft || left + cellSize > viewport.scrollLeft + viewport.clientWidth) {
+                viewport.scrollLeft = left - Math.max(0, (viewport.clientWidth - cellSize) / 2);
+            }
         }
     };
     solve.disabled = false;
     solve.onclick = () => {
         stopStroke();
-        clock.addAnswerPenalty(rows);
+        clock.addPenalty(rows);
         updatePlayTime();
         g_drawmatrix = answer.map(row => row.slice());
-        hintedRow = undefined;
+        highlightedHint = undefined;
         hintMessage.textContent = '';
         positionHintMarker();
         renderBoard(true);
@@ -631,22 +643,24 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     refreshBoard = () => renderBoard();
 }
 
-function pickRowHint(answer, board, blank, random = Math.random) {
+function pickLineHint(answer, board, blank, random = Math.random) {
+    const rowChanges = Array.from(answer, () => []);
+    const columnChanges = Array.from(answer[0], () => []);
+    answer.forEach((colors, row) => colors.forEach((color, column) => {
+        const current = board[row][column];
+        if (current === color || (current === -1 && color === blank)) return;
+        const change = { row, column, color };
+        rowChanges[row].push(change);
+        columnChanges[column].push(change);
+    }));
     const candidates = [];
-    for (let row = 0; row < answer.length; row++) {
-        const matches = (color, column) => {
-            const current = board[row][column];
-            return current === color || (current === -1 && color === blank);
-        };
-        if (!answer[row].every(matches)) candidates.push(row);
+    for (const [axis, lines] of [['row', rowChanges], ['column', columnChanges]]) {
+        lines.forEach((changes, index) => {
+            if (changes.length) candidates.push({ axis, index, changes });
+        });
     }
     if (!candidates.length) return null;
-
-    const row = candidates[Math.floor(random() * candidates.length)];
-    const colors = answer[row].map((color, column) =>
-        color === blank && board[row][column] === -1 ? -1 : color
-    );
-    return { row, colors };
+    return candidates[Math.floor(random() * candidates.length)];
 }
 
 function boardPointAt(x, y, rect, widthInCells, heightInCells, offset) {

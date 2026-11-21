@@ -61,7 +61,7 @@
                 <p class="play-instructions" id="paint-instructions">下で色を選び、マスを押して塗ります。大きな盤面は上下左右にスクロールできます。</p>
                 <div class="board-tools" role="group" aria-label="盤面の操作">
                     <button type="button" id="check">答え合わせ</button>
-                    <button type="button" id="row-hint">ヒント</button>
+                    <button type="button" id="line-hint">ヒント <small>+1分</small></button>
                     <button type="button" id="zoom-out" aria-label="盤面を縮小">−</button>
                     <button type="button" id="zoom-in" aria-label="盤面を拡大">＋</button>
                     <button type="button" id="zoom-fit">全体を表示</button>
@@ -115,7 +115,7 @@
     <p id="pause-message" role="status" hidden>一時停止中です。「再開」を押すと盤面が表示されます。</p>
     <div id="pixelcanvas" hidden>
         <canvas id="canvas"></canvas>
-        <div id="hint-row-marker" aria-hidden="true" hidden></div>
+        <div id="hint-line-marker" aria-hidden="true" hidden></div>
     </div>
     <div id="fix-phone-under-menu" hidden>
         <div id="color-palette" role="group" aria-label="塗る色"></div>
