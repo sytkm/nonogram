@@ -14,7 +14,7 @@
     <script src="quality-controls.js"></script>
     <script src="mosaic.js"></script>
     <script src="importfile.js?v=initial-paint-color"></script>
-    <link rel="stylesheet" href="style.css?v=clue-mode-controls">
+    <link rel="stylesheet" href="style.css?v=horizontal-palette">
     <title>画像でノノグラム</title>
 </head>
 
@@ -183,7 +183,10 @@
             <button type="button" id="board-undo" disabled>元に戻す</button>
             <button type="button" id="board-redo" disabled>やり直す</button>
         </div>
-        <div id="color-palette" role="group" aria-label="塗る色"></div>
+        <div id="palette-panel">
+            <p id="palette-scroll-note">塗る色 · 隠れている色は左右にスクロール</p>
+            <div id="color-palette" role="group" aria-label="塗る色" aria-describedby="palette-scroll-note"></div>
+        </div>
     </div>
 </body>
 
