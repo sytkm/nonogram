@@ -21,6 +21,6 @@
 
 ## デザインを変更するとき
 
-- [Anthropicのフロントエンドデザイン考察](https://www.anthropic.com/engineering/improving-frontend-design-through-skills)、[GOV.UKのデザイン原則](https://www.gov.uk/guidance/government-design-principles)、[NN/gのユーザビリティ原則](https://www.nngroup.com/articles/ten-usability-heuristics/)を参考に、利用者がその画面で最初にしたい操作と、このアプリならではの表現を一つずつ決める。
+- [Anthropicのフロントエンドデザイン考察](https://claude.com/resources/articles/improving-frontend-design-through-skills)、[GOV.UKのデザイン原則](https://www.gov.uk/guidance/government-design-principles)、[NN/gのユーザビリティ原則](https://www.nngroup.com/articles/ten-usability-heuristics/)を参考に、利用者がその画面で最初にしたい操作と、このアプリならではの表現を一つずつ決める。
 - Nonogramの見た目は、紙のノノグラムを手掛かりにする。罫線、数字、マス、余白を使い、少数の色、線、書体を画面間で揃える。装飾用のカード、グラデーション、影、バッジ、重複する見出しは、区切りや操作を伝える役割があるときだけ使う。
 - 実際のパズルの配色を保持する。数字、細い罫線、塗り、斜線、チェック、フォーカスの違いを読み取れるか確認する。PC・スマホ幅で、開始・入力・完了まで実際に操作して確かめる。外部の書体や素材を追加する場合は必要性と利用条件を確認する。
