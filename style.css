@@ -537,22 +537,38 @@ header:has(#play-panel:not([hidden])) {
     flex: none;
 }
 
-#settings-dialog,
-#play-guide-dialog,
-#restart-dialog {
+dialog {
     box-sizing: border-box;
     width: min(34rem, calc(100% - 2rem));
     max-height: calc(100% - 2rem);
     padding: 1rem;
-    border: 1px solid #aebccc;
-    border-radius: 0.5rem;
-    color: #203751;
+    border: 1px solid var(--puzzle-major-rule);
+    border-radius: 0.35rem;
+    background: var(--puzzle-paper);
+    color: var(--puzzle-ink);
 }
 
-#settings-dialog::backdrop,
-#play-guide-dialog::backdrop,
-#restart-dialog::backdrop {
-    background: rgb(20 35 55 / 45%);
+dialog::backdrop {
+    background: rgb(26 42 35 / 45%);
+}
+
+dialog button:focus-visible {
+    outline-color: var(--puzzle-accent);
+}
+
+.settings-heading,
+#restart-dialog h2 {
+    padding-block-end: 0.6rem;
+    border-bottom: 1px solid var(--puzzle-rule);
+}
+
+#prepare-puzzle {
+    width: fit-content;
+    min-width: min(18rem, calc(100% - 2rem));
+}
+
+#prepare-puzzle-message {
+    margin: 0;
 }
 
 .action-link.action-danger {
@@ -578,14 +594,19 @@ header:has(#play-panel:not([hidden])) {
 .settings-heading h2,
 #restart-dialog h2 {
     margin: 0;
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
     font-size: 1.25rem;
 }
 
 #settings-dialog fieldset {
     margin: 0.75rem 0 0;
     padding: 0.25rem 0.65rem;
-    border: 1px solid #d3dce8;
-    border-radius: 0.35rem;
+    border: 1px solid var(--puzzle-rule);
+    border-radius: 0.25rem;
+}
+
+#settings-dialog input[type="checkbox"] {
+    accent-color: var(--puzzle-accent);
 }
 
 #settings-dialog label {
@@ -618,14 +639,15 @@ header:has(#play-panel:not([hidden])) {
     box-sizing: border-box;
     width: 1.75rem;
     height: 1.75rem;
-    border: 1px solid #5c6b7a;
-    color: #111;
+    border: 1px solid var(--puzzle-rule);
+    background: #fff;
+    color: var(--puzzle-ink);
     text-align: center;
 }
 
 .guide-example .guide-filled {
-    background: #111;
-    border-color: #808080;
+    background: var(--puzzle-accent);
+    border-color: var(--puzzle-rule);
 }
 
 .guide-more summary {
