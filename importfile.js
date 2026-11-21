@@ -41,6 +41,7 @@ function setupImagePicker() {
     const threshold = document.getElementById('threshold');
     const resumeColor = document.getElementById('resume-color');
     const playPreview = document.getElementById('play-preview');
+    const splitPreview = document.getElementById('split-preview');
     let currentImage;
 
     function updatePreview() {
@@ -55,6 +56,7 @@ function setupImagePicker() {
         };
         currentImage.puzzle = puzzle;
         const { matrix, palette } = puzzle;
+        splitPreview.hidden = !canSplitPuzzle(matrix);
         document.getElementById('threshold-panel').hidden = useColor;
         document.getElementById('color-note').hidden = !useColor;
         document.getElementById('threshold-value').value = threshold.value;
@@ -94,6 +96,7 @@ function setupImagePicker() {
             '元画像 ' + image.naturalWidth + ' × ' + image.naturalHeight +
             ' ／ 盤面 ' + imageData.width + ' × ' + imageData.height + ' マス';
         playPreview.disabled = false;
+        splitPreview.disabled = false;
         resetThreshold();
     }
 
@@ -151,6 +154,7 @@ function setupImagePicker() {
 
     side.addEventListener('input', () => {
         playPreview.disabled = !side.validity.valid || !side.value;
+        splitPreview.disabled = playPreview.disabled;
         if (!playPreview.disabled) updateSize();
     });
     mode.addEventListener('change', updatePreview);
@@ -161,10 +165,12 @@ function setupImagePicker() {
     playPreview.addEventListener('click', () => {
         startPuzzle(currentImage.puzzle, { generated: true });
     });
+    splitPreview.addEventListener('click', () => openMosaic(currentImage.puzzle));
 }
 
 function setPlaying(playing) {
     document.getElementById('start-panel').hidden = playing;
+    document.getElementById('mosaic-panel').hidden = true;
     document.getElementById('play-panel').hidden = !playing;
     document.getElementById('pixelcanvas').hidden = !playing;
     document.getElementById('fix-phone-under-menu').hidden = !playing;
@@ -243,7 +249,7 @@ function decodeLegacyPng(src) {
 }
 
 function startPuzzle({ matrix, palette, blank }, options = {}) {
-    g_drawmatrix = matrix.map(row => row.map(() => blank));
+    g_drawmatrix = options.initialBoard ?? matrix.map(row => row.map(() => blank));
     const usedColors = options.generated
         ? new Set([...palette.slice(1).map((_, i) => i + 1), blank])
         : new Set(matrix.flat());
@@ -267,6 +273,16 @@ function startPuzzle({ matrix, palette, blank }, options = {}) {
         throw error;
     }
     document.getElementById('preview-monochrome').hidden = !options.canConvert;
+    const splitBoard = document.getElementById('split-board');
+    splitBoard.hidden = options.shared === true || Boolean(options.tileLabel) || !canSplitPuzzle(matrix);
+    splitBoard.onclick = () => openMosaic({ matrix, palette, blank });
+    const tileLabel = document.getElementById('mosaic-tile-label');
+    tileLabel.hidden = !options.tileLabel;
+    tileLabel.textContent = options.tileLabel ?? '';
+    const returnToMosaic = document.getElementById('return-mosaic');
+    returnToMosaic.hidden = !options.onReturn;
+    returnToMosaic.onclick = options.onReturn ?? null;
+    document.getElementById('board-home').hidden = Boolean(options.onReturn);
 
     const share = document.getElementById('share');
     share.hidden = !options.shareSource;
@@ -281,7 +297,7 @@ function startPuzzle({ matrix, palette, blank }, options = {}) {
     }
 
     const download = document.getElementById('downl');
-    download.hidden = options.shared === true;
+    download.hidden = options.shared === true || Boolean(options.tileLabel);
     document.getElementById('solve').hidden = options.shared === true;
     download.onclick = () => {
         const link = document.createElement('a');
@@ -292,8 +308,13 @@ function startPuzzle({ matrix, palette, blank }, options = {}) {
     document.getElementById('check').onclick = () => {
         const solved = checkNumber(rowClues, g_drawmatrix, blank) &&
             checkNumber(columnClues, transpose(g_drawmatrix), blank);
+        if (solved && options.onSolved) {
+            options.onSolved();
+            return;
+        }
         alert(solved ? '正解！' : 'まだ一致していません。');
     };
+    if (options.tileLabel) returnToMosaic.focus();
 }
 
 function boardResolution(width, height, pixelRatio) {
@@ -729,26 +750,6 @@ function paletteColor(source) {
     }
     return palette;
 }
-
-/**
- * 行列分割関数
- * @param  {Number[][]} matrix - 分割する行列
- * @param  {Number} wid - 分割の幅
- * @param  {Number} hei - 分割の高さ
- * @return {Number[][][]} - 分割された行列
- */
-function splitMatrix(matrix, wid, hei) {
-    const spmatrix = [];
-    for (let i = 0; i < matrix.length / hei; i++) {
-        const sprowmatrix = [];
-        for (let j = 0; j < matrix[i].length / wid; j++) {
-            sprowmatrix.push(matrix.map(x => x.slice(j * wid, (j + 1) * wid)).slice(i * hei, (i + 1) * hei));
-        }
-        spmatrix.push(sprowmatrix);
-    }
-    return spmatrix;
-}
-
 
 /**
  * 背景色から文字色を決める関数

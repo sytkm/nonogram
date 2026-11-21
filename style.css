@@ -157,3 +157,73 @@ h1 {
 .palette-mark {
     background: linear-gradient(135deg, white 46%, #222 47% 53%, white 54%);
 }
+
+#mosaic-panel {
+    box-sizing: border-box;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    padding: 0 1rem 1rem;
+}
+
+.mosaic-map {
+    overflow: auto;
+    padding: 0.25rem;
+}
+
+#mosaic-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--mosaic-columns), 50px);
+    width: max-content;
+}
+
+.mosaic-tile {
+    width: 50px;
+    height: 50px;
+    padding: 0;
+    border: 0;
+    box-shadow: inset 0 0 0 1px #777;
+    background: #eaf2fc;
+    color: #163759;
+    font: inherit;
+    cursor: pointer;
+}
+
+.mosaic-tile.mosaic-complete {
+    background: #fff;
+    box-shadow: none;
+    opacity: 1;
+    cursor: default;
+}
+
+.mosaic-tile:focus-visible {
+    outline: 2px solid #164c83;
+    outline-offset: -3px;
+}
+
+.mosaic-tile canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+}
+
+#mosaic-image {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 0.75rem;
+    image-rendering: pixelated;
+}
+
+.mosaic-downloads {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+}
+
+.mosaic-downloads a:not([hidden]) {
+    display: inline-grid;
+    align-items: center;
+    min-height: 44px;
+}
