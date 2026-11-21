@@ -35,80 +35,80 @@ h1 {
     font-size: 1.5rem;
 }
 
-.home-intro-title,
+:root {
+    --puzzle-paper: #f9f7ee;
+    --puzzle-ink: #293b35;
+    --puzzle-rule: #829088;
+    --puzzle-accent: #25594b;
+    --puzzle-accent-active: #194235;
+}
+
 .home-art {
     display: none;
 }
 
 header:has(#start-panel:not([hidden]) #image-preview[hidden]) {
     flex: 1 1 auto;
-    background: #f6f4ec;
-    color: #1c3145;
+    background: var(--puzzle-paper);
+    color: var(--puzzle-ink);
     padding: 1rem clamp(1rem, 4vw, 3rem) 2rem;
 }
 
 header:has(#start-panel:not([hidden]) #image-preview[hidden]) .site-heading,
 #start-panel:has(#image-preview[hidden]) {
-    max-width: 66rem;
+    max-width: 59rem;
     margin-inline: auto;
+}
+
+header:has(#start-panel:not([hidden]) #image-preview[hidden]) .site-heading {
+    padding-block-end: 0.85rem;
+    border-bottom: 1px solid var(--puzzle-rule);
+}
+
+header:has(#start-panel:not([hidden]) #image-preview[hidden]) h1 {
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+    font-size: clamp(1.4rem, 3vw, 2.25rem);
 }
 
 #start-panel:has(#image-preview[hidden]) .home-intro {
     display: grid;
-    gap: clamp(1.25rem, 4vw, 3rem);
-    align-items: center;
-    margin-block-start: clamp(1rem, 4vw, 3rem);
-    padding: clamp(1.125rem, 5vw, 3.75rem);
-    border: 1px solid #d7dedc;
-    border-radius: 1.25rem;
-    background: #fffefa;
-    box-shadow: 0 0.5rem 1.5rem rgb(27 53 71 / 7%);
-}
-
-#start-panel:has(#image-preview[hidden]) .home-intro-title {
-    display: block;
-    margin: 0;
-    color: #183e60;
-    font-size: clamp(1.75rem, 4.3vw, 3.5rem);
-    line-height: 1.18;
-    letter-spacing: 0.015em;
+    gap: clamp(1rem, 4vw, 3rem);
+    align-items: start;
+    margin-block-start: clamp(1rem, 3vw, 2.75rem);
 }
 
 .home-copy > p {
     line-height: 1.65;
 }
 
+#start-panel:has(#image-preview[hidden]) .home-copy > p:first-child {
+    max-width: 30rem;
+    margin-block-start: 0;
+    font-size: 1.125rem;
+}
+
 #start-panel:has(#image-preview[hidden]) #image-formats {
     font-size: 0.875rem;
-    color: #465d6b;
 }
 
 #start-panel:has(#image-preview[hidden]) #saved-progress {
-    padding-block-start: 0.875rem;
-    border-top: 1px solid #d7dedc;
+    padding-block-start: 0.75rem;
+    border-top: 1px solid var(--puzzle-rule);
 }
 
 #start-panel:has(#image-preview[hidden]) .home-art {
     display: grid;
-    place-items: center;
-    padding: clamp(0.5rem, 2vw, 1.5rem);
-    border-radius: 0.875rem;
-    background-color: #e9f2ec;
-    background-image: radial-gradient(#aec8bf 1px, transparent 1px);
-    background-size: 12px 12px;
+    justify-items: start;
+    gap: 0.65rem;
+    margin: 0;
+    font-size: 0.875rem;
 }
 
 .home-puzzle {
-    --home-square: clamp(1.25rem, 4vw, 2.75rem);
-    border-collapse: separate;
-    border-spacing: 2px;
-    padding: 0.4rem;
-    border: 1px solid #b8cec5;
-    border-radius: 0.55rem;
-    background: #fffefa;
+    --home-square: clamp(1.5rem, 4vw, 2.5rem);
+    border-collapse: collapse;
     text-align: center;
-    color: #284958;
-    box-shadow: 0 0.25rem 0 #c7dad0;
+    font-variant-numeric: tabular-nums;
 }
 
 .home-puzzle th,
@@ -117,36 +117,38 @@ header:has(#start-panel:not([hidden]) #image-preview[hidden]) .site-heading,
     width: var(--home-square);
     height: var(--home-square);
     padding: 0;
-    border-radius: 2px;
-    font-size: 0.75rem;
-}
-
-.home-puzzle th {
-    background: #e8f0ed;
-    line-height: 1.05;
+    font-size: 0.875rem;
 }
 
 .home-puzzle tbody td {
-    border: 1px solid #cbdbd4;
-    background: #f6faf7;
+    border: 1px solid var(--puzzle-rule);
+    background: #fff;
 }
 
-.home-puzzle .home-cell-filled {
-    border-color: #246871;
-    background: #246871;
+.home-puzzle tbody tr:first-child td {
+    border-top: 2px solid var(--puzzle-ink);
 }
 
-.home-puzzle .home-cell-slash {
-    color: #465d6b;
+.home-puzzle tbody tr:last-child td {
+    border-bottom: 2px solid var(--puzzle-ink);
+}
+
+.home-puzzle tbody td:nth-child(2) {
+    border-left: 2px solid var(--puzzle-ink);
+}
+
+.home-puzzle tbody td:last-child {
+    border-right: 2px solid var(--puzzle-ink);
+}
+
+.home-puzzle .home-first-move td {
+    border-inline-color: #91b8a9;
+    background: var(--puzzle-accent);
 }
 
 @media (min-width: 48rem) {
     #start-panel:has(#image-preview[hidden]) .home-intro {
-        grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
-    }
-
-    .home-puzzle {
-        --home-square: clamp(1.75rem, 3.1vw, 2.75rem);
+        grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
     }
 }
 
@@ -388,6 +390,16 @@ header:has(#start-panel:not([hidden]) #image-preview[hidden]) .site-heading,
 .action-link.action-primary:hover:not(:disabled),
 .action-link.action-primary:active:not(:disabled) {
     background: #103b67;
+}
+
+#start-panel:has(#image-preview[hidden]) .action-primary:not(:disabled) {
+    border-color: var(--puzzle-accent);
+    background: var(--puzzle-accent);
+}
+
+#start-panel:has(#image-preview[hidden]) .action-primary:hover:not(:disabled),
+#start-panel:has(#image-preview[hidden]) .action-primary:active:not(:disabled) {
+    background: var(--puzzle-accent-active);
 }
 
 .board-tools .clue-mode[aria-pressed="true"],

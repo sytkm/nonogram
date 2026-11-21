@@ -16,7 +16,7 @@
     <script src="mosaic.js?v=mosaic-share"></script>
     <script src="share-controls.js?v=mosaic-share"></script>
     <script src="importfile.js?v=mosaic-actions"></script>
-    <link rel="stylesheet" href="style.css?v=home-puzzle-visuals">
+    <link rel="stylesheet" href="style.css?v=puzzle-paper-home">
     <title>画像でノノグラム</title>
 </head>
 
@@ -31,8 +31,7 @@
         <div id="start-panel">
             <div class="home-intro">
                 <div class="home-copy">
-                    <h2 class="home-intro-title">画像からはじめる<br>ノノグラム</h2>
-                    <p>写真やイラストをパズルに。数字を手がかりにマスを塗り、絵を完成させましょう。</p>
+                    <p>写真やイラストから問題を作り、数字を手がかりにマスを塗って絵を完成させます。</p>
                     <div class="toolbar-group" role="group" aria-label="新しい問題">
                         <button type="button" id="open-image" class="action-link action-primary" aria-describedby="image-formats">自分の画像で作る</button>
                         <a href="?sample" class="action-link">サンプル問題で遊ぶ</a>
@@ -45,20 +44,21 @@
                         <small>このブラウザに自動保存した問題を再開します。</small>
                     </div>
                 </div>
-                <div class="home-art" aria-hidden="true">
-                    <table class="home-puzzle">
+                <figure class="home-art">
+                    <table class="home-puzzle" aria-hidden="true">
                         <thead>
-                            <tr><td></td><th>1</th><th>3</th><th>2<br>2</th><th>3</th><th>1</th></tr>
+                            <tr><td></td><th>1</th><th>1</th><th>5</th><th>1</th><th>1</th></tr>
                         </thead>
                         <tbody>
-                            <tr><th>1</th><td></td><td></td><td class="home-cell-filled"></td><td></td><td></td></tr>
-                            <tr><th>3</th><td></td><td class="home-cell-filled"></td><td class="home-cell-filled"></td><td class="home-cell-filled"></td><td></td></tr>
-                            <tr><th>2 2</th><td class="home-cell-filled"></td><td class="home-cell-filled"></td><td class="home-cell-slash">／</td><td class="home-cell-filled"></td><td class="home-cell-filled"></td></tr>
-                            <tr><th>3</th><td></td><td class="home-cell-filled"></td><td class="home-cell-filled"></td><td class="home-cell-filled"></td><td></td></tr>
-                            <tr><th>1</th><td></td><td></td><td class="home-cell-filled"></td><td></td><td></td></tr>
+                            <tr><th>1</th><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>1</th><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr class="home-first-move"><th>5</th><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>1</th><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>1</th><td></td><td></td><td></td><td></td><td></td></tr>
                         </tbody>
                     </table>
-                </div>
+                    <figcaption>サンプルの最初の一手。左が「5」の行は、5マスすべてを塗れます。</figcaption>
+                </figure>
             </div>
             <p id="image-status" role="status"></p>
             <div id="image-preview" hidden>
