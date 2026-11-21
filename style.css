@@ -198,6 +198,21 @@ h1 {
     column-gap: 0.75rem;
 }
 
+.advanced-options {
+    flex-basis: 100%;
+    margin-block: 0.25rem;
+}
+
+.advanced-options summary {
+    padding-block: 0.65rem;
+    cursor: pointer;
+}
+
+.advanced-options p {
+    margin: 0 0 0.5rem;
+    font-size: 0.875rem;
+}
+
 .board-menu:not([hidden]) {
     margin-top: 0.45rem;
     padding: 0.5rem;

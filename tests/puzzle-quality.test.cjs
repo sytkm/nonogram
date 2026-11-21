@@ -84,3 +84,18 @@ test('一つに絞るまで初期斜線を追加し、検査上限時は途中�
     assert.equal(limited.quality, 'inconclusive');
     assert.equal(limited.fixedSlashes.length, 0);
 });
+
+test('答えが一つでも、行・列の推理だけでは止まる問題がある', () => {
+    const rows = [[[1, 1], [1, 1]], [[1, 2]], [[-1, 0]], [[-1, 0]]];
+    const columns = singleRuns([1, 1, 1, 1]);
+    assert.equal(inspectPuzzleQuality(rows, columns, 0), 'unique');
+    assert.equal(context.inspectLineSolvability(rows, columns, 0), 'partial');
+});
+
+test('行・列の推理の検査には最初からある斜線を反映する', () => {
+    const rows = singleRuns([1, 1]);
+    const columns = singleRuns([1, 1]);
+    assert.equal(context.inspectLineSolvability(rows, columns, 0), 'partial');
+    assert.equal(context.inspectLineSolvability(rows, columns, 0, [0]), 'complete');
+    assert.equal(context.inspectLineSolvability(rows, columns, 0, [0], 1), 'inconclusive');
+});

@@ -1,3 +1,55 @@
+function reducePuzzleLine(line, clues, blank, budget) {
+    budget.remaining--;
+    if (!line.includes(blank)) return isLinePossible(line, clues, blank);
+    const choices = lineCellChoices(line, clues, blank);
+    if (!choices) return false;
+    for (let i = 0; i < line.length; i++) {
+        const color = choices[i];
+        if (line[i] === blank && color != null) line[i] = color === blank ? -1 : color;
+    }
+    return true;
+}
+
+function propagatePuzzleLines(cells, rowsOfClues, columnsOfClues, blank, budget) {
+    const height = rowsOfClues.length;
+    const width = columnsOfClues.length;
+    let previousUnfilled;
+    let unfilled = width * height + 1;
+    do {
+        previousUnfilled = unfilled;
+        for (let row = 0; row < height; row++) {
+            if (budget.remaining <= 0) return 'inconclusive';
+            if (!reducePuzzleLine(cells[row], rowsOfClues[row], blank, budget)) return 'contradiction';
+        }
+        for (let column = 0; column < width; column++) {
+            if (budget.remaining <= 0) return 'inconclusive';
+            const line = cells.map(row => row[column]);
+            if (!reducePuzzleLine(line, columnsOfClues[column], blank, budget)) return 'contradiction';
+            for (let row = 0; row < height; row++) cells[row][column] = line[row];
+        }
+        unfilled = 0;
+        for (const row of cells) {
+            for (const color of row) if (color === blank) unfilled++;
+        }
+    // Columns can fill the last cell and invalidate a row checked earlier.
+    } while (unfilled < previousUnfilled);
+    return unfilled ? 'partial' : 'complete';
+}
+
+function initialPuzzleCells(height, width, blank, fixed) {
+    const cells = Array.from({ length: height }, () => Array(width).fill(blank));
+    for (const index of fixed) cells[Math.floor(index / width)][index % width] = -1;
+    return cells;
+}
+
+function inspectLineSolvability(rows, columns, blank, fixed = [], maxLineChecks = 20_000) {
+    const height = rows.length;
+    const width = columns.length;
+    if (height > 200 || width > 200) return 'inconclusive';
+    const cells = initialPuzzleCells(height, width, blank, fixed);
+    return propagatePuzzleLines(cells, rows, columns, blank, { remaining: maxLineChecks });
+}
+
 function searchPuzzleSolutions(rowsOfClues, columnsOfClues, blank, fixed, budget) {
     const height = rowsOfClues.length;
     const width = columnsOfClues.length;
@@ -7,45 +59,9 @@ function searchPuzzleSolutions(rowsOfClues, columnsOfClues, blank, fixed, budget
     const columnColors = columnsOfClues.map(clues => new Set(clues.map(([color]) => color)));
     const solutions = [];
 
-    function reduceLine(line, clues) {
-        budget.remaining--;
-        if (!line.includes(blank)) return isLinePossible(line, clues, blank);
-        const choices = lineCellChoices(line, clues, blank);
-        if (!choices) return false;
-        for (let i = 0; i < line.length; i++) {
-            const color = choices[i];
-            if (line[i] === blank && color != null) line[i] = color === blank ? -1 : color;
-        }
-        return true;
-    }
-
-    function propagate(cells) {
-        let previousUnfilled;
-        let unfilled = width * height + 1;
-        do {
-            previousUnfilled = unfilled;
-            for (let row = 0; row < height; row++) {
-                if (budget.remaining <= 0) return 'inconclusive';
-                if (!reduceLine(cells[row], rowsOfClues[row])) return 'contradiction';
-            }
-            for (let column = 0; column < width; column++) {
-                if (budget.remaining <= 0) return 'inconclusive';
-                const line = cells.map(row => row[column]);
-                if (!reduceLine(line, columnsOfClues[column])) return 'contradiction';
-                for (let row = 0; row < height; row++) cells[row][column] = line[row];
-            }
-            unfilled = 0;
-            for (const row of cells) {
-                for (const color of row) if (color === blank) unfilled++;
-            }
-        // Columns can fill the last cell and invalidate a row checked earlier.
-        } while (unfilled < previousUnfilled);
-        return unfilled ? 'partial' : 'complete';
-    }
-
     function search(cells, depth) {
         if (depth >= 64) return false;
-        const state = propagate(cells);
+        const state = propagatePuzzleLines(cells, rowsOfClues, columnsOfClues, blank, budget);
         if (state === 'inconclusive') return false;
         if (state === 'contradiction') return true;
         if (state === 'complete') {
@@ -65,8 +81,7 @@ function searchPuzzleSolutions(rowsOfClues, columnsOfClues, blank, fixed, budget
         return true;
     }
 
-    const cells = Array.from({ length: height }, () => Array(width).fill(blank));
-    for (const index of fixed) cells[Math.floor(index / width)][index % width] = -1;
+    const cells = initialPuzzleCells(height, width, blank, fixed);
     return search(cells, 0) ? solutions : null;
 }
 

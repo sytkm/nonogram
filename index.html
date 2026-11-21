@@ -11,10 +11,10 @@
     <script src="board-tools.js?v=clue-eyedropper"></script>
     <script src="line-logic.js"></script>
     <script src="progress-store.js"></script>
-    <script src="quality-controls.js"></script>
+    <script src="quality-controls.js?v=line-solvability-options"></script>
     <script src="mosaic.js"></script>
-    <script src="importfile.js?v=first-play-guide"></script>
-    <link rel="stylesheet" href="style.css?v=first-play-guide">
+    <script src="importfile.js?v=line-solvability-options"></script>
+    <link rel="stylesheet" href="style.css?v=line-solvability-options">
     <title>画像でノノグラム</title>
 </head>
 
@@ -62,6 +62,12 @@
                 <p id="preview-message" role="status"></p>
                 <button type="button" id="preview-quality">答えが一つか調べる</button>
                 <p id="preview-quality-result" class="quality-result" role="status"></p>
+                <details class="advanced-options">
+                    <summary>高度なオプション</summary>
+                    <p>「考え方ヒント」と同じ方法で、確実に分かるマスを繰り返し埋めると、最後まで解けるか調べます。</p>
+                    <button type="button" id="preview-logic">行・列の推理で解けるか調べる</button>
+                    <p id="preview-logic-result" class="quality-result" role="status"></p>
+                </details>
                 <button type="button" id="play-preview">この問題で遊ぶ</button>
                 <button type="button" id="split-preview" hidden>10×10に分けて遊ぶ</button>
                 <button type="button" id="resume-color" hidden>カラー問題に戻る</button>
@@ -105,6 +111,12 @@
                     <button type="button" id="preview-monochrome" hidden>同じ画像を白黒に変換</button>
                     <a href="" id="share" class="action-link" target="_blank" rel="noopener">Twitterでシェア</a>
                     <a href="?" id="board-home" class="action-link">最初の画面に戻る</a>
+                    <details id="board-advanced-options" class="advanced-options">
+                        <summary>高度なオプション</summary>
+                        <p>「考え方ヒント」と同じ方法で、開始時の盤面から最後まで解けるか調べます。</p>
+                        <button type="button" id="board-logic">行・列の推理で解けるか調べる</button>
+                        <p id="board-logic-result" class="quality-result" role="status"></p>
+                    </details>
                 </div>
                 <p id="hint-message" class="play-only" role="status"></p>
                 <p id="conflict-message" role="status"></p>
