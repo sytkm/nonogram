@@ -108,7 +108,8 @@ h1 {
     display: none;
 }
 
-#play-panel.is-viewing-tile .play-only {
+#play-panel.is-viewing-tile .play-only,
+#play-panel.is-viewing-tile .board-menu.play-only {
     display: none;
 }
 
@@ -138,8 +139,7 @@ h1 {
 }
 
 .play-clock,
-.mosaic-time-controls,
-#answer-controls:not([hidden]) {
+.mosaic-time-controls {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
@@ -171,10 +171,6 @@ h1 {
     font-weight: 600;
 }
 
-#answer-penalty {
-    font-size: 0.875rem;
-}
-
 #pause-message {
     margin: auto;
     padding: 1rem;
@@ -182,40 +178,97 @@ h1 {
 }
 
 .board-tools,
-.play-options-items {
+.toolbar-group,
+.board-menu:not([hidden]) {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 0.375rem;
 }
 
+.board-tools {
+    column-gap: 0.75rem;
+}
+
+.board-menu:not([hidden]) {
+    margin-top: 0.45rem;
+    padding: 0.5rem;
+    border: 1px solid #d3dce8;
+    border-radius: 0.5rem;
+    background: #f2f6fb;
+}
+
+.play-clock button,
 .board-tools button,
-.board-tools summary,
-.play-options-items a {
+.board-menu button,
+.action-link {
     box-sizing: border-box;
     min-height: 44px;
     padding: 0.45rem 0.65rem;
+    border: 1px solid #aebccc;
+    border-radius: 0.35rem;
+    background: #fff;
+    color: #203751;
     font: inherit;
     font-size: 0.875rem;
-}
-
-.board-tools summary {
-    align-content: center;
     cursor: pointer;
 }
 
-#play-options[open] {
-    flex-basis: 100%;
-}
-
-.play-options-items a {
-    display: inline-grid;
+.action-link:not([hidden]) {
+    display: inline-flex;
     align-items: center;
+    justify-content: center;
+    text-decoration: none;
 }
 
-.board-tools button[hidden],
-.play-options-items a[hidden] {
-    display: none;
+.play-clock button:hover:not(:disabled),
+.board-tools button:hover:not(:disabled),
+.board-menu button:hover:not(:disabled),
+.action-link:hover,
+.board-menu-button[aria-expanded="true"] {
+    background: #e1ebf8;
+    border-color: #6685ae;
+}
+
+.play-clock button:focus-visible,
+.board-tools button:focus-visible,
+.board-menu button:focus-visible,
+.action-link:focus-visible {
+    outline: 2px solid #175caa;
+    outline-offset: 2px;
+}
+
+.play-clock button:disabled,
+.board-tools button:disabled,
+.board-menu button:disabled {
+    color: #677788;
+    border-color: #ccd4de;
+    cursor: default;
+}
+
+.board-menu label:not([hidden]) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    font-size: 0.875rem;
+}
+
+.menu-note,
+.board-menu .quality-result {
+    flex-basis: 100%;
+    margin: 0.25rem 0 0;
+    font-size: 0.875rem;
+}
+
+.penalty {
+    display: inline-block;
+    padding: 0.08rem 0.3rem;
+    border-radius: 0.25rem;
+    background: #f2e8d6;
+    color: #593b13;
+    font-size: 0.75rem;
+    font-weight: 650;
+    white-space: nowrap;
 }
 
 #zoom-out,

@@ -16,6 +16,7 @@ const samplePNG = 'iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAMAAAC6sdbXAAAABlBMVEX///8wW
 window.onload = async function () {
     setupImagePicker();
     setupProgressRestore();
+    setupBoardMenus();
     window.addEventListener('resize', () => refreshBoard?.());
     window.setInterval(() => {
         if (!document.getElementById('play-panel').hidden) updatePlayTime();
@@ -210,6 +211,25 @@ function setupImagePicker() {
     });
 }
 
+function showBoardMenu(selected) {
+    for (const button of document.querySelectorAll('.board-menu-button')) {
+        const open = button === selected;
+        button.setAttribute('aria-expanded', String(open));
+        document.getElementById(button.getAttribute('aria-controls')).hidden = !open;
+    }
+}
+
+function setupBoardMenus() {
+    for (const button of document.querySelectorAll('.board-menu-button')) {
+        button.onclick = () => showBoardMenu(button.getAttribute('aria-expanded') === 'false' ? button : undefined);
+    }
+    document.getElementById('hint-tools').addEventListener('click', event => {
+        if (!event.target.closest('button[data-close-board-menu]')) return;
+        showBoardMenu();
+        document.querySelector('[aria-controls="hint-tools"]').focus({ preventScroll: true });
+    }, { capture: true });
+}
+
 function setPlaying(playing) {
     if (playing) playClock?.resume();
     else {
@@ -369,7 +389,7 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
         ? Math.max(10, Math.min(40, Math.floor(500 / Math.max(widthInCells, heightInCells))))
         : options.sample ? 40 : Math.max(Math.round(500 / heightInCells), 10);
 
-    document.getElementById('play-options').open = false;
+    showBoardMenu();
     for (const id of ['line-hint', 'logic-hint']) {
         document.getElementById(id).hidden = options.shared === true;
     }
@@ -409,9 +429,8 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
 
     const download = document.getElementById('downl');
     download.hidden = options.shared === true || Boolean(options.tileLabel);
-    document.getElementById('answer-controls').hidden = options.shared === true;
-    document.getElementById('answer-penalty').textContent =
-        '答えを見ると ' + matrix.length + '分加算してクリア（1行につき1分）';
+    document.getElementById('solve').hidden = options.shared === true;
+    document.getElementById('answer-penalty').textContent = '+' + matrix.length + '分';
     download.onclick = () => {
         const link = document.createElement('a');
         link.href = document.getElementById('canvas').toDataURL('image/png');
