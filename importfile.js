@@ -7,7 +7,7 @@ let g_selectcolor = 0;
 let refreshBoard;
 let refreshBoardSettings;
 let boardForSettings;
-const boardSettingDefaults = { stickClues: true, showSymbols: false, autoSlash: false };
+const boardSettingDefaults = { stickClues: true, showSymbols: false, autoSlash: false, pickClueColor: false };
 const boardSettings = {};
 const boardSettingsKey = 'nonogram.settings';
 let finishStroke;
@@ -247,6 +247,7 @@ function setupSettings() {
         stickClues: document.getElementById('stick-clues'),
         showSymbols: document.getElementById('color-symbols'),
         autoSlash: document.getElementById('auto-slash'),
+        pickClueColor: document.getElementById('pick-clue-color'),
     };
     try {
         const saved = JSON.parse(localStorage.getItem(boardSettingsKey));
@@ -438,9 +439,9 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
     setPlaying(true);
     let controls;
     try {
-        drawUnderPalette(palette, usedColors, blank);
+        const selectColor = drawUnderPalette(palette, usedColors, blank);
         controls = setupBoard(matrix, palette, blank, rowClues, columnClues, initialCellSize, clock, board,
-            [...usedColors].filter(color => color !== blank).length > 1, onEdit, fixedSlashes);
+            [...usedColors].filter(color => color !== blank).length > 1, onEdit, fixedSlashes, selectColor);
     } catch (error) {
         setPlaying(false);
         throw error;
@@ -557,7 +558,7 @@ function boardResolution(width, height, pixelRatio) {
     };
 }
 
-function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSize, clock, board, multiColor, onEdit, fixedSlashes) {
+function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSize, clock, board, multiColor, onEdit, fixedSlashes, selectColor) {
     const { cells } = board;
     const viewport = document.getElementById('pixelcanvas');
     const canvas = document.getElementById('canvas');
@@ -572,6 +573,13 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     keyboardMarker.hidden = true;
     let showSymbols = multiColor && boardSetting('showSymbols', board);
     const palettePanel = document.getElementById('color-palette');
+    const clueInstructions = document.getElementById('clue-instructions');
+    function updateClueInstructions() {
+        clueInstructions.textContent = boardSetting('pickClueColor', board)
+            ? 'ヒント数字を押すと、その色を選べます。'
+            : 'ヒント数字を押すとチェックできます。';
+    }
+    updateClueInstructions();
     palettePanel.classList.toggle('show-symbols', showSymbols);
     const zoomIn = document.getElementById('zoom-in');
     const zoomOut = document.getElementById('zoom-out');
@@ -1083,8 +1091,13 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     canvas.onclick = event => {
         if (board.finished || !event.detail) return;
         const point = pointFor(event);
-        const key = boardClueAt(point, rowsOfClues, columnsOfClues);
-        if (key && key === pressedClue) {
+        const clue = boardClueAt(point, rowsOfClues, columnsOfClues);
+        if (clue && clue.key === pressedClue) {
+            if (boardSetting('pickClueColor', board)) {
+                if (clue.color >= 0) selectColor(clue.color);
+                return;
+            }
+            const { key } = clue;
             const before = Boolean(board.marks[key]);
             if (before) delete board.marks[key];
             else board.marks[key] = true;
@@ -1140,7 +1153,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     canvas.onpointerdown = event => {
         if (board.finished || stroke || !event.isPrimary || event.button !== 0) return;
         const point = pointFor(event);
-        pressedClue = boardClueAt(point, rowsOfClues, columnsOfClues);
+        pressedClue = boardClueAt(point, rowsOfClues, columnsOfClues)?.key;
         if (!tracing) return;
         const cell = boardCellAt(point, columns, rows);
         if (!cell) return;
@@ -1164,6 +1177,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     viewport.onscroll = renderFixedClues;
     boardForSettings = board;
     refreshBoardSettings = () => {
+        updateClueInstructions();
         showSymbols = multiColor && boardSetting('showSymbols', board);
         palettePanel.classList.toggle('show-symbols', showSymbols);
         renderBoard(true);
@@ -1432,7 +1446,13 @@ function drawUnderPalette(palette, usedColors, blank) {
     if (!usedColors.has(blank)) colors.push(blank);
     colors.push(-1);
 
-    let selected;
+    const buttons = new Map();
+    function selectColor(color) {
+        buttons.get(g_selectcolor)?.setAttribute('aria-pressed', 'false');
+        buttons.get(color).setAttribute('aria-pressed', 'true');
+        g_selectcolor = color;
+    }
+
     for (const color of colors) {
         const button = document.createElement('button');
         const swatch = document.createElement('span');
@@ -1459,16 +1479,12 @@ function drawUnderPalette(palette, usedColors, blank) {
         button.title = label;
         button.setAttribute('aria-label', label);
         button.setAttribute('aria-pressed', String(g_selectcolor === color));
-        if (g_selectcolor === color) selected = button;
         button.append(swatch);
-        button.onclick = () => {
-            selected?.setAttribute('aria-pressed', 'false');
-            selected = button;
-            button.setAttribute('aria-pressed', 'true');
-            g_selectcolor = color;
-        };
+        button.onclick = () => selectColor(color);
+        buttons.set(color, button);
         container.append(button);
     }
+    return selectColor;
 }
 
 /**
