@@ -16,7 +16,7 @@
     <script src="mosaic.js?v=mosaic-share"></script>
     <script src="share-controls.js?v=mosaic-share"></script>
     <script src="importfile.js?v=mosaic-actions"></script>
-    <link rel="stylesheet" href="style.css?v=mosaic-actions">
+    <link rel="stylesheet" href="style.css?v=puzzle-paper-home">
     <title>画像でノノグラム</title>
 </head>
 
@@ -29,17 +29,36 @@
             </button>
         </div>
         <div id="start-panel">
-            <p>自分の画像で問題を作れます。画像がなければ、サンプルですぐに遊べます。</p>
-            <div class="toolbar-group" role="group" aria-label="新しい問題">
-                <button type="button" id="open-image" class="action-link action-primary" aria-describedby="image-formats">自分の画像で作る</button>
-                <a href="?sample" class="action-link">サンプル問題で遊ぶ</a>
-                <button type="button" class="action-link" data-open-play-guide aria-haspopup="dialog" aria-controls="play-guide-dialog">遊び方</button>
-            </div>
-            <input type="file" id="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" hidden>
-            <p id="image-formats">PNG・JPEG・WebPに対応しています。画像はブラウザ内で処理します。</p>
-            <div id="saved-progress" class="toolbar-group" hidden>
-                <button type="button" id="resume-progress" class="action-link">前回の続きから</button>
-                <small>このブラウザに自動保存した問題を再開します。</small>
+            <div class="home-intro">
+                <div class="home-copy">
+                    <p>写真やイラストから問題を作り、数字を手がかりにマスを塗って絵を完成させます。</p>
+                    <div class="toolbar-group" role="group" aria-label="新しい問題">
+                        <button type="button" id="open-image" class="action-link action-primary" aria-describedby="image-formats">自分の画像で作る</button>
+                        <a href="?sample" class="action-link">サンプル問題で遊ぶ</a>
+                        <button type="button" class="action-link" data-open-play-guide aria-haspopup="dialog" aria-controls="play-guide-dialog">遊び方</button>
+                    </div>
+                    <input type="file" id="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" hidden>
+                    <p id="image-formats">PNG・JPEG・WebPに対応しています。画像はブラウザ内で処理します。</p>
+                    <div id="saved-progress" class="toolbar-group" hidden>
+                        <button type="button" id="resume-progress" class="action-link">前回の続きから</button>
+                        <small>このブラウザに自動保存した問題を再開します。</small>
+                    </div>
+                </div>
+                <figure class="home-art">
+                    <table class="home-puzzle" aria-hidden="true">
+                        <thead>
+                            <tr><td></td><th>1</th><th>1</th><th>5</th><th>1</th><th>1</th></tr>
+                        </thead>
+                        <tbody>
+                            <tr><th>1</th><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>1</th><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr class="home-first-move"><th>5</th><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>1</th><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th>1</th><td></td><td></td><td></td><td></td><td></td></tr>
+                        </tbody>
+                    </table>
+                    <figcaption>サンプルの最初の一手。左が「5」の行は、5マスすべてを塗れます。</figcaption>
+                </figure>
             </div>
             <p id="image-status" role="status"></p>
             <div id="image-preview" hidden>
