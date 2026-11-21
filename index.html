@@ -11,6 +11,7 @@
     <script src="board-tools.js"></script>
     <script src="line-logic.js"></script>
     <script src="progress-store.js"></script>
+    <script src="quality-controls.js"></script>
     <script src="mosaic.js"></script>
     <script src="importfile.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -53,6 +54,8 @@
                 </div>
                 <p id="color-note" hidden>近い色を最大7色にまとめます。白に近い部分は空白になります。</p>
                 <p id="preview-message" role="status"></p>
+                <button type="button" id="preview-quality">答えが一つか調べる</button>
+                <p id="preview-quality-result" class="quality-result" role="status"></p>
                 <button type="button" id="play-preview">この問題で遊ぶ</button>
                 <button type="button" id="split-preview" hidden>10×10に分けて遊ぶ</button>
                 <button type="button" id="resume-color" hidden>カラー問題に戻る</button>
@@ -91,12 +94,14 @@
                             <label><input type="checkbox" id="stick-clues" checked> ヒント数字を固定</label>
                             <label><input type="checkbox" id="auto-slash"> 完成した行・列の空白に斜線</label>
                             <label id="color-symbol-option"><input type="checkbox" id="color-symbols"> 色の記号を表示</label>
+                            <button type="button" id="board-quality">答えが一つか調べる</button>
                             <button type="button" id="downl">画像を保存</button>
                             <button type="button" id="preview-monochrome" hidden>同じ画像を白黒に変換</button>
                             <a href="" id="share" target="_blank" rel="noopener">Twitterでシェア</a>
                             <a href="?" id="board-home">最初の画面に戻る</a>
                             <p class="play-instructions" id="keyboard-instructions">右クリックで斜線。Tab で盤面を選び、矢印キーで移動、Space または Enter で塗り、X で斜線、Delete で消去。</p>
                         </div>
+                        <p id="board-quality-result" class="quality-result" role="status"></p>
                     </details>
                 </div>
                 <p class="play-instructions">ヒント数字を押すとチェックできます。</p>
