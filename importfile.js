@@ -427,7 +427,8 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
     const usedColors = options.generated
         ? new Set([...palette.slice(1).map((_, i) => i + 1), blank])
         : new Set(matrix.flat());
-    g_selectcolor = usedColors.values().next().value;
+    const paintColors = [...usedColors].filter(color => color !== blank);
+    g_selectcolor = paintColors[0] ?? blank;
 
     const widthInCells = matrix[0].length + rowClues[1];
     const heightInCells = matrix.length + columnClues[1];
@@ -444,7 +445,7 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
     try {
         const selectColor = drawUnderPalette(palette, usedColors, blank);
         controls = setupBoard(matrix, palette, blank, rowClues, columnClues, initialCellSize, clock, board,
-            [...usedColors].filter(color => color !== blank).length > 1, onEdit, fixedSlashes, selectColor);
+            paintColors.length > 1, onEdit, fixedSlashes, selectColor);
     } catch (error) {
         setPlaying(false);
         throw error;
