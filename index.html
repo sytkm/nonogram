@@ -8,6 +8,8 @@
     <script src="inflate.min.js"></script>
     <script src="image-input.js"></script>
     <script src="play-clock.js"></script>
+    <script src="board-tools.js"></script>
+    <script src="progress-store.js"></script>
     <script src="mosaic.js"></script>
     <script src="importfile.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -19,6 +21,10 @@
         <h1>画像でノノグラム</h1>
         <div id="start-panel">
             <p>画像からノノグラムを作れます。画像がなくても、サンプルですぐに遊べます。</p>
+            <div id="saved-progress" hidden>
+                <button type="button" id="resume-progress">前回の続きから</button>
+                <small>このブラウザに直近の1問を自動保存します。</small>
+            </div>
             <a href="?sample">サンプル問題で遊ぶ</a>
             <label for="file">自分の画像で作る</label>
             <input type="file" id="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp">
@@ -62,6 +68,8 @@
                 <div class="board-tools" role="group" aria-label="盤面の操作">
                     <button type="button" id="check">答え合わせ</button>
                     <button type="button" id="line-hint">ヒント <small>+1分</small></button>
+                    <button type="button" id="board-undo" disabled>元に戻す</button>
+                    <button type="button" id="board-redo" disabled>やり直す</button>
                     <button type="button" id="zoom-out" aria-label="盤面を縮小">−</button>
                     <button type="button" id="zoom-in" aria-label="盤面を拡大">＋</button>
                     <button type="button" id="zoom-fit">全体を表示</button>
@@ -76,13 +84,16 @@
                                 <button type="button" id="solve" aria-describedby="answer-penalty">答えを見る</button>
                                 <span id="answer-penalty"></span>
                             </div>
+                            <label id="color-symbol-option"><input type="checkbox" id="color-symbols"> 色の記号を表示</label>
                             <button type="button" id="downl">画像を保存</button>
                             <button type="button" id="preview-monochrome" hidden>同じ画像を白黒に変換</button>
                             <a href="" id="share" target="_blank" rel="noopener">Twitterでシェア</a>
                             <a href="?" id="board-home">最初の画面に戻る</a>
+                            <p class="play-instructions" id="keyboard-instructions">右クリックで斜線。Tab で盤面を選び、矢印キーで移動、Space または Enter で塗り、X で斜線、Delete で消去。</p>
                         </div>
                     </details>
                 </div>
+                <p class="play-instructions">ヒント数字を押すとチェックできます。</p>
                 <p id="hint-message" role="status"></p>
             </div>
         </div>
@@ -92,7 +103,7 @@
         <div id="mosaic-instructions">
             <p>区画を選んで遊びます。クリアした区画がつながって、一枚の絵になります。</p>
             <p>元の画像からはみ出す端のマスは空白です。空白だけの区画は最初から完成しています。</p>
-            <p>途中の状態は、このページを開いている間だけ残ります。</p>
+            <p>途中の状態は、このブラウザに自動保存されます。</p>
         </div>
         <p id="mosaic-progress" role="status"></p>
         <div class="mosaic-time-controls">
@@ -112,9 +123,11 @@
         </section>
         <p><a href="?">最初の画面に戻る</a></p>
     </main>
+    <p id="progress-warning" role="status"></p>
     <p id="pause-message" role="status" hidden>一時停止中です。「再開」を押すと盤面が表示されます。</p>
     <div id="pixelcanvas" hidden>
-        <canvas id="canvas"></canvas>
+        <canvas id="canvas" tabindex="0" aria-label="ノノグラムの盤面" aria-describedby="keyboard-instructions"></canvas>
+        <div id="keyboard-cell-marker" aria-hidden="true" hidden></div>
         <div id="hint-line-marker" aria-hidden="true" hidden></div>
     </div>
     <div id="fix-phone-under-menu" hidden>

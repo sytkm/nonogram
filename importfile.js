@@ -3,18 +3,18 @@
 // 選択色
 let g_selectcolor = 0;
 
-// 描画したマトリクス
-let g_drawmatrix = [];
-
 // 表示中の盤面だけ、画面の解像度が変わったときに描き直す。
 let refreshBoard;
+let finishStroke;
 let playClock;
+let restoredColorSource;
 
 // 5×5の十字を描いたパレット形式のサンプルPNG。
 const samplePNG = 'iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAMAAAC6sdbXAAAABlBMVEX///8wW6NnOUAjAAAAFUlEQVR4nGNgYGBkAAEQyQgCDEgiAAClAAqu0sLdAAAAAElFTkSuQmCC';
 
 window.onload = function () {
     setupImagePicker();
+    setupProgressRestore();
     window.addEventListener('resize', () => refreshBoard?.());
     window.setInterval(() => {
         if (!document.getElementById('play-panel').hidden) updatePlayTime();
@@ -164,7 +164,23 @@ function setupImagePicker() {
     mode.addEventListener('change', updatePreview);
     threshold.addEventListener('input', updatePreview);
     document.getElementById('reset-threshold').addEventListener('click', resetThreshold);
-    document.getElementById('preview-monochrome').addEventListener('click', () => openPreview(true));
+    document.getElementById('preview-monochrome').addEventListener('click', async () => {
+        const source = restoredColorSource;
+        if (!source) {
+            openPreview(true);
+            return;
+        }
+        const selection = currentImage;
+        try {
+            const bytes = Uint8Array.from(atob(source), character => character.charCodeAt(0));
+            const decoded = await readPuzzleImage(new Blob([bytes], { type: 'image/png' }));
+            if (source !== restoredColorSource || selection !== currentImage) return;
+            currentImage = { image: decoded.image, format: decoded.format };
+            openPreview(true);
+        } catch {
+            document.getElementById('progress-warning').textContent = '元の画像を開けませんでした。';
+        }
+    });
     resumeColor.addEventListener('click', () => setPlaying(true));
     playPreview.addEventListener('click', () => {
         startPuzzle(currentImage.puzzle, { generated: true });
@@ -174,7 +190,11 @@ function setupImagePicker() {
 
 function setPlaying(playing) {
     if (playing) playClock?.resume();
-    else playClock?.suspend();
+    else {
+        finishStroke?.();
+        playClock?.suspend();
+        flushProgress();
+    }
     document.getElementById('start-panel').hidden = playing;
     document.getElementById('mosaic-panel').hidden = true;
     document.getElementById('play-panel').hidden = !playing;
@@ -268,10 +288,14 @@ function decodeLegacyPng(src) {
 }
 
 function startPuzzle({ matrix, palette, blank }, options = {}) {
+    finishStroke?.();
     playClock?.suspend();
     const clock = options.clock ?? createPlayClock();
     playClock = clock;
-    g_drawmatrix = options.initialBoard ?? matrix.map(row => row.map(() => blank));
+    restoredColorSource = options.progressId && options.canConvert ? options.shareSource : undefined;
+    const board = options.board ?? {};
+    const cells = board.cells ??= matrix.map(row => row.map(() => blank));
+    board.marks ??= {};
     const usedColors = options.generated
         ? new Set([...palette.slice(1).map((_, i) => i + 1), blank])
         : new Set(matrix.flat());
@@ -289,9 +313,11 @@ function startPuzzle({ matrix, palette, blank }, options = {}) {
     const hint = document.getElementById('line-hint');
     hint.hidden = options.shared === true;
     setPlaying(true);
+    let controls;
     try {
         drawUnderPalette(palette, usedColors, blank);
-        setupBoard(matrix, palette, blank, rowClues, columnClues, initialCellSize, clock);
+        controls = setupBoard(matrix, palette, blank, rowClues, columnClues, initialCellSize, clock, board,
+            [...usedColors].filter(color => color !== blank).length > 1);
     } catch (error) {
         setPlaying(false);
         throw error;
@@ -322,7 +348,6 @@ function startPuzzle({ matrix, palette, blank }, options = {}) {
 
     const download = document.getElementById('downl');
     download.hidden = options.shared === true || Boolean(options.tileLabel);
-    const solve = document.getElementById('solve');
     document.getElementById('answer-controls').hidden = options.shared === true;
     document.getElementById('answer-penalty').textContent =
         '答えを見るたび ' + matrix.length + '分加算（1行につき1分）';
@@ -333,14 +358,14 @@ function startPuzzle({ matrix, palette, blank }, options = {}) {
         link.click();
     };
     document.getElementById('check').onclick = () => {
-        const solved = checkNumber(rowClues, g_drawmatrix, blank) &&
-            checkNumber(columnClues, transpose(g_drawmatrix), blank);
+        finishStroke();
+        const solved = checkNumber(rowClues, cells, blank) &&
+            checkNumber(columnClues, transpose(cells), blank);
         if (solved) {
             clock.finish();
             updatePlayTime();
-            document.getElementById('pause-play').disabled = true;
-            solve.disabled = true;
-            hint.disabled = true;
+            controls.finish();
+            queueProgressSave();
             if (options.onSolved) {
                 options.onSolved();
                 return;
@@ -348,6 +373,17 @@ function startPuzzle({ matrix, palette, blank }, options = {}) {
         }
         alert(solved ? '正解！' : 'まだ一致していません。');
     };
+    if (!options.onReturn) {
+        const { sample, shared, generated, shareSource, canConvert } = options;
+        setProgressSource(() => ({
+            kind: 'board',
+            puzzle: { matrix, palette, blank },
+            options: { sample, shared, generated, shareSource, canConvert },
+            board,
+            clock: clock.snapshot(),
+        }), options.progressId);
+    }
+    if (board.finished) controls.finish();
     if (options.tileLabel) returnToMosaic.focus();
 }
 
@@ -360,10 +396,22 @@ function boardResolution(width, height, pixelRatio) {
     };
 }
 
-function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSize, clock) {
+function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSize, clock, board, multiColor) {
+    const { cells } = board;
     const viewport = document.getElementById('pixelcanvas');
     const canvas = document.getElementById('canvas');
     const context = canvas.getContext('2d');
+    const keyboardMarker = document.getElementById('keyboard-cell-marker');
+    const symbols = document.getElementById('color-symbols');
+    const undo = document.getElementById('board-undo');
+    const redo = document.getElementById('board-redo');
+    const history = createBoardHistory(board);
+    let keyboardCell;
+    keyboardMarker.hidden = true;
+    symbols.checked = multiColor && Boolean(board.showSymbols);
+    document.getElementById('color-symbol-option').hidden = !multiColor;
+    const palettePanel = document.getElementById('color-palette');
+    palettePanel.classList.toggle('show-symbols', symbols.checked);
     const zoomIn = document.getElementById('zoom-in');
     const zoomOut = document.getElementById('zoom-out');
     const paintMode = document.getElementById('paint-mode');
@@ -386,8 +434,45 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     let cellSize;
     let tracing = false;
     let stroke;
+    let pressedClue;
     let pausedPosition;
     let highlightedHint;
+
+    function updateHistoryButtons() {
+        undo.disabled = board.finished || !history.canUndo();
+        redo.disabled = board.finished || !history.canRedo();
+    }
+
+    function record(changes) {
+        history.record(changes);
+        updateHistoryButtons();
+        queueProgressSave();
+    }
+
+    function moveHistory(action) {
+        stopStroke();
+        if (board.finished || !history[action]()) return;
+        highlightedHint = undefined;
+        hintMessage.textContent = '';
+        positionHintMarker();
+        renderBoard(true);
+        updateHistoryButtons();
+        queueProgressSave();
+    }
+
+    function positionKeyboardCell(scroll = false) {
+        if (!keyboardCell) return;
+        const x = (leftClueCount + keyboardCell.column) * cellSize;
+        const y = (topClueCount + keyboardCell.row) * cellSize;
+        Object.assign(keyboardMarker.style, {
+            left: x + 'px', top: y + 'px', width: cellSize + 'px', height: cellSize + 'px',
+        });
+        keyboardMarker.hidden = false;
+        if (scroll) {
+            viewport.scrollLeft = Math.min(x, Math.max(viewport.scrollLeft, x + cellSize - viewport.clientWidth));
+            viewport.scrollTop = Math.min(y, Math.max(viewport.scrollTop, y + cellSize - viewport.clientHeight));
+        }
+    }
 
     function positionHintMarker() {
         hintMarker.hidden = !highlightedHint;
@@ -412,21 +497,20 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
 
         context.fillStyle = '#fff';
         context.fillRect(0, 0, canvas.width, canvas.height);
-        g_drawmatrix.forEach((row, y) => row.forEach((color, x) => paintCell(y, x, color)));
-
         const fontSize = Math.max(1, Math.floor(Math.min(
             canvas.width / widthInCells, canvas.height / heightInCells
         ) * 0.68));
         context.font = '600 ' + fontSize + 'px system-ui, sans-serif';
         context.textAlign = 'center';
         context.textBaseline = 'middle';
+        cells.forEach((row, y) => row.forEach((color, x) => paintCell(y, x, color)));
 
         // ヒントを盤面側に揃え、どの行・列の数字か追いやすくする。
         rowsOfClues.forEach((clues, y) => clues.forEach((clue, x) =>
-            paintClue(leftClueCount - clues.length + x, topClueCount + y, clue)
+            paintClue(leftClueCount - clues.length + x, topClueCount + y, clue, boardClueKey('row', y, x))
         ));
         columnsOfClues.forEach((clues, x) => clues.forEach((clue, y) =>
-            paintClue(leftClueCount + x, topClueCount - clues.length + y, clue)
+            paintClue(leftClueCount + x, topClueCount - clues.length + y, clue, boardClueKey('column', x, y))
         ));
     }
 
@@ -442,7 +526,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         };
     }
 
-    function paintClue(column, row, [color, count]) {
+    function paintClue(column, row, [color, count], key) {
         const { left, top, width, height } = rectangle(column, row);
         if (!width || !height) return;
         if (color >= 0) {
@@ -453,7 +537,13 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
             context.fillStyle = '#111';
         }
         if (cellSize >= 6 && width >= 4 && height >= 4) {
-            context.fillText(String(count), left + width / 2, top + height / 2, width * 0.85);
+            const text = symbols.checked && color >= 0 ? count + '·' + paletteSymbol(color, blank) : String(count);
+            context.fillText(text, left + width / 2, top + height / 2, width * 0.9);
+        }
+        if (board.marks[key]) {
+            // Keep the number legible by striking through its lower half.
+            const thickness = Math.max(1, Math.floor(height / 12));
+            context.fillRect(left + width * 0.1, top + height * 0.60, width * 0.8, thickness);
         }
     }
 
@@ -470,6 +560,10 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
             context.fillRect(left, top, border, height);
             if (row === rows - 1) context.fillRect(left, top + height - border, width, border);
             if (column === columns - 1) context.fillRect(left + width - border, top, border, height);
+        }
+        if (symbols.checked && color >= 0 && color !== blank && cellSize >= 6 && width >= 4 && height >= 4) {
+            context.fillStyle = chooseTextColor(...palette[color]);
+            context.fillText(paletteSymbol(color, blank), left + width / 2, top + height / 2, width * 0.85);
         }
         if (color < 0 && Math.min(width, height) >= 4) {
             context.strokeStyle = '#222';
@@ -491,6 +585,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         canvas.style.height = (heightInCells * cellSize) + 'px';
         renderBoard(true);
         positionHintMarker();
+        positionKeyboardCell();
         if (center && previousSize) {
             const ratio = cellSize / previousSize;
             viewport.scrollLeft = oldX * ratio - Math.min(viewport.clientWidth, canvas.clientWidth) / 2;
@@ -512,7 +607,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     hintMessage.textContent = '';
     hint.disabled = false;
     hint.onclick = () => {
-        const result = pickLineHint(answer, g_drawmatrix, blank);
+        const result = pickLineHint(answer, cells, blank);
         if (!result) {
             hintMessage.textContent = 'すべてのマスがそろっています。答え合わせを押してください。';
             return;
@@ -521,10 +616,9 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         clock.addPenalty(1);
         updatePlayTime();
         const { axis, index, changes } = result;
-        for (const { row, column, color } of changes) {
-            g_drawmatrix[row][column] = color;
-            paintCell(row, column, color);
-        }
+        const action = [];
+        for (const { row, column, color } of changes) applyColor({ row, column }, color, action);
+        record(action);
         highlightedHint = { axis, index };
         const lineLabel = axis === 'row' ? '上から' + (index + 1) + '行目' : '左から' + (index + 1) + '列目';
         hintMessage.textContent = lineLabel + 'をヒントで埋めました（1分加算）。';
@@ -546,15 +640,18 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         stopStroke();
         clock.addPenalty(rows);
         updatePlayTime();
-        g_drawmatrix = answer.map(row => row.slice());
+        const action = [];
+        answer.forEach((line, row) => line.forEach((color, column) => applyColor({ row, column }, color, action)));
+        record(action);
         highlightedHint = undefined;
         hintMessage.textContent = '';
         positionHintMarker();
         renderBoard(true);
     };
+    document.getElementById('check').disabled = false;
     pauseButton.disabled = false;
     pauseButton.textContent = '一時停止';
-    pauseButton.onclick = () => {
+    function togglePause() {
         if (pausedPosition) {
             setPlayAreaVisible(true);
             viewport.scrollLeft = pausedPosition.left;
@@ -569,8 +666,14 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         }
         pauseMessage.hidden = !pausedPosition;
         pauseButton.textContent = pausedPosition ? '再開' : '一時停止';
+        board.paused = Boolean(pausedPosition);
         updatePlayTime();
+    }
+    pauseButton.onclick = () => {
+        togglePause();
+        queueProgressSave();
     };
+    if (board.paused && !board.finished) togglePause();
 
     function setTracing(enabled) {
         stopStroke();
@@ -587,10 +690,12 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
             widthInCells, heightInCells, [leftClueCount, topClueCount]);
     }
 
-    function applyColor({ row, column }, color) {
+    function applyColor({ row, column }, color, action) {
         clock.start();
-        if (g_drawmatrix[row][column] === color) return;
-        g_drawmatrix[row][column] = color;
+        const before = cells[row][column];
+        if (before === color) return;
+        action.push({ row, column, before, after: color });
+        cells[row][column] = color;
         paintCell(row, column, color);
     }
 
@@ -599,33 +704,109 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         const point = pointFor(event);
         if (!point) return;
         for (const cell of traceBoardCells(stroke.point, point, columns, rows)) {
-            applyColor(cell, stroke.color);
+            applyColor(cell, stroke.color, stroke.changes);
         }
         stroke.point = point;
     }
 
     function stopStroke() {
-        const id = stroke?.id;
+        if (!stroke) return;
+        const { id, changes } = stroke;
         stroke = undefined;
-        if (id !== undefined && canvas.hasPointerCapture(id)) canvas.releasePointerCapture(id);
+        if (canvas.hasPointerCapture(id)) canvas.releasePointerCapture(id);
+        record(changes);
     }
 
     setTracing(false);
     paintMode.onclick = () => setTracing(!tracing);
+    function editCell(cell, color) {
+        if (board.finished) return;
+        stopStroke();
+        const action = [];
+        applyColor(cell, color, action);
+        record(action);
+    }
+
+    function toggleSlash(cell) {
+        editCell(cell, cells[cell.row][cell.column] === -1 ? blank : -1);
+    }
+
+    undo.onclick = () => moveHistory('undo');
+    redo.onclick = () => moveHistory('redo');
+    updateHistoryButtons();
+    symbols.onchange = () => {
+        board.showSymbols = symbols.checked;
+        palettePanel.classList.toggle('show-symbols', symbols.checked);
+        renderBoard(true);
+        queueProgressSave();
+    };
     canvas.onclick = event => {
-        if (tracing) return;
-        const cell = boardCellAt(pointFor(event), columns, rows);
+        if (board.finished || !event.detail) return;
+        const point = pointFor(event);
+        const key = boardClueAt(point, rowsOfClues, columnsOfClues);
+        if (key && key === pressedClue) {
+            const before = Boolean(board.marks[key]);
+            if (before) delete board.marks[key];
+            else board.marks[key] = true;
+            record([{ key, before, after: !before }]);
+            renderBoard(true);
+            return;
+        }
+        const cell = boardCellAt(point, columns, rows);
         if (!cell) return;
-        applyColor(cell, g_selectcolor);
+        keyboardCell = cell;
+        positionKeyboardCell();
+        if (!tracing) editCell(cell, g_selectcolor);
+    };
+    canvas.oncontextmenu = event => {
+        if (event.pointerType === 'touch') return;
+        const cell = boardCellAt(pointFor(event), columns, rows);
+        if (!cell || board.finished) return;
+        event.preventDefault();
+        toggleSlash(cell);
+    };
+    canvas.onfocus = () => {
+        keyboardCell ??= { row: 0, column: 0 };
+        positionKeyboardCell();
+    };
+    canvas.onkeydown = event => {
+        if (event.altKey) return;
+        const key = event.key.toLowerCase();
+        if (event.metaKey || event.ctrlKey) {
+            if (key !== 'z' && key !== 'y') return;
+            event.preventDefault();
+            moveHistory(key === 'y' || event.shiftKey ? 'redo' : 'undo');
+            return;
+        }
+        const offsets = { arrowup: [-1, 0], arrowdown: [1, 0], arrowleft: [0, -1], arrowright: [0, 1] };
+        const offset = offsets[key];
+        if (offset) {
+            event.preventDefault();
+            keyboardCell = {
+                row: Math.max(0, Math.min(rows - 1, keyboardCell.row + offset[0])),
+                column: Math.max(0, Math.min(columns - 1, keyboardCell.column + offset[1])),
+            };
+            positionKeyboardCell(true);
+        } else if ([' ', 'enter', 'x', 'delete', 'backspace'].includes(key)) {
+            event.preventDefault();
+            if (key === 'x') {
+                if (!event.repeat) toggleSlash(keyboardCell);
+            } else {
+                editCell(keyboardCell, key === 'delete' || key === 'backspace' ? blank : g_selectcolor);
+            }
+            positionKeyboardCell(true);
+        }
     };
     canvas.onpointerdown = event => {
-        if (!tracing || stroke || !event.isPrimary || event.button !== 0) return;
+        if (board.finished || stroke || !event.isPrimary || event.button !== 0) return;
         const point = pointFor(event);
+        pressedClue = boardClueAt(point, rowsOfClues, columnsOfClues);
+        if (!tracing) return;
         const cell = boardCellAt(point, columns, rows);
         if (!cell) return;
         canvas.setPointerCapture(event.pointerId);
-        stroke = { id: event.pointerId, point, color: g_selectcolor };
-        applyColor(cell, stroke.color);
+        stroke = { id: event.pointerId, point, color: g_selectcolor, changes: [] };
+        applyColor(cell, stroke.color, stroke.changes);
     };
     canvas.onpointermove = event => {
         if (!stroke || event.pointerId !== stroke.id) return;
@@ -641,6 +822,17 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         if (event.pointerId === stroke?.id) stopStroke();
     };
     refreshBoard = () => renderBoard();
+    finishStroke = stopStroke;
+    return {
+        finish() {
+            board.finished = true;
+            document.getElementById('check').disabled = true;
+            pauseButton.disabled = true;
+            hint.disabled = true;
+            solve.disabled = true;
+            updateHistoryButtons();
+        },
+    };
 }
 
 function pickLineHint(answer, board, blank, random = Math.random) {
@@ -853,8 +1045,13 @@ function drawUnderPalette(palette, usedColors, blank) {
             label = '空白に戻す';
         } else {
             const hexColor = '#' + palette[color].map(channel => channel.toString(16).padStart(2, '0')).join('');
-            label = '色 ' + hexColor;
+            const symbol = document.createElement('span');
+            symbol.className = 'palette-symbol';
+            symbol.textContent = paletteSymbol(color, blank);
+            swatch.append(symbol);
+            label = '色 ' + symbol.textContent + ' ' + hexColor;
             swatch.style.backgroundColor = hexColor;
+            swatch.style.color = chooseTextColor(...palette[color]);
         }
         button.title = label;
         button.setAttribute('aria-label', label);
