@@ -71,3 +71,22 @@ test('秒未満を切り捨て、1時間以上の時間も表示する', () => {
     assert.equal(context.formatPlayTime(60_999), '01:00');
     assert.equal(context.formatPlayTime(3_661_000), '1:01:01');
 });
+
+test('プレイ時間の保存から復元し、ページを閉じていた時間は加算しない', () => {
+    let now = 100;
+    const clock = context.createPlayClock(() => now);
+    clock.start();
+    now += 2000;
+    clock.addPenalty(1);
+    const saved = clock.snapshot();
+    now += 10_000;
+    const restored = context.createPlayClock(() => now, saved);
+    assert.equal(restored.elapsed(), 62_000);
+    restored.resume();
+    now += 2000;
+    restored.finish();
+    const finished = context.createPlayClock(() => now, restored.snapshot());
+    finished.resume();
+    now += 4000;
+    assert.equal(finished.elapsed(), 64_000);
+});

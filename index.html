@@ -9,6 +9,7 @@
     <script src="image-input.js"></script>
     <script src="play-clock.js"></script>
     <script src="board-tools.js"></script>
+    <script src="progress-store.js"></script>
     <script src="mosaic.js"></script>
     <script src="importfile.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -20,6 +21,10 @@
         <h1>画像でノノグラム</h1>
         <div id="start-panel">
             <p>画像からノノグラムを作れます。画像がなくても、サンプルですぐに遊べます。</p>
+            <div id="saved-progress" hidden>
+                <button type="button" id="resume-progress">前回の続きから</button>
+                <small>このブラウザに直近の1問を自動保存します。</small>
+            </div>
             <a href="?sample">サンプル問題で遊ぶ</a>
             <label for="file">自分の画像で作る</label>
             <input type="file" id="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp">
@@ -98,7 +103,7 @@
         <div id="mosaic-instructions">
             <p>区画を選んで遊びます。クリアした区画がつながって、一枚の絵になります。</p>
             <p>元の画像からはみ出す端のマスは空白です。空白だけの区画は最初から完成しています。</p>
-            <p>途中の状態は、このページを開いている間だけ残ります。</p>
+            <p>途中の状態は、このブラウザに自動保存されます。</p>
         </div>
         <p id="mosaic-progress" role="status"></p>
         <div class="mosaic-time-controls">
@@ -118,6 +123,7 @@
         </section>
         <p><a href="?">最初の画面に戻る</a></p>
     </main>
+    <p id="progress-warning" role="status"></p>
     <p id="pause-message" role="status" hidden>一時停止中です。「再開」を押すと盤面が表示されます。</p>
     <div id="pixelcanvas" hidden>
         <canvas id="canvas" tabindex="0" aria-label="ノノグラムの盤面" aria-describedby="keyboard-instructions"></canvas>

@@ -42,8 +42,15 @@ function prepareMosaicDownload(link, canvas) {
     }, 'image/png');
 }
 
-function openMosaic({ matrix, palette, blank }) {
+function openMosaic({ matrix, palette, blank }, saved) {
     const mosaic = splitMosaic(matrix, blank);
+    mosaic.tiles.forEach((tile, index) => {
+        const state = saved?.tiles[index];
+        if (!state) return;
+        tile.complete ||= state.complete;
+        tile.board = state.board;
+        if (state.clock) tile.clock = createPlayClock(undefined, state.clock);
+    });
     const panel = document.getElementById('mosaic-panel');
     const title = document.getElementById('mosaic-title');
     const progress = document.getElementById('mosaic-progress');
@@ -58,7 +65,7 @@ function openMosaic({ matrix, palette, blank }) {
     const saveLarge = document.getElementById('mosaic-save-large');
     const styles = palette.map(color => 'rgb(' + color.join(',') + ')');
     let completedCount = mosaic.tiles.filter(tile => tile.complete).length;
-    let showTimes = false;
+    let showTimes = saved?.showTimes ?? false;
     const tileDisplays = [];
     grid.replaceChildren();
     grid.style.setProperty('--mosaic-columns', mosaic.columns);
@@ -175,6 +182,15 @@ function openMosaic({ matrix, palette, blank }) {
     timeToggle.onclick = () => {
         showTimes = !showTimes;
         updateTimeView();
+        queueProgressSave();
     };
     updateOverview(title);
+    setProgressSource(() => ({
+        kind: 'mosaic',
+        puzzle: { matrix, palette, blank },
+        showTimes,
+        tiles: mosaic.tiles.map(tile => ({
+            complete: tile.complete, board: tile.board, clock: tile.clock?.snapshot(),
+        })),
+    }), saved?.id);
 }

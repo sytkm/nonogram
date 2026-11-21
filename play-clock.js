@@ -1,8 +1,8 @@
-function createPlayClock(now = () => performance.now()) {
-    let saved = 0;
+function createPlayClock(now = () => performance.now(), state = {}) {
+    let saved = state.elapsed ?? 0;
     let startedAt = null;
-    let started = false;
-    let finished = false;
+    let started = state.started ?? false;
+    let finished = state.finished ?? false;
 
     function start() {
         if (finished || startedAt !== null) return;
@@ -24,6 +24,9 @@ function createPlayClock(now = () => performance.now()) {
         },
         elapsed() {
             return saved + (startedAt === null ? 0 : now() - startedAt);
+        },
+        snapshot() {
+            return { elapsed: this.elapsed(), started, finished };
         },
         addPenalty(minutes) {
             if (finished) return;
