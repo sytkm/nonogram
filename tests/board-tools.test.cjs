@@ -50,3 +50,9 @@ test('ヒント数字のチェックを取り消せて、新しい操作でや�
     history.record([{ row: 0, column: 0, before: 0, after: 1 }]);
     assert.equal(history.canRedo(), false);
 });
+
+test('空白以外の色に重複しない記号を付ける', () => {
+    assert.equal(context.paletteSymbol(1, 0), 'A');
+    assert.equal(context.paletteSymbol(0, 4), 'A');
+    assert.equal(context.paletteSymbol(27, 0), 'AA');
+});
