@@ -56,6 +56,7 @@ function openMosaic({ matrix, palette, blank }, saved) {
     const progress = document.getElementById('mosaic-progress');
     const totalTime = document.getElementById('mosaic-total-time');
     const timeToggle = document.getElementById('mosaic-time-toggle');
+    const reviewToggle = document.getElementById('mosaic-review-toggle');
     const grid = document.getElementById('mosaic-grid');
     const map = document.getElementById('mosaic-map');
     const instructions = document.getElementById('mosaic-instructions');
@@ -66,6 +67,7 @@ function openMosaic({ matrix, palette, blank }, saved) {
     const styles = palette.map(color => 'rgb(' + color.join(',') + ')');
     let completedCount = mosaic.tiles.filter(tile => tile.complete).length;
     let showTimes = saved?.showTimes ?? false;
+    let showTiles = false;
     const tileDisplays = [];
     grid.replaceChildren();
     grid.style.setProperty('--mosaic-columns', mosaic.columns);
@@ -77,12 +79,11 @@ function openMosaic({ matrix, palette, blank }, saved) {
         link.hidden = true;
     }
 
-    function updateOverview(focusTarget, clearedLabel) {
+    function updateOverview(focusTarget) {
         setPlaying(false);
         document.getElementById('start-panel').hidden = true;
         panel.hidden = false;
-        progress.textContent = completedCount + ' / ' + mosaic.tiles.length + ' 区画が完成' +
-            (clearedLabel ? '（' + clearedLabel + 'をクリア）' : '');
+        progress.textContent = completedCount + ' / ' + mosaic.tiles.length + ' 区画が完成';
         if (completedCount === mosaic.tiles.length && finished.hidden) {
             canvas.width = mosaic.width;
             canvas.height = mosaic.height;
@@ -115,13 +116,15 @@ function openMosaic({ matrix, palette, blank }, saved) {
             // 区画の表示と同じ秒単位に揃え、画面上の数字を足した合計にする。
             total += Math.floor(elapsed / 1000) * 1000;
             time.textContent = formatPlayTime(elapsed);
-            const state = tile.complete ? '（完成済み）' : '';
+            const state = tile.complete ? '（完成済み・閲覧）' : '';
             button.setAttribute('aria-label', label + state + (showTimes ? '、' + time.textContent : ''));
         }
         totalTime.textContent = formatPlayTime(total);
         timeToggle.setAttribute('aria-pressed', String(showTimes));
         grid.classList.toggle('show-times', showTimes);
-        map.hidden = !showTimes && !finished.hidden;
+        reviewToggle.hidden = finished.hidden || showTimes;
+        reviewToggle.setAttribute('aria-pressed', String(showTiles));
+        map.hidden = !finished.hidden && !showTimes && !showTiles;
     }
 
     function drawPiece(context, tile, left, top) {
@@ -145,7 +148,6 @@ function openMosaic({ matrix, palette, blank }, saved) {
         drawPiece(context, tile, 0, 0);
         button.firstElementChild.replaceWith(thumbnail);
         button.classList.add('mosaic-complete');
-        button.disabled = true;
     }
 
     mosaic.tiles.forEach((tile, index) => {
@@ -163,17 +165,23 @@ function openMosaic({ matrix, palette, blank }, saved) {
         if (tile.complete) reveal(tile, button);
         button.onclick = () => {
             tile.clock ??= createPlayClock();
+            if (tile.complete) {
+                tile.clock.finish();
+                // Older saves keep the completion flag and time, but discard the board.
+                tile.board ??= { cells: tile.answer.map(row => row.slice()), finished: true };
+            }
             startPuzzle({ matrix: tile.answer, palette, blank }, {
                 tileLabel: label + ' / ' + mosaic.tiles.length,
                 board: tile.board ??= {},
                 clock: tile.clock,
+                review: tile.complete,
                 onReturn: () => updateOverview(button),
                 onSolved: () => {
                     tile.complete = true;
                     completedCount++;
-                    tile.board = undefined;
+                    delete tile.board.past;
+                    delete tile.board.future;
                     reveal(tile, button);
-                    updateOverview(grid.querySelector('button:not(:disabled)') ?? title, label);
                 },
             });
         };
@@ -184,6 +192,10 @@ function openMosaic({ matrix, palette, blank }, saved) {
         showTimes = !showTimes;
         updateTimeView();
         queueProgressSave();
+    };
+    reviewToggle.onclick = () => {
+        showTiles = !showTiles;
+        updateTimeView();
     };
     updateOverview(title);
     setProgressSource(() => ({

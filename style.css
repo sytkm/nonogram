@@ -108,6 +108,15 @@ h1 {
     display: none;
 }
 
+#play-panel.is-viewing-tile .play-only {
+    display: none;
+}
+
+#play-panel.is-viewing-tile #board-result {
+    margin-block: 0.65rem;
+    font-size: 1rem;
+}
+
 #board-result.is-complete {
     color: #17683d;
     font-weight: 700;
@@ -139,7 +148,8 @@ h1 {
 
 .play-clock button,
 #restart-dialog button,
-#mosaic-time-toggle {
+#mosaic-time-toggle,
+#mosaic-review-toggle {
     min-height: 44px;
     padding: 0.45rem 0.65rem;
     font: inherit;
@@ -294,7 +304,6 @@ h1 {
     background: #fff;
     box-shadow: none;
     opacity: 1;
-    cursor: default;
 }
 
 .mosaic-tile:focus-visible {
