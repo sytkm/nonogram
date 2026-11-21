@@ -57,3 +57,30 @@ test('2×3の全配置を列挙して答えの数の分類を照合する', () =
         assert.equal(inspectPuzzleQuality(rows, columns, 0), count === 1 ? 'unique' : 'multiple', key);
     }
 });
+
+test('6×6の複数解を元画像が空白の一マスだけで一意にする', () => {
+    const rows = singleRuns([1, 2, 2, 3, 3, 3]);
+    const columns = singleRuns([2, 3, 3, 3, 2, 1]);
+    const answer = ['100000', '110000', '011000', '011100', '001110', '000111']
+        .map(line => Array.from(line, Number));
+    const result = context.preparePuzzleQuality(rows, columns, 0, answer);
+    assert.equal(result.quality, 'unique');
+    assert.deepEqual(Array.from(result.fixedSlashes), [5]);
+    assert.equal(inspectPuzzleQuality(rows, columns, 0, undefined, result.fixedSlashes), 'unique');
+    assert.equal(answer[0][5], 0);
+});
+
+test('一つに絞るまで初期斜線を追加し、検査上限時は途中の結果を返さない', () => {
+    const rows = singleRuns([1, 2, 2, 3, 3, 3]);
+    const columns = singleRuns([2, 3, 3, 3, 2, 1]);
+    const answer = ['000001', '110000', '110000', '011100', '001110', '001110']
+        .map(line => Array.from(line, Number));
+    const result = context.preparePuzzleQuality(rows, columns, 0, answer);
+    assert.equal(result.quality, 'unique');
+    assert.equal(result.fixedSlashes.length, 2);
+    assert.ok(result.fixedSlashes.every(index => answer[Math.floor(index / 6)][index % 6] === 0));
+    assert.equal(inspectPuzzleQuality(rows, columns, 0, undefined, result.fixedSlashes), 'unique');
+    const limited = context.preparePuzzleQuality(rows, columns, 0, answer, 1);
+    assert.equal(limited.quality, 'inconclusive');
+    assert.equal(limited.fixedSlashes.length, 0);
+});
