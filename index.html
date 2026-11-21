@@ -84,6 +84,7 @@
                                 <button type="button" id="solve" aria-describedby="answer-penalty">答えを見る</button>
                                 <span id="answer-penalty"></span>
                             </div>
+                            <label><input type="checkbox" id="stick-clues" checked> ヒント数字を固定</label>
                             <label id="color-symbol-option"><input type="checkbox" id="color-symbols"> 色の記号を表示</label>
                             <button type="button" id="downl">画像を保存</button>
                             <button type="button" id="preview-monochrome" hidden>同じ画像を白黒に変換</button>
@@ -126,6 +127,7 @@
     <p id="progress-warning" role="status"></p>
     <p id="pause-message" role="status" hidden>一時停止中です。「再開」を押すと盤面が表示されます。</p>
     <div id="pixelcanvas" hidden>
+        <div class="fixed-clues" aria-hidden="true"><canvas id="fixed-clues" hidden></canvas></div>
         <canvas id="canvas" tabindex="0" aria-label="ノノグラムの盤面" aria-describedby="keyboard-instructions"></canvas>
         <div id="keyboard-cell-marker" aria-hidden="true" hidden></div>
         <div id="hint-line-marker" aria-hidden="true" hidden></div>

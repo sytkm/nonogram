@@ -65,3 +65,18 @@ function paletteSymbol(index, blank) {
     }
     return symbol;
 }
+
+function fixedClueGutters(scrollLeft, scrollTop, viewWidth, viewHeight, clueWidth, clueHeight) {
+    // Leave room to play even when many clues fit on a small or zoomed-in screen.
+    return {
+        left: scrollLeft > 0 && clueWidth <= viewWidth / 2 ? clueWidth : 0,
+        top: scrollTop > 0 && clueHeight <= viewHeight / 2 ? clueHeight : 0,
+    };
+}
+
+function fixedClueHit(x, y, { left, top }) {
+    return {
+        left: x >= 0 && x < left && y >= 0,
+        top: y >= 0 && y < top && x >= 0,
+    };
+}
