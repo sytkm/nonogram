@@ -286,6 +286,8 @@ function startPuzzle({ matrix, palette, blank }, options = {}) {
         : options.sample ? 40 : Math.max(Math.round(500 / heightInCells), 10);
 
     document.getElementById('play-options').open = false;
+    const hint = document.getElementById('row-hint');
+    hint.hidden = options.shared === true;
     setPlaying(true);
     try {
         drawUnderPalette(palette, usedColors, blank);
@@ -338,6 +340,7 @@ function startPuzzle({ matrix, palette, blank }, options = {}) {
             updatePlayTime();
             document.getElementById('pause-play').disabled = true;
             solve.disabled = true;
+            hint.disabled = true;
             if (options.onSolved) {
                 options.onSolved();
                 return;
@@ -367,6 +370,9 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     const instructions = document.getElementById('paint-instructions');
     const pauseButton = document.getElementById('pause-play');
     const pauseMessage = document.getElementById('pause-message');
+    const hint = document.getElementById('row-hint');
+    const hintMessage = document.getElementById('hint-message');
+    const hintMarker = document.getElementById('hint-row-marker');
     const columns = answer[0].length;
     const rows = answer.length;
     const [rowsOfClues, leftClueCount] = rowClues;
@@ -381,6 +387,17 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     let tracing = false;
     let stroke;
     let pausedPosition;
+    let hintedRow;
+
+    function positionHintMarker() {
+        hintMarker.hidden = hintedRow === undefined;
+        if (hintedRow === undefined) return;
+        hintMarker.style.left = (leftClueCount * cellSize) + 'px';
+        hintMarker.style.top = ((topClueCount + hintedRow) * cellSize) + 'px';
+        hintMarker.style.width = (columns * cellSize) + 'px';
+        hintMarker.style.height = cellSize + 'px';
+        hintMarker.style.borderWidth = Math.max(1, Math.min(2, Math.floor(cellSize / 2))) + 'px';
+    }
 
     function renderBoard(force = false) {
         const size = boardResolution(widthInCells * cellSize, heightInCells * cellSize,
@@ -471,6 +488,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         canvas.style.width = (widthInCells * cellSize) + 'px';
         canvas.style.height = (heightInCells * cellSize) + 'px';
         renderBoard(true);
+        positionHintMarker();
         if (center && previousSize) {
             const ratio = cellSize / previousSize;
             viewport.scrollLeft = oldX * ratio - Math.min(viewport.clientWidth, canvas.clientWidth) / 2;
@@ -489,12 +507,37 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     zoomOut.onclick = () => resizeBoard(Math.max(1, Math.floor(cellSize / 1.25)), true);
     document.getElementById('zoom-fit').onclick = () => resizeBoard(fit(), false);
     const solve = document.getElementById('solve');
+    hintMessage.textContent = '';
+    hint.disabled = false;
+    hint.onclick = () => {
+        const result = pickRowHint(answer, g_drawmatrix, blank);
+        if (!result) {
+            hintMessage.textContent = 'すべての行がそろっています。答え合わせを押してください。';
+            return;
+        }
+        stopStroke();
+        clock.start();
+        updatePlayTime();
+        const { row, colors } = result;
+        g_drawmatrix[row] = colors;
+        colors.forEach((color, column) => paintCell(row, column, color));
+        hintedRow = row;
+        hintMessage.textContent = '上から' + (row + 1) + '行目をヒントで埋めました。';
+        positionHintMarker();
+        const top = (topClueCount + row) * cellSize;
+        if (top < viewport.scrollTop || top + cellSize > viewport.scrollTop + viewport.clientHeight) {
+            viewport.scrollTop = top - Math.max(0, (viewport.clientHeight - cellSize) / 2);
+        }
+    };
     solve.disabled = false;
     solve.onclick = () => {
         stopStroke();
         clock.addAnswerPenalty(rows);
         updatePlayTime();
         g_drawmatrix = answer.map(row => row.slice());
+        hintedRow = undefined;
+        hintMessage.textContent = '';
+        positionHintMarker();
         renderBoard(true);
     };
     pauseButton.disabled = false;
@@ -586,6 +629,24 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         if (event.pointerId === stroke?.id) stopStroke();
     };
     refreshBoard = () => renderBoard();
+}
+
+function pickRowHint(answer, board, blank, random = Math.random) {
+    const candidates = [];
+    for (let row = 0; row < answer.length; row++) {
+        const matches = (color, column) => {
+            const current = board[row][column];
+            return current === color || (current === -1 && color === blank);
+        };
+        if (!answer[row].every(matches)) candidates.push(row);
+    }
+    if (!candidates.length) return null;
+
+    const row = candidates[Math.floor(random() * candidates.length)];
+    const colors = answer[row].map((color, column) =>
+        color === blank && board[row][column] === -1 ? -1 : color
+    );
+    return { row, colors };
 }
 
 function boardPointAt(x, y, rect, widthInCells, heightInCells, offset) {
