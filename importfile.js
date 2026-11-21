@@ -13,7 +13,7 @@ const boardSettingsKey = 'nonogram.settings';
 let finishStroke;
 let playClock;
 let restoredColorSource;
-let boardLogicRequest;
+let resetBoardLogicCheck;
 
 // 5×5の十字を描いたパレット形式のサンプルPNG。
 const samplePNG = 'iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAMAAAC6sdbXAAAABlBMVEX///8wW6NnOUAjAAAAFUlEQVR4nGNgYGBkAAEQyQgCDEgiAAClAAqu0sLdAAAAAElFTkSuQmCC';
@@ -406,8 +406,7 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
     finishStroke?.();
     playClock?.suspend();
     const board = options.board ?? {};
-    boardLogicRequest?.cancel();
-    boardLogicRequest = undefined;
+    resetBoardLogicCheck?.();
     const hasSavedCells = Boolean(board.cells);
     const rowClues = makeNumber(matrix, blank);
     const columnClues = makeNumber(transpose(matrix), blank);
@@ -453,25 +452,14 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
             ? '答えが一つか確認できなかったため、ヒント数字に合う配置でクリアになります。'
             : '';
     qualityNote.hidden = !qualityNote.textContent;
-    const logicResult = document.getElementById('board-logic-result');
-    logicResult.textContent = '';
-    if (!options.review && !options.sample) {
-        if (options.initialCheck) {
-            logicResult.textContent = lineSolvabilityMessage(options.initialCheck);
-        } else {
-            logicResult.textContent = '行・列の推理で解けるか調べています…';
-            const request = requestPuzzleQuality({
-                rows: rowClues[0], columns: columnClues[0], blank,
-                fixedSlashes: board.fixedSlashes, check: 'logic',
-            });
-            boardLogicRequest = request;
-            request.result.then(outcome => {
-                if (boardLogicRequest !== request) return;
-                boardLogicRequest = undefined;
-                logicResult.textContent = lineSolvabilityMessage(outcome);
-            });
-        }
-    }
+    document.getElementById('board-advanced-options').open = false;
+    resetBoardLogicCheck = setupQualityCheck(document.getElementById('board-logic'),
+        document.getElementById('board-logic-result'),
+        () => ({
+            rows: rowClues[0], columns: columnClues[0], blank,
+            fixedSlashes: board.fixedSlashes, check: 'logic',
+        }),
+        lineSolvabilityMessage, '行・列の推理で解けるか調べています…');
     const usedColors = options.generated
         ? new Set([...palette.slice(1).map((_, i) => i + 1), blank])
         : new Set(matrix.flat());

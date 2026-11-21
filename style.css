@@ -103,8 +103,7 @@ h1 {
 #hint-message,
 #conflict-message,
 #board-result,
-#quality-play-note,
-#board-logic-result {
+#quality-play-note {
     margin: 0.4rem 0 0;
     font-size: 0.875rem;
 }
@@ -197,6 +196,21 @@ h1 {
 
 .board-tools {
     column-gap: 0.75rem;
+}
+
+.advanced-options {
+    flex-basis: 100%;
+    margin-block: 0.25rem;
+}
+
+.advanced-options summary {
+    padding-block: 0.65rem;
+    cursor: pointer;
+}
+
+.advanced-options p {
+    margin: 0 0 0.5rem;
+    font-size: 0.875rem;
 }
 
 .board-menu:not([hidden]) {
