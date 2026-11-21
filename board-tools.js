@@ -56,3 +56,12 @@ function createBoardHistory(state) {
         },
     };
 }
+
+function paletteSymbol(index, blank) {
+    if (index > blank) index--;
+    let symbol = '';
+    for (let n = index + 1; n > 0; n = Math.floor((n - 1) / 26)) {
+        symbol = String.fromCharCode(65 + (n - 1) % 26) + symbol;
+    }
+    return symbol;
+}

@@ -296,7 +296,8 @@ function startPuzzle({ matrix, palette, blank }, options = {}) {
     let controls;
     try {
         drawUnderPalette(palette, usedColors, blank);
-        controls = setupBoard(matrix, palette, blank, rowClues, columnClues, initialCellSize, clock, board);
+        controls = setupBoard(matrix, palette, blank, rowClues, columnClues, initialCellSize, clock, board,
+            [...usedColors].filter(color => color !== blank).length > 1);
     } catch (error) {
         setPlaying(false);
         throw error;
@@ -363,14 +364,22 @@ function boardResolution(width, height, pixelRatio) {
     };
 }
 
-function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSize, clock, board) {
+function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSize, clock, board, multiColor) {
     const { cells } = board;
     const viewport = document.getElementById('pixelcanvas');
     const canvas = document.getElementById('canvas');
     const context = canvas.getContext('2d');
+    const keyboardMarker = document.getElementById('keyboard-cell-marker');
+    const symbols = document.getElementById('color-symbols');
     const undo = document.getElementById('board-undo');
     const redo = document.getElementById('board-redo');
     const history = createBoardHistory(board);
+    let keyboardCell;
+    keyboardMarker.hidden = true;
+    symbols.checked = multiColor && Boolean(board.showSymbols);
+    document.getElementById('color-symbol-option').hidden = !multiColor;
+    const palettePanel = document.getElementById('color-palette');
+    palettePanel.classList.toggle('show-symbols', symbols.checked);
     const zoomIn = document.getElementById('zoom-in');
     const zoomOut = document.getElementById('zoom-out');
     const paintMode = document.getElementById('paint-mode');
@@ -417,6 +426,20 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         updateHistoryButtons();
     }
 
+    function positionKeyboardCell(scroll = false) {
+        if (!keyboardCell) return;
+        const x = (leftClueCount + keyboardCell.column) * cellSize;
+        const y = (topClueCount + keyboardCell.row) * cellSize;
+        Object.assign(keyboardMarker.style, {
+            left: x + 'px', top: y + 'px', width: cellSize + 'px', height: cellSize + 'px',
+        });
+        keyboardMarker.hidden = false;
+        if (scroll) {
+            viewport.scrollLeft = Math.min(x, Math.max(viewport.scrollLeft, x + cellSize - viewport.clientWidth));
+            viewport.scrollTop = Math.min(y, Math.max(viewport.scrollTop, y + cellSize - viewport.clientHeight));
+        }
+    }
+
     function positionHintMarker() {
         hintMarker.hidden = !highlightedHint;
         if (!highlightedHint) return;
@@ -440,14 +463,13 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
 
         context.fillStyle = '#fff';
         context.fillRect(0, 0, canvas.width, canvas.height);
-        cells.forEach((row, y) => row.forEach((color, x) => paintCell(y, x, color)));
-
         const fontSize = Math.max(1, Math.floor(Math.min(
             canvas.width / widthInCells, canvas.height / heightInCells
         ) * 0.68));
         context.font = '600 ' + fontSize + 'px system-ui, sans-serif';
         context.textAlign = 'center';
         context.textBaseline = 'middle';
+        cells.forEach((row, y) => row.forEach((color, x) => paintCell(y, x, color)));
 
         // ヒントを盤面側に揃え、どの行・列の数字か追いやすくする。
         rowsOfClues.forEach((clues, y) => clues.forEach((clue, x) =>
@@ -481,7 +503,8 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
             context.fillStyle = '#111';
         }
         if (cellSize >= 6 && width >= 4 && height >= 4) {
-            context.fillText(String(count), left + width / 2, top + height / 2, width * 0.85);
+            const text = symbols.checked && color >= 0 ? count + '·' + paletteSymbol(color, blank) : String(count);
+            context.fillText(text, left + width / 2, top + height / 2, width * 0.9);
         }
         if (board.marks[key]) {
             // Keep the number legible by striking through its lower half.
@@ -504,6 +527,10 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
             if (row === rows - 1) context.fillRect(left, top + height - border, width, border);
             if (column === columns - 1) context.fillRect(left + width - border, top, border, height);
         }
+        if (symbols.checked && color >= 0 && color !== blank && cellSize >= 6 && width >= 4 && height >= 4) {
+            context.fillStyle = chooseTextColor(...palette[color]);
+            context.fillText(paletteSymbol(color, blank), left + width / 2, top + height / 2, width * 0.85);
+        }
         if (color < 0 && Math.min(width, height) >= 4) {
             context.strokeStyle = '#222';
             context.lineWidth = border;
@@ -524,6 +551,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         canvas.style.height = (heightInCells * cellSize) + 'px';
         renderBoard(true);
         positionHintMarker();
+        positionKeyboardCell();
         if (center && previousSize) {
             const ratio = cellSize / previousSize;
             viewport.scrollLeft = oldX * ratio - Math.min(viewport.clientWidth, canvas.clientWidth) / 2;
@@ -659,9 +687,18 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         record(action);
     }
 
+    function toggleSlash(cell) {
+        editCell(cell, cells[cell.row][cell.column] === -1 ? blank : -1);
+    }
+
     undo.onclick = () => moveHistory('undo');
     redo.onclick = () => moveHistory('redo');
     updateHistoryButtons();
+    symbols.onchange = () => {
+        board.showSymbols = symbols.checked;
+        palettePanel.classList.toggle('show-symbols', symbols.checked);
+        renderBoard(true);
+    };
     canvas.onclick = event => {
         if (board.finished || !event.detail) return;
         const point = pointFor(event);
@@ -676,7 +713,48 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         }
         const cell = boardCellAt(point, columns, rows);
         if (!cell) return;
+        keyboardCell = cell;
+        positionKeyboardCell();
         if (!tracing) editCell(cell, g_selectcolor);
+    };
+    canvas.oncontextmenu = event => {
+        if (event.pointerType === 'touch') return;
+        const cell = boardCellAt(pointFor(event), columns, rows);
+        if (!cell || board.finished) return;
+        event.preventDefault();
+        toggleSlash(cell);
+    };
+    canvas.onfocus = () => {
+        keyboardCell ??= { row: 0, column: 0 };
+        positionKeyboardCell();
+    };
+    canvas.onkeydown = event => {
+        if (event.altKey) return;
+        const key = event.key.toLowerCase();
+        if (event.metaKey || event.ctrlKey) {
+            if (key !== 'z' && key !== 'y') return;
+            event.preventDefault();
+            moveHistory(key === 'y' || event.shiftKey ? 'redo' : 'undo');
+            return;
+        }
+        const offsets = { arrowup: [-1, 0], arrowdown: [1, 0], arrowleft: [0, -1], arrowright: [0, 1] };
+        const offset = offsets[key];
+        if (offset) {
+            event.preventDefault();
+            keyboardCell = {
+                row: Math.max(0, Math.min(rows - 1, keyboardCell.row + offset[0])),
+                column: Math.max(0, Math.min(columns - 1, keyboardCell.column + offset[1])),
+            };
+            positionKeyboardCell(true);
+        } else if ([' ', 'enter', 'x', 'delete', 'backspace'].includes(key)) {
+            event.preventDefault();
+            if (key === 'x') {
+                if (!event.repeat) toggleSlash(keyboardCell);
+            } else {
+                editCell(keyboardCell, key === 'delete' || key === 'backspace' ? blank : g_selectcolor);
+            }
+            positionKeyboardCell(true);
+        }
     };
     canvas.onpointerdown = event => {
         if (board.finished || stroke || !event.isPrimary || event.button !== 0) return;
@@ -926,8 +1004,13 @@ function drawUnderPalette(palette, usedColors, blank) {
             label = '空白に戻す';
         } else {
             const hexColor = '#' + palette[color].map(channel => channel.toString(16).padStart(2, '0')).join('');
-            label = '色 ' + hexColor;
+            const symbol = document.createElement('span');
+            symbol.className = 'palette-symbol';
+            symbol.textContent = paletteSymbol(color, blank);
+            swatch.append(symbol);
+            label = '色 ' + symbol.textContent + ' ' + hexColor;
             swatch.style.backgroundColor = hexColor;
+            swatch.style.color = chooseTextColor(...palette[color]);
         }
         button.title = label;
         button.setAttribute('aria-label', label);
