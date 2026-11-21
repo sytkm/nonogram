@@ -36,5 +36,8 @@ node --test tests/*.test.cjs
 従来のPNG行データの幅と画素の値、白黒変換の明るさと透明度、縮小後のサイズを確認します。
 パレット形式PNGの透明度と、フィルター方式0〜4で符号化された行も確認します。
 
-## License
-Copyright (c) 2019-2021 sytkm Released under the MIT license http://opensource.org/licenses/mit-license.php
+## ライセンス
+
+Nonogramは [MITライセンス](LICENSE) で公開しています。
+
+PNGの展開に [zlib.js](https://github.com/imaya/zlib.js) の `inflate.min.js` を同梱しています。著作権表示とMITライセンス本文は [zlib.jsのライセンス](licenses/zlib.js.txt) を参照してください。
