@@ -56,6 +56,22 @@ h1 {
     display: block;
 }
 
+.fixed-clues {
+    position: sticky;
+    top: 0;
+    left: 0;
+    width: 0;
+    height: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+
+#fixed-clues {
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
 #hint-line-marker {
     position: absolute;
     box-sizing: border-box;

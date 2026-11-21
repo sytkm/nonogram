@@ -56,3 +56,22 @@ test('空白以外の色に重複しない記号を付ける', () => {
     assert.equal(context.paletteSymbol(0, 4), 'A');
     assert.equal(context.paletteSymbol(27, 0), 'AA');
 });
+
+test('スクロールした軸のヒントだけを固定し、盤面が狭い場合は空間を確保する', () => {
+    const gutters = (x, y, width, height) => ({
+        ...context.fixedClueGutters(x, y, width, height, 120, 100),
+    });
+    assert.deepEqual(gutters(0, 0, 375, 280), { left: 0, top: 0 });
+    assert.deepEqual(gutters(48, 0, 375, 280), { left: 120, top: 0 });
+    assert.deepEqual(gutters(48, 60, 375, 280), { left: 120, top: 100 });
+    assert.deepEqual(gutters(48, 60, 239, 199), { left: 0, top: 0 });
+});
+
+test('固定したヒントと重なる角、外側のマスを区別する', () => {
+    const hit = (x, y) => ({ ...context.fixedClueHit(x, y, { top: 100, left: 120 }) });
+    assert.deepEqual(hit(119, 99), { left: true, top: true });
+    assert.deepEqual(hit(120, 99), { left: false, top: true });
+    assert.deepEqual(hit(119, 100), { left: true, top: false });
+    assert.deepEqual(hit(120, 100), { left: false, top: false });
+    assert.deepEqual(hit(-1, 10), { left: false, top: false });
+});

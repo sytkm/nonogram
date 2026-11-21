@@ -402,6 +402,10 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     const canvas = document.getElementById('canvas');
     const context = canvas.getContext('2d');
     const keyboardMarker = document.getElementById('keyboard-cell-marker');
+    const stickClues = document.getElementById('stick-clues');
+    const clueOverlay = document.getElementById('fixed-clues');
+    const clueContext = clueOverlay.getContext('2d');
+    stickClues.checked = board.stickClues !== false;
     const symbols = document.getElementById('color-symbols');
     const undo = document.getElementById('board-undo');
     const redo = document.getElementById('board-redo');
@@ -460,6 +464,48 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         queueProgressSave();
     }
 
+    function clueGutters() {
+        return stickClues.checked
+            ? fixedClueGutters(viewport.scrollLeft, viewport.scrollTop, viewport.clientWidth,
+                viewport.clientHeight, leftClueCount * cellSize, topClueCount * cellSize)
+            : { left: 0, top: 0 };
+    }
+
+    function renderFixedClues() {
+        const { left, top } = clueGutters();
+        const x = viewport.scrollLeft;
+        const y = viewport.scrollTop;
+        const boardWidth = widthInCells * cellSize;
+        const boardHeight = heightInCells * cellSize;
+        const width = Math.min(viewport.clientWidth, boardWidth - x);
+        const height = Math.min(viewport.clientHeight, boardHeight - y);
+        clueOverlay.hidden = (!left && !top) || width <= 0 || height <= 0;
+        if (clueOverlay.hidden) return;
+
+        // Copy the already rendered numbers, including color symbols and checkmarks.
+        const scaleX = canvas.width / boardWidth;
+        const scaleY = canvas.height / boardHeight;
+        const pixelWidth = Math.max(1, Math.round(width * scaleX));
+        const pixelHeight = Math.max(1, Math.round(height * scaleY));
+        if (clueOverlay.width !== pixelWidth) clueOverlay.width = pixelWidth;
+        if (clueOverlay.height !== pixelHeight) clueOverlay.height = pixelHeight;
+        clueOverlay.style.width = width + 'px';
+        clueOverlay.style.height = height + 'px';
+        clueContext.setTransform(pixelWidth / width, 0, 0, pixelHeight / height, 0, 0);
+        clueContext.clearRect(0, 0, width, height);
+
+        if (top) {
+            clueContext.drawImage(canvas, x * scaleX, 0, width * scaleX, top * scaleY, 0, 0, width, top);
+        }
+        if (left) {
+            clueContext.drawImage(canvas, 0, y * scaleY, left * scaleX, height * scaleY, 0, 0, left, height);
+        }
+        if (left && top) {
+            clueContext.fillStyle = '#fff';
+            clueContext.fillRect(0, 0, left, top);
+        }
+    }
+
     function positionKeyboardCell(scroll = false) {
         if (!keyboardCell) return;
         const x = (leftClueCount + keyboardCell.column) * cellSize;
@@ -469,8 +515,9 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         });
         keyboardMarker.hidden = false;
         if (scroll) {
-            viewport.scrollLeft = Math.min(x, Math.max(viewport.scrollLeft, x + cellSize - viewport.clientWidth));
-            viewport.scrollTop = Math.min(y, Math.max(viewport.scrollTop, y + cellSize - viewport.clientHeight));
+            const { left, top } = clueGutters();
+            viewport.scrollLeft = Math.min(x - left, Math.max(viewport.scrollLeft, x + cellSize - viewport.clientWidth));
+            viewport.scrollTop = Math.min(y - top, Math.max(viewport.scrollTop, y + cellSize - viewport.clientHeight));
         }
     }
 
@@ -489,7 +536,10 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     function renderBoard(force = false) {
         const size = boardResolution(widthInCells * cellSize, heightInCells * cellSize,
             window.devicePixelRatio || 1);
-        if (!force && canvas.width === size.width && canvas.height === size.height) return;
+        if (!force && canvas.width === size.width && canvas.height === size.height) {
+            renderFixedClues();
+            return;
+        }
         if (canvas.width !== size.width || canvas.height !== size.height) {
             canvas.width = size.width;
             canvas.height = size.height;
@@ -512,6 +562,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         columnsOfClues.forEach((clues, x) => clues.forEach((clue, y) =>
             paintClue(leftClueCount + x, topClueCount - clues.length + y, clue, boardClueKey('column', x, y))
         ));
+        renderFixedClues();
     }
 
     function rectangle(column, row) {
@@ -594,6 +645,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
             viewport.scrollLeft = 0;
             viewport.scrollTop = 0;
         }
+        renderFixedClues();
         zoomIn.disabled = cellSize >= maxCellSize;
         zoomOut.disabled = cellSize <= 1;
     }
@@ -623,14 +675,15 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         const lineLabel = axis === 'row' ? '上から' + (index + 1) + '行目' : '左から' + (index + 1) + '列目';
         hintMessage.textContent = lineLabel + 'をヒントで埋めました（1分加算）。';
         positionHintMarker();
+        const gutters = clueGutters();
         if (axis === 'row') {
             const top = (topClueCount + index) * cellSize;
-            if (top < viewport.scrollTop || top + cellSize > viewport.scrollTop + viewport.clientHeight) {
+            if (top < viewport.scrollTop + gutters.top || top + cellSize > viewport.scrollTop + viewport.clientHeight) {
                 viewport.scrollTop = top - Math.max(0, (viewport.clientHeight - cellSize) / 2);
             }
         } else {
             const left = (leftClueCount + index) * cellSize;
-            if (left < viewport.scrollLeft || left + cellSize > viewport.scrollLeft + viewport.clientWidth) {
+            if (left < viewport.scrollLeft + gutters.left || left + cellSize > viewport.scrollLeft + viewport.clientWidth) {
                 viewport.scrollLeft = left - Math.max(0, (viewport.clientWidth - cellSize) / 2);
             }
         }
@@ -685,8 +738,13 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
             : '下で色を選び、マスを押して塗ります。大きな盤面は上下左右にスクロールできます。';
     }
 
-    function pointFor(event) {
-        return boardPointAt(event.clientX, event.clientY, canvas.getBoundingClientRect(),
+    function pointFor(event, painting = false) {
+        const viewRect = viewport.getBoundingClientRect();
+        const { left, top } = fixedClueHit(event.clientX - viewRect.left,
+            event.clientY - viewRect.top, clueGutters());
+        if (painting && (left || top)) return null;
+        return boardPointAt(event.clientX - (left ? viewport.scrollLeft : 0),
+            event.clientY - (top ? viewport.scrollTop : 0), canvas.getBoundingClientRect(),
             widthInCells, heightInCells, [leftClueCount, topClueCount]);
     }
 
@@ -701,10 +759,14 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
 
     function continueStroke(event) {
         if (!stroke || event.pointerId !== stroke.id) return;
-        const point = pointFor(event);
-        if (!point) return;
-        for (const cell of traceBoardCells(stroke.point, point, columns, rows)) {
-            applyColor(cell, stroke.color, stroke.changes);
+        const point = pointFor(event, true);
+        if (point && !stroke.point) {
+            const cell = boardCellAt(point, columns, rows);
+            if (cell) applyColor(cell, stroke.color, stroke.changes);
+        } else if (point) {
+            for (const cell of traceBoardCells(stroke.point, point, columns, rows)) {
+                applyColor(cell, stroke.color, stroke.changes);
+            }
         }
         stroke.point = point;
     }
@@ -820,6 +882,12 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     };
     canvas.onpointercancel = canvas.onlostpointercapture = event => {
         if (event.pointerId === stroke?.id) stopStroke();
+    };
+    viewport.onscroll = renderFixedClues;
+    stickClues.onchange = () => {
+        board.stickClues = stickClues.checked;
+        renderFixedClues();
+        queueProgressSave();
     };
     refreshBoard = () => renderBoard();
     finishStroke = stopStroke;
