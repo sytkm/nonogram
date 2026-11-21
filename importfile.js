@@ -7,7 +7,6 @@ let g_selectcolor = 0;
 let refreshBoard;
 let finishStroke;
 let playClock;
-let resetBoardQuality;
 let restoredColorSource;
 
 // 5×5の十字を描いたパレット形式のサンプルPNG。
@@ -233,7 +232,6 @@ function setupBoardMenus() {
 function setPlaying(playing) {
     if (playing) playClock?.resume();
     else {
-        resetBoardQuality?.();
         finishStroke?.();
         playClock?.suspend();
         flushProgress();
@@ -331,13 +329,13 @@ function decodeLegacyPng(src) {
 }
 
 async function startPuzzle({ matrix, palette, blank }, options = {}) {
-    resetBoardQuality?.();
     finishStroke?.();
     playClock?.suspend();
     const board = options.board ?? {};
+    const hasSavedCells = Boolean(board.cells);
     const rowClues = makeNumber(matrix, blank);
     const columnClues = makeNumber(transpose(matrix), blank);
-    if (!board.quality && !board.cells) {
+    if (!board.quality && !hasSavedCells) {
         const preparation = document.getElementById('prepare-puzzle');
         preparation.oncancel = event => event.preventDefault();
         preparation.showModal();
@@ -379,9 +377,6 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
         ? new Set([...palette.slice(1).map((_, i) => i + 1), blank])
         : new Set(matrix.flat());
     g_selectcolor = usedColors.values().next().value;
-    resetBoardQuality = setupQualityCheck(document.getElementById('board-quality'),
-        document.getElementById('board-quality-result'),
-        () => ({ rows: rowClues[0], columns: columnClues[0], blank, fixedSlashes: [...fixedSlashes] }));
 
     const widthInCells = matrix[0].length + rowClues[1];
     const heightInCells = matrix.length + columnClues[1];
@@ -451,19 +446,16 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
         }
     }
 
-    function checkCompletion(showIncomplete = false) {
+    function checkCompletion(save = true) {
         if (board.finished) return;
         const solved = board.quality === 'unique'
             ? matchesIntendedImage(matrix, cells, blank)
             : checkNumber(rowClues, cells, blank) && checkNumber(columnClues, transpose(cells), blank);
-        if (!solved) {
-            if (showIncomplete) result.textContent = 'まだヒント数字と一致していません。';
-            return;
-        }
+        if (!solved) return;
         clock.finish();
         updatePlayTime();
         showClear();
-        queueProgressSave();
+        if (save) queueProgressSave();
         options.onSolved?.();
     }
 
@@ -472,10 +464,6 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
         checkCompletion();
     }
 
-    document.getElementById('check').onclick = () => {
-        finishStroke();
-        checkCompletion(true);
-    };
     restart.onclick = () => {
         const target = options.tileLabel ? 'この区画' : 'この問題';
         document.getElementById('restart-message').textContent =
@@ -509,6 +497,7 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
         }), options.progressId);
     }
     if (board.finished) showClear();
+    else if (!board.paused) checkCompletion(hasSavedCells);
     if (options.tileLabel) returnToMosaic.focus();
 }
 
@@ -954,7 +943,6 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         renderBoard(true);
         onEdit();
     };
-    document.getElementById('check').disabled = false;
     pauseButton.disabled = false;
     pauseButton.textContent = '一時停止';
     function togglePause() {
@@ -978,6 +966,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     pauseButton.onclick = () => {
         togglePause();
         queueProgressSave();
+        if (!board.paused) onEdit();
     };
     if (board.paused && !board.finished) togglePause();
 
@@ -1152,7 +1141,6 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     return {
         finish() {
             board.finished = true;
-            document.getElementById('check').disabled = true;
             checkConflicts.disabled = true;
             if (clearConflicts()) renderBoard(true);
             pauseButton.disabled = true;
