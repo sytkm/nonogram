@@ -336,6 +336,8 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
     const clock = options.clock ?? createPlayClock();
     playClock = clock;
     restoredColorSource = options.progressId && options.canConvert ? options.shareSource : undefined;
+    const playPanel = document.getElementById('play-panel');
+    playPanel.classList.remove('is-viewing-tile');
     const result = document.getElementById('board-result');
     const restart = document.getElementById('restart-board');
     const restartDialog = document.getElementById('restart-dialog');
@@ -418,9 +420,16 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
     };
     function showClear() {
         controls.finish();
-        result.textContent = 'クリア！';
         result.classList.add('is-complete');
-        restart.textContent = 'もう一度遊ぶ';
+        if (options.tileLabel) {
+            playPanel.classList.add('is-viewing-tile');
+            document.getElementById('fix-phone-under-menu').hidden = true;
+            result.textContent = options.review ? '完成済みの区画を表示しています。' : '区画クリア！';
+            returnToMosaic.focus({ preventScroll: true });
+        } else {
+            result.textContent = 'クリア！';
+            restart.textContent = 'もう一度遊ぶ';
+        }
     }
 
     function checkCompletion(showIncomplete = false) {

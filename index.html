@@ -64,26 +64,26 @@
         <div id="play-panel" hidden>
             <div class="play-clock">
                 <div>プレイ時間 <span id="play-time" role="timer" aria-label="プレイ時間">00:00</span></div>
-                <button type="button" id="pause-play">一時停止</button>
-                <button type="button" id="restart-board">最初からやり直す</button>
+                <button type="button" id="pause-play" class="play-only">一時停止</button>
+                <button type="button" id="restart-board" class="play-only">最初からやり直す</button>
             </div>
             <div id="play-actions">
                 <p id="mosaic-tile-label" class="play-instructions" hidden></p>
-                <p class="play-instructions" id="paint-instructions">下で色を選び、マスを押して塗ります。大きな盤面は上下左右にスクロールできます。</p>
+                <p class="play-instructions play-only" id="paint-instructions">下で色を選び、マスを押して塗ります。大きな盤面は上下左右にスクロールできます。</p>
                 <div class="board-tools" role="group" aria-label="盤面の操作">
-                    <button type="button" id="check">答え合わせ</button>
-                    <button type="button" id="check-conflicts">矛盾チェック</button>
-                    <button type="button" id="logic-hint">考え方ヒント</button>
-                    <button type="button" id="line-hint">行・列ヒント <small>+1分</small></button>
-                    <button type="button" id="board-undo" disabled>元に戻す</button>
-                    <button type="button" id="board-redo" disabled>やり直す</button>
+                    <button type="button" id="check" class="play-only">答え合わせ</button>
+                    <button type="button" id="check-conflicts" class="play-only">矛盾チェック</button>
+                    <button type="button" id="logic-hint" class="play-only">考え方ヒント</button>
+                    <button type="button" id="line-hint" class="play-only">行・列ヒント <small>+1分</small></button>
+                    <button type="button" id="board-undo" class="play-only" disabled>元に戻す</button>
+                    <button type="button" id="board-redo" class="play-only" disabled>やり直す</button>
                     <button type="button" id="zoom-out" aria-label="盤面を縮小">−</button>
                     <button type="button" id="zoom-in" aria-label="盤面を拡大">＋</button>
                     <button type="button" id="zoom-fit">全体を表示</button>
-                    <button type="button" id="paint-mode" aria-pressed="false" aria-describedby="paint-instructions">なぞり塗り</button>
+                    <button type="button" id="paint-mode" class="play-only" aria-pressed="false" aria-describedby="paint-instructions">なぞり塗り</button>
                     <button type="button" id="split-board" hidden>10×10に分けて遊ぶ</button>
                     <button type="button" id="return-mosaic" hidden>全体図に戻る</button>
-                    <details id="play-options">
+                    <details id="play-options" class="play-only">
                         <summary>その他</summary>
                         <p class="play-instructions">上と左の数字は、色ごとに連続して塗るマスの数です。</p>
                         <div class="play-options-items">
@@ -104,8 +104,8 @@
                         <p id="board-quality-result" class="quality-result" role="status"></p>
                     </details>
                 </div>
-                <p class="play-instructions">ヒント数字を押すとチェックできます。</p>
-                <p id="hint-message" role="status"></p>
+                <p class="play-instructions play-only">ヒント数字を押すとチェックできます。</p>
+                <p id="hint-message" class="play-only" role="status"></p>
                 <p id="conflict-message" role="status"></p>
                 <p id="board-result" role="status"></p>
                 <p id="quality-play-note" role="status" hidden></p>
@@ -117,12 +117,13 @@
         <div id="mosaic-instructions">
             <p>区画を選んで遊びます。クリアした区画がつながって、一枚の絵になります。</p>
             <p>元の画像からはみ出す端のマスは空白です。空白だけの区画は最初から完成しています。</p>
-            <p>途中の状態は、このブラウザに自動保存されます。</p>
+            <p>途中の状態は、このブラウザに自動保存されます。完成済みの区画も開いて見返せます。</p>
         </div>
         <p id="mosaic-progress" role="status"></p>
         <div class="mosaic-time-controls">
             <div>合計プレイ時間 <span id="mosaic-total-time">00:00</span></div>
             <button type="button" id="mosaic-time-toggle" aria-pressed="false">区画の時間を表示</button>
+            <button type="button" id="mosaic-review-toggle" aria-pressed="false" hidden>区画を見返す</button>
         </div>
         <div class="mosaic-map" id="mosaic-map" role="region" aria-label="区画の全体図" tabindex="0">
             <div id="mosaic-grid"></div>
