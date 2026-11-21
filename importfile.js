@@ -498,17 +498,9 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
     returnToMosaic.onclick = options.onReturn ?? null;
     document.getElementById('board-home').hidden = Boolean(options.onReturn);
 
-    const share = document.getElementById('share');
-    share.hidden = !options.shareSource;
-    if (options.shareSource) {
-        const puzzleURL = new URL(window.location.href);
-        puzzleURL.search = encodeURIComponent(options.shareSource);
-        puzzleURL.hash = '';
-        const shareURL = new URL('https://twitter.com/share');
-        shareURL.searchParams.set('url', puzzleURL.href);
-        shareURL.searchParams.set('text', 'このNonogramが解けるかな？');
-        share.href = shareURL.href;
-    }
+    setupPuzzleShare(document.getElementById('board-share'), options.shareSource
+        ? legacyPuzzleShareURL(window.location.href, options.shareSource)
+        : undefined);
 
     const download = document.getElementById('downl');
     download.hidden = options.shared === true || Boolean(options.tileLabel);

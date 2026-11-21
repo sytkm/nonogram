@@ -198,6 +198,22 @@ h1 {
     column-gap: 0.75rem;
 }
 
+.puzzle-share {
+    flex-basis: 100%;
+    min-width: 0;
+}
+
+.puzzle-share p {
+    margin: 0.4rem 0;
+    font-size: 0.875rem;
+}
+
+.puzzle-share input {
+    box-sizing: border-box;
+    width: 100%;
+    font: inherit;
+}
+
 .advanced-options {
     flex-basis: 100%;
     margin-block: 0.25rem;
