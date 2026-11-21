@@ -77,11 +77,12 @@ function openMosaic({ matrix, palette, blank }, saved) {
         link.hidden = true;
     }
 
-    function updateOverview(focusTarget) {
+    function updateOverview(focusTarget, clearedLabel) {
         setPlaying(false);
         document.getElementById('start-panel').hidden = true;
         panel.hidden = false;
-        progress.textContent = completedCount + ' / ' + mosaic.tiles.length + ' 区画が完成';
+        progress.textContent = completedCount + ' / ' + mosaic.tiles.length + ' 区画が完成' +
+            (clearedLabel ? '（' + clearedLabel + 'をクリア）' : '');
         if (completedCount === mosaic.tiles.length && finished.hidden) {
             canvas.width = mosaic.width;
             canvas.height = mosaic.height;
@@ -172,7 +173,7 @@ function openMosaic({ matrix, palette, blank }, saved) {
                     completedCount++;
                     tile.board = undefined;
                     reveal(tile, button);
-                    updateOverview(grid.querySelector('button:not(:disabled)') ?? title);
+                    updateOverview(grid.querySelector('button:not(:disabled)') ?? title, label);
                 },
             });
         };

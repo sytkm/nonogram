@@ -81,14 +81,21 @@ h1 {
 }
 
 #hint-message,
-#conflict-message {
+#conflict-message,
+#board-result {
     margin: 0.4rem 0 0;
     font-size: 0.875rem;
 }
 
 #hint-message:empty,
-#conflict-message:empty {
+#conflict-message:empty,
+#board-result:empty {
     display: none;
+}
+
+#board-result.is-complete {
+    color: #17683d;
+    font-weight: 700;
 }
 
 #canvas.is-painting {
@@ -116,11 +123,21 @@ h1 {
 }
 
 .play-clock button,
+#restart-dialog button,
 #mosaic-time-toggle {
     min-height: 44px;
     padding: 0.45rem 0.65rem;
     font: inherit;
     font-size: 0.875rem;
+}
+
+#restart-dialog {
+    width: min(25rem, calc(100% - 4rem));
+}
+
+#restart-dialog h2 {
+    margin: 0;
+    font-size: 1.25rem;
 }
 
 #play-time,
