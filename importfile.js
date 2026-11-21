@@ -251,6 +251,10 @@ function saveBoardSetting(name, value) {
 
 function setupSettings() {
     const dialog = document.getElementById('settings-dialog');
+    const playGuide = document.getElementById('play-guide-dialog');
+    for (const button of document.querySelectorAll('[data-open-play-guide]')) {
+        button.onclick = () => playGuide.showModal();
+    }
     const playPanel = document.getElementById('play-panel');
     const settingsInputs = {
         stickClues: document.getElementById('stick-clues'),
