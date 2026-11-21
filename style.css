@@ -151,31 +151,11 @@ h1 {
     margin: 0.5rem 0;
 }
 
-.play-clock,
-.mosaic-time-controls {
+.play-clock {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 0.5rem;
-}
-
-.play-clock button,
-#restart-dialog button,
-#mosaic-time-toggle,
-#mosaic-review-toggle {
-    min-height: 44px;
-    padding: 0.45rem 0.65rem;
-    font: inherit;
-    font-size: 0.875rem;
-}
-
-#restart-dialog {
-    width: min(25rem, calc(100% - 4rem));
-}
-
-#restart-dialog h2 {
-    margin: 0;
-    font-size: 1.25rem;
 }
 
 #play-time,
@@ -295,7 +275,8 @@ h1 {
     background: #103b67;
 }
 
-.board-tools .clue-mode[aria-pressed="true"] {
+.board-tools .clue-mode[aria-pressed="true"],
+#mosaic-panel .action-link[aria-pressed="true"] {
     border-color: #174d85;
     background: #174d85;
     color: #fff;
@@ -336,7 +317,8 @@ h1 {
 }
 
 #settings-dialog,
-#play-guide-dialog {
+#play-guide-dialog,
+#restart-dialog {
     box-sizing: border-box;
     width: min(34rem, calc(100% - 2rem));
     max-height: calc(100% - 2rem);
@@ -347,11 +329,33 @@ h1 {
 }
 
 #settings-dialog::backdrop,
-#play-guide-dialog::backdrop {
+#play-guide-dialog::backdrop,
+#restart-dialog::backdrop {
     background: rgb(20 35 55 / 45%);
 }
 
-.settings-heading h2 {
+.action-link.action-danger {
+    border-color: #a32727;
+    background: #a32727;
+    color: #fff;
+}
+
+.action-link.action-danger:hover,
+.action-link.action-danger:active {
+    border-color: #7e1919;
+    background: #7e1919;
+}
+
+#restart-dialog {
+    width: min(25rem, calc(100% - 2rem));
+}
+
+.restart-actions {
+    justify-content: flex-end;
+}
+
+.settings-heading h2,
+#restart-dialog h2 {
     margin: 0;
     font-size: 1.25rem;
 }
@@ -557,12 +561,6 @@ h1 {
     box-shadow: inset 0 0 0 1px #b3bbc3;
 }
 
-#mosaic-time-toggle[aria-pressed="true"] {
-    border-color: #174d85;
-    background: #174d85;
-    color: #fff;
-}
-
 #mosaic-image {
     display: block;
     max-width: 100%;
@@ -571,16 +569,8 @@ h1 {
     image-rendering: pixelated;
 }
 
-.mosaic-downloads {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.75rem;
-}
-
-.mosaic-downloads a:not([hidden]) {
-    display: inline-grid;
-    align-items: center;
-    min-height: 44px;
+#mosaic-share {
+    margin-block: 1rem;
 }
 
 #keyboard-cell-marker {
