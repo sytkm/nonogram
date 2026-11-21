@@ -619,6 +619,11 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     const keyboardMarker = document.getElementById('keyboard-cell-marker');
     const clueOverlay = document.getElementById('fixed-clues');
     const clueContext = clueOverlay.getContext('2d');
+    const sheetColors = getComputedStyle(canvas);
+    const cluePaper = sheetColors.getPropertyValue('--puzzle-paper').trim();
+    const clueInk = sheetColors.getPropertyValue('--puzzle-ink').trim();
+    const majorRule = sheetColors.getPropertyValue('--puzzle-major-rule').trim();
+    const minorRule = sheetColors.getPropertyValue('--puzzle-rule').trim();
     const undo = document.getElementById('board-undo');
     const redo = document.getElementById('board-redo');
     const history = createBoardHistory(board);
@@ -761,7 +766,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
             clueContext.drawImage(canvas, 0, y * scaleY, left * scaleX, height * scaleY, 0, 0, left, height);
         }
         if (left && top) {
-            clueContext.fillStyle = '#fff';
+            clueContext.fillStyle = cluePaper;
             clueContext.fillRect(0, 0, left, top);
         }
     }
@@ -810,7 +815,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
             canvas.height = size.height;
         }
 
-        context.fillStyle = '#fff';
+        context.fillStyle = cluePaper;
         context.fillRect(0, 0, canvas.width, canvas.height);
         const fontSize = Math.max(1, Math.floor(Math.min(
             canvas.width / widthInCells, canvas.height / heightInCells
@@ -854,7 +859,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
             context.fillRect(left, top, width, height);
             context.fillStyle = chooseTextColor(...palette[color]);
         } else {
-            context.fillStyle = '#111';
+            context.fillStyle = clueInk;
         }
         if (cellSize >= 6 && width >= 4 && height >= 4) {
             const text = showSymbols && color >= 0 ? count + '·' + paletteSymbol(color, blank) : String(count);
@@ -889,11 +894,14 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
             ? '#fff' : 'rgb(' + palette[color].join(',') + ')';
         context.fillRect(left, top, width, height);
 
-        const border = Math.min(width, height) >= 24 ? 2 : 1;
-        if (Math.min(width, height) >= 3) {
-            context.fillStyle = '#555';
-            context.fillRect(left, top, width, border);
-            context.fillRect(left, top, border, height);
+        const shorterSide = Math.min(width, height);
+        const border = shorterSide >= 12 ? 2 : 1;
+        if (shorterSide >= 3) {
+            context.fillStyle = row % 5 === 0 ? majorRule : minorRule;
+            context.fillRect(left, top, width, row % 5 === 0 ? border : 1);
+            context.fillStyle = column % 5 === 0 ? majorRule : minorRule;
+            context.fillRect(left, top, column % 5 === 0 ? border : 1, height);
+            context.fillStyle = majorRule;
             if (row === rows - 1) context.fillRect(left, top + height - border, width, border);
             if (column === columns - 1) context.fillRect(left + width - border, top, border, height);
         }
