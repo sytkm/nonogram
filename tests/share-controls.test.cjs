@@ -6,7 +6,7 @@ const test = require('node:test');
 
 const script = fs.readFileSync(path.join(__dirname, '../share-controls.js'), 'utf8');
 
-test('共有URLが従来の形式を保ち、Blueskyの文字数上限を超えると投稿リンクを出さない', () => {
+test('共有URLが従来の形式を保ち、Blueskyの投稿画面に長いURLも渡す', () => {
     const context = vm.createContext({ URL });
     vm.runInContext(script, context);
     const original = 'AA+/=';
@@ -16,7 +16,9 @@ test('共有URLが従来の形式を保ち、Blueskyの文字数上限を超え�
     const compose = new URL(context.blueskyComposeURL(url));
     assert.equal(compose.origin + compose.pathname, 'https://bsky.app/intent/compose');
     assert.equal(compose.searchParams.get('text').split('\n')[1], url);
-    assert.equal(context.blueskyComposeURL(url + 'a'.repeat(300)), null);
+    const longURL = url + 'a'.repeat(300);
+    const longCompose = new URL(context.blueskyComposeURL(longURL));
+    assert.equal(longCompose.searchParams.get('text').split('\n')[1], longURL);
 });
 
 test('コピーに失敗した場合も、同じ共有リンクを選択して手動でコピーできる', async () => {
@@ -32,7 +34,7 @@ test('コピーに失敗した場合も、同じ共有リンクを選択して�
     });
     vm.runInContext(script, context);
     const field = { focus() {}, select() { selected = true; } };
-    const controls = Object.fromEntries(['bluesky', 'copy', 'long-link', 'status', 'manual']
+    const controls = Object.fromEntries(['bluesky', 'copy', 'status', 'manual']
         .map(name => ['[data-share-' + name + ']', { removeAttribute() {} }]));
     const manual = controls['[data-share-manual]'];
     manual.querySelector = () => field;
