@@ -882,12 +882,12 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
 
     hint.disabled = false;
     hint.onclick = () => {
+        stopStroke();
         const result = pickLineHint(answer, cells, blank);
         if (!result) {
             onEdit();
             return;
         }
-        stopStroke();
         clock.addPenalty(1);
         updatePlayTime();
         const { axis, index, changes } = result;
@@ -1144,23 +1144,33 @@ function matchesIntendedImage(answer, board, blank) {
 }
 
 function pickLineHint(answer, board, blank, random = Math.random) {
-    const rowChanges = Array.from(answer, () => []);
-    const columnChanges = Array.from(answer[0], () => []);
+    const unfinishedRows = Array(answer.length).fill(false);
+    const unfinishedColumns = Array(answer[0].length).fill(false);
     answer.forEach((colors, row) => colors.forEach((color, column) => {
         const current = board[row][column];
+        // Unmarked blanks already count as correct when selecting a line.
         if (current === color || (current === -1 && color === blank)) return;
-        const change = { row, column, color };
-        rowChanges[row].push(change);
-        columnChanges[column].push(change);
+        unfinishedRows[row] = true;
+        unfinishedColumns[column] = true;
     }));
     const candidates = [];
-    for (const [axis, lines] of [['row', rowChanges], ['column', columnChanges]]) {
-        lines.forEach((changes, index) => {
-            if (changes.length) candidates.push({ axis, index, changes });
+    for (const [axis, lines] of [['row', unfinishedRows], ['column', unfinishedColumns]]) {
+        lines.forEach((unfinished, index) => {
+            if (unfinished) candidates.push({ axis, index });
         });
     }
     if (!candidates.length) return null;
-    return candidates[Math.floor(random() * candidates.length)];
+
+    const { axis, index } = candidates[Math.floor(random() * candidates.length)];
+    const line = axis === 'row' ? answer[index] : answer.map(row => row[index]);
+    const changes = [];
+    line.forEach((value, offset) => {
+        const row = axis === 'row' ? index : offset;
+        const column = axis === 'row' ? offset : index;
+        const color = value === blank ? -1 : value;
+        if (board[row][column] !== color) changes.push({ row, column, color });
+    });
+    return { axis, index, changes };
 }
 
 function boardPointAt(x, y, rect, widthInCells, heightInCells, offset) {
