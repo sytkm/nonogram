@@ -567,8 +567,8 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
 
     restart.onclick = () => {
         document.getElementById('restart-message').textContent = options.tileLabel
-            ? 'この区画だけ、塗ったマスや印、プレイ時間を消して最初から始めます。'
-            : 'この問題の塗ったマスや印、プレイ時間を消して最初から始めます。';
+            ? 'この区画の塗り・斜線・数字のチェックとプレイ時間をリセットします。他の区画の進み具合と、最初からある青い斜線は残ります。'
+            : '塗り・斜線・数字のチェックとプレイ時間をリセットします。最初からある青い斜線は残ります。';
         restartDialog.returnValue = '';
         restartDialog.showModal();
     };
