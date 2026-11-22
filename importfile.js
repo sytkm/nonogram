@@ -29,18 +29,21 @@ window.onload = async function () {
         if (!document.getElementById('play-panel').hidden) updatePlayTime();
     }, 250);
 
+    const isPuzzleShareHash = hash => hash.startsWith(normalSharePrefix) || hash.startsWith(mosaicSharePrefix);
     // A pasted fragment can navigate within the current page without reloading it.
     window.addEventListener('hashchange', event => {
-        if ([event.oldURL, event.newURL].some(url => new URL(url).hash.startsWith(mosaicSharePrefix))) {
+        if ([event.oldURL, event.newURL].some(url => isPuzzleShareHash(new URL(url).hash))) {
             window.location.reload();
         }
     });
 
     const { search: query, hash } = window.location;
-    if (hash.startsWith(mosaicSharePrefix)) {
+    if (isPuzzleShareHash(hash)) {
         try {
-            openMosaic(await readMosaicShare(hash));
-            showFirstSharedGuide(true);
+            const mosaic = hash.startsWith(mosaicSharePrefix);
+            if (mosaic) openMosaic(await readMosaicShare(hash));
+            else await startPuzzle(await readPuzzleShare(hash), { shared: true, generated: true });
+            showFirstSharedGuide(mosaic);
         } catch {
             showInvalidSharedPuzzle();
         }
@@ -79,9 +82,10 @@ function setupImagePicker() {
     const previewSharing = document.getElementById('preview-sharing');
     const previewShareUnavailable = document.getElementById('preview-share-unavailable');
     const previewShare = document.getElementById('preview-share');
+    const previewShareMessage = document.getElementById('preview-share-message');
     const mosaicShare = document.getElementById('preview-mosaic-share');
     const mosaicShareMessage = document.getElementById('preview-mosaic-share-message');
-    let mosaicShareRequest;
+    let previewShareRequest;
     const playPreview = document.getElementById('play-preview');
     const splitPreview = document.getElementById('split-preview');
     let currentImage;
@@ -112,29 +116,40 @@ function setupImagePicker() {
     }
 
     function updatePreviewSharing(puzzle, shareSource) {
-        setupPuzzleShare(previewShare, shareSource
-            ? legacyPuzzleShareURL(window.location.href, shareSource)
-            : null);
+        const request = {};
+        previewShareRequest = request;
+        setupPuzzleShare(previewShare, null);
         setupPuzzleShare(mosaicShare, null);
+        previewShareMessage.textContent = '';
         mosaicShareMessage.textContent = '';
-        mosaicShareRequest = undefined;
-        const canShareSplit = Boolean(puzzle && canSplitPuzzle(puzzle.matrix));
-        previewSharing.hidden = !shareSource && !canShareSplit;
-        previewShareUnavailable.hidden = !previewSharing.hidden;
-        if (!canShareSplit) return;
-        mosaicShareMessage.textContent = '分割問題の共有リンクを準備しています…';
+        previewSharing.hidden = !puzzle;
+        previewShareUnavailable.hidden = Boolean(puzzle);
+        if (!puzzle) return;
 
-        const request = mosaicShareURL(window.location.href, puzzle);
-        mosaicShareRequest = request;
-        request.then(url => {
-            if (mosaicShareRequest !== request) return;
-            setupPuzzleShare(mosaicShare, url);
-            mosaicShareMessage.textContent = url ? ''
-                : '共有リンクが8,000文字を超えるため、この分割問題はリンクで共有できません。';
-        }).catch(() => {
-            if (mosaicShareRequest !== request) return;
-            mosaicShareMessage.textContent = 'このブラウザでは分割問題の共有リンクを作成できませんでした。';
-        });
+        const pageURL = window.location.href;
+        if (shareSource) {
+            setupPuzzleShare(previewShare, legacyPuzzleShareURL(pageURL, shareSource));
+        } else {
+            prepareLink(previewShare, previewShareMessage, '通常問題', puzzleShareURL(pageURL, puzzle));
+        }
+        if (canSplitPuzzle(puzzle.matrix)) {
+            prepareLink(mosaicShare, mosaicShareMessage, '分割問題', mosaicShareURL(pageURL, puzzle));
+        }
+
+        async function prepareLink(group, message, label, link) {
+            message.textContent = label + 'の共有リンクを準備しています…';
+            try {
+                const url = await link;
+                if (previewShareRequest !== request) return;
+                setupPuzzleShare(group, url);
+                message.textContent = url ? '' : label +
+                    'の共有リンクが8,000文字を超えます。マス数を減らすか、別の画像を選んでください。';
+            } catch {
+                if (previewShareRequest !== request) return;
+                message.textContent = 'このブラウザでは' + label +
+                    'の共有リンクを作成できませんでした。別のブラウザをお試しください。';
+            }
+        }
     }
 
     function updatePreview() {

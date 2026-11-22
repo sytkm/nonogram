@@ -9,7 +9,7 @@ const context = vm.createContext({ URL, Blob, CompressionStream, DecompressionSt
 for (const file of ['mosaic.js', 'mosaic-share.js']) {
     vm.runInContext(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), context);
 }
-const { mosaicShareURL, readMosaicShare, splitMosaic } = context;
+const { puzzleShareURL, readPuzzleShare, mosaicShareURL, readMosaicShare, splitMosaic } = context;
 const base = 'https://example.org/nonogram/';
 const normalize = value => JSON.parse(JSON.stringify(value));
 
@@ -52,5 +52,28 @@ test('圧縮できても共有URLが8,000文字を超える場合は作成を中
         return seed >>> 24;
     }));
     const palette = Array.from({ length: 256 }, (_, color) => [color, color, color]);
-    assert.equal(await mosaicShareURL(base, { matrix, palette, blank: 0 }), null);
+    const puzzle = { matrix, palette, blank: 0 };
+    assert.equal(await mosaicShareURL(base, puzzle), null);
+    assert.equal(await puzzleShareURL(base, puzzle), null);
+});
+
+test('分割できない小さなカラー問題も、通常リンクで寸法・色・空白を復元できる', async () => {
+    const puzzle = {
+        matrix: [[0, 2, 1], [2, 0, 1]],
+        palette: [[20, 80, 150], [200, 100, 20]],
+        blank: 2,
+    };
+    const link = new URL(await puzzleShareURL(base + '?sample#old', { ...puzzle, clock: { elapsed: 3000 } }));
+    assert.equal(link.search, '');
+    assert.match(link.hash, /^#puzzle=1\./);
+    assert.deepEqual(normalize(await readPuzzleShare(link.hash)), puzzle);
+    await assert.rejects(readMosaicShare(link.hash.replace('#puzzle=', '#mosaic=')));
+});
+
+test('通常リンクで空の行やマス数の上限を超えた盤面は開かない', async () => {
+    const hashFor = matrix => '#puzzle=1.' + gzipSync(JSON.stringify({
+        matrix, palette: [[0, 0, 0]], blank: 1,
+    })).toString('base64url');
+    await assert.rejects(readPuzzleShare(hashFor([[]])));
+    await assert.rejects(readPuzzleShare(hashFor(Array.from({ length: 201 }, () => Array(200).fill(0)))));
 });
