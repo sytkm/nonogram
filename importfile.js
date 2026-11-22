@@ -66,11 +66,13 @@ function setupImagePicker() {
     document.getElementById('change-preview-image').onclick = () => input.click();
     const status = document.getElementById('image-status');
     const preview = document.getElementById('image-preview');
+    const resetPreviewTabs = setupTabs(preview);
     const canvas = document.getElementById('preview-canvas');
     const side = document.getElementById('puzzle-side');
     const mode = document.getElementById('puzzle-mode');
     const threshold = document.getElementById('threshold');
     const previewSharing = document.getElementById('preview-sharing');
+    const previewShareUnavailable = document.getElementById('preview-share-unavailable');
     const previewShare = document.getElementById('preview-share');
     const mosaicShare = document.getElementById('preview-mosaic-share');
     const mosaicShareMessage = document.getElementById('preview-mosaic-share-message');
@@ -113,6 +115,7 @@ function setupImagePicker() {
         mosaicShareRequest = undefined;
         const canShareSplit = Boolean(puzzle && canSplitPuzzle(puzzle.matrix));
         previewSharing.hidden = !shareSource && !canShareSplit;
+        previewShareUnavailable.hidden = !previewSharing.hidden;
         if (!canShareSplit) return;
         mosaicShareMessage.textContent = '分割問題の共有リンクを準備しています…';
 
@@ -221,6 +224,7 @@ function setupImagePicker() {
             ? '大きな画像なので、最長辺' + SUGGESTED_PHOTO_SIDE + 'マスを提案します。' +
               MAX_PUZZLE_SIDE + 'マスまで変更できます。'
             : '';
+        resetPreviewTabs();
         preview.hidden = false;
         setPlaying(false);
         document.getElementById('preview-heading').focus();
