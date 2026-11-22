@@ -16,8 +16,8 @@
     <script src="mosaic.js?v=overview-wording"></script>
     <script src="share-controls.js?v=mosaic-share"></script>
     <script src="guide-tabs.js"></script>
-    <script src="importfile.js?v=compact-play-guide"></script>
-    <link rel="stylesheet" href="style.css?v=paused-paper">
+    <script src="importfile.js?v=visible-solver-checks"></script>
+    <link rel="stylesheet" href="style.css?v=visible-solver-checks">
     <title>画像でノノグラム</title>
 </head>
 
@@ -102,12 +102,12 @@
                             <p>「答えが一つか調べる」で、ヒント数字に合うマスの塗り方が一通りか確認できます。複数あると分かった場合は、遊び始めるときに固定の青い斜線を加え、答えを一つに絞ります。確認しきれなかった場合は、ヒント数字に合う塗り方でクリアできます。</p>
                             <button type="button" id="preview-quality" class="action-link">答えが一つか調べる</button>
                             <p id="preview-quality-result" class="quality-result" role="status"></p>
-                            <details class="advanced-options">
-                                <summary>解き方の確認</summary>
+                            <section class="advanced-options" aria-labelledby="preview-check-heading">
+                                <h3 id="preview-check-heading">解き方の確認</h3>
                                 <p>「考え方ヒント」を繰り返す方法で、最後まで解けるか調べます。</p>
                                 <button type="button" id="preview-logic" class="action-link">行・列の推理で解けるか調べる</button>
                                 <p id="preview-logic-result" class="quality-result" role="status"></p>
-                            </details>
+                            </section>
                         </div>
                     </div>
                 </div>
@@ -161,12 +161,12 @@
                             <label>共有リンク <input type="text" readonly></label>
                         </div>
                     </div>
-                    <details id="board-advanced-options" class="advanced-options">
-                        <summary>解き方の確認</summary>
+                    <section id="board-advanced-options" class="advanced-options" aria-labelledby="board-check-heading">
+                        <h3 id="board-check-heading">解き方の確認</h3>
                         <p>「考え方ヒント」を繰り返す方法で、最初から最後まで解けるか調べます。途中の入力は使いません。</p>
                         <button type="button" id="board-logic">行・列の推理で解けるか調べる</button>
                         <p id="board-logic-result" class="quality-result" role="status"></p>
-                    </details>
+                    </section>
                 </div>
                 <p id="hint-message" class="play-only" role="status"></p>
                 <p id="conflict-message" role="status"></p>

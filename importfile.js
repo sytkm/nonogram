@@ -485,7 +485,6 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
             ? '答えが一つか確認できなかったため、ヒント数字に合う配置でクリアになります。'
             : '';
     qualityNote.hidden = !qualityNote.textContent;
-    document.getElementById('board-advanced-options').open = false;
     resetBoardLogicCheck = setupQualityCheck(document.getElementById('board-logic'),
         document.getElementById('board-logic-result'),
         () => ({
