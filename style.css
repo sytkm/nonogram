@@ -486,6 +486,7 @@ header:has(#play-panel:not([hidden])) {
 #mosaic-panel .action-link[aria-pressed="true"] {
     border-color: var(--puzzle-accent);
     background: var(--puzzle-accent);
+    color: #fff;
 }
 
 #start-panel .action-primary:hover:not(:disabled),

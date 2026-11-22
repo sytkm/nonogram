@@ -117,14 +117,16 @@ function openMosaic({ matrix, palette, blank }, saved) {
             // 区画の表示と同じ秒単位に揃え、画面上の数字を足した合計にする。
             total += Math.floor(elapsed / 1000) * 1000;
             time.textContent = formatPlayTime(elapsed);
-            const state = tile.complete ? '（完成済み・閲覧）' : '';
+            const state = tile.complete ? '（完成済み・開いて確認）' : '';
             button.setAttribute('aria-label', label + state + (showTimes ? '、' + time.textContent : ''));
         }
         totalTime.textContent = formatPlayTime(total);
         timeToggle.setAttribute('aria-pressed', String(showTimes));
+        timeToggle.textContent = showTimes ? '区画のプレイ時間を隠す' : '区画のプレイ時間を表示';
         grid.classList.toggle('show-times', showTimes);
         reviewToggle.hidden = finished.hidden || showTimes;
         reviewToggle.setAttribute('aria-pressed', String(showTiles));
+        reviewToggle.textContent = showTiles ? '区画を隠す' : '区画を見返す';
         map.hidden = !finished.hidden && !showTimes && !showTiles;
     }
 
