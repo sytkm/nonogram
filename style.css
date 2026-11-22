@@ -862,3 +862,26 @@ dialog button:focus-visible {
 #progress-warning:empty {
     display: none;
 }
+
+/* Keep the rule examples distinct from the puzzle's own palette. */
+.guide-color-example .guide-color-a {
+    background: #305ba3;
+    color: #fff;
+}
+
+.guide-color-example .guide-color-b {
+    background: #a52c38;
+    color: #fff;
+}
+
+.guide-clue-a {
+    color: #305ba3;
+}
+
+.guide-clue-b {
+    color: #a52c38;
+}
+
+.guide-color-example th span + span {
+    margin-inline-start: 0.5rem;
+}
