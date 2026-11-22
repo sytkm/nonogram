@@ -17,7 +17,7 @@
     <script src="share-controls.js?v=mosaic-share"></script>
     <script src="guide-tabs.js"></script>
     <script src="importfile.js?v=compact-play-guide"></script>
-    <link rel="stylesheet" href="style.css?v=mosaic-toggle-text">
+    <link rel="stylesheet" href="style.css?v=paused-paper">
     <title>画像でノノグラム</title>
 </head>
 
@@ -322,7 +322,12 @@
         </form>
     </dialog>
     <p id="progress-warning" role="status"></p>
-    <p id="pause-message" role="status" hidden>一時停止中です。「再開」を押すと盤面が表示されます。</p>
+    <section id="pause-message" role="status" hidden>
+        <div class="pause-copy">
+            <h2>一時停止中</h2>
+            <p>「再開」を押すと、続きから遊べます。</p>
+        </div>
+    </section>
     <div id="pixelcanvas" hidden>
         <div class="fixed-clues" aria-hidden="true"><canvas id="fixed-clues" hidden></canvas></div>
         <canvas id="canvas" tabindex="0" aria-label="ノノグラムの盤面" aria-describedby="keyboard-instructions"></canvas>

@@ -371,9 +371,37 @@ header:has(#play-panel:not([hidden])) {
 }
 
 #pause-message {
-    margin: auto;
-    padding: 1rem;
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    overflow: auto;
+    padding: 1.5rem 1rem;
+    border-top: 1px solid var(--puzzle-rule);
+    background: var(--puzzle-paper);
+    color: var(--puzzle-ink);
     text-align: center;
+}
+
+#pause-message:not([hidden]) {
+    display: flex;
+}
+
+.pause-copy {
+    max-width: 30rem;
+    margin: auto;
+}
+
+#pause-message h2 {
+    margin: 0 0 0.75rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--puzzle-rule);
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+    font-size: 1.5rem;
+}
+
+#pause-message p {
+    margin: 0;
+    line-height: 1.65;
 }
 
 .board-tools,
