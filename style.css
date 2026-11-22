@@ -20,7 +20,7 @@ body {
 }
 
 header {
-    padding: 0.75rem 1rem;
+    padding: 1rem;
     overflow: auto;
 }
 
@@ -55,10 +55,9 @@ header:has(#start-panel:not([hidden]) #image-preview[hidden]) {
     flex: 1 1 auto;
     background: var(--puzzle-paper);
     color: var(--puzzle-ink);
-    padding: 1rem clamp(1rem, 4vw, 3rem) 2rem;
+    padding: 1rem 1rem 2rem;
 }
 
-header:has(#start-panel:not([hidden]) #image-preview[hidden]) .site-heading,
 #start-panel:has(#image-preview[hidden]) {
     max-width: 59rem;
     margin-inline: auto;
@@ -161,9 +160,7 @@ header:has(#start-panel:not([hidden]) #image-preview:not([hidden])) {
     flex: 1 1 auto;
 }
 
-header:has(#start-panel:not([hidden]) #image-preview:not([hidden])) .site-heading,
-#start-panel:has(#image-preview:not([hidden])),
-body:has(#mosaic-panel:not([hidden])) .site-heading {
+#start-panel:has(#image-preview:not([hidden])) {
     max-width: 59rem;
     margin-inline: auto;
 }
@@ -601,6 +598,11 @@ header:has(#play-panel:not([hidden])) {
     color: #677788;
     border-color: #ccd4de;
     cursor: default;
+}
+
+.site-heading {
+    max-width: 59rem;
+    margin-inline: auto;
 }
 
 .site-heading,
