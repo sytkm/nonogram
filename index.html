@@ -115,6 +115,8 @@
         </div>
         <div id="play-panel" hidden>
             <div class="play-clock">
+                <a href="?" id="board-home" class="action-link">ホームに戻る</a>
+                <button type="button" id="return-mosaic" hidden>全体図に戻る</button>
                 <div>プレイ時間 <span id="play-time" role="timer" aria-label="プレイ時間">00:00</span></div>
                 <button type="button" id="pause-play" class="play-only">一時停止</button>
                 <button type="button" id="restart-board" class="play-only" aria-haspopup="dialog" aria-controls="restart-dialog">最初からやり直す</button>
@@ -131,7 +133,6 @@
                     <div class="toolbar-group" role="group" aria-label="操作メニュー">
                         <button type="button" class="board-menu-button play-only" aria-controls="hint-tools" aria-expanded="false">ヒント・確認</button>
                         <button type="button" class="board-menu-button play-only" aria-controls="play-options" aria-expanded="false">問題</button>
-                        <button type="button" id="return-mosaic" hidden>全体図に戻る</button>
                     </div>
                     <div class="toolbar-group play-only" role="group" aria-labelledby="clue-mode-label">
                         <span id="clue-mode-label">ヒント数字</span>
@@ -149,7 +150,6 @@
                     <button type="button" id="split-board" hidden>10×10に分けて遊ぶ</button>
                     <button type="button" id="downl">今の盤面をPNGで保存</button>
                     <button type="button" id="preview-monochrome" hidden>同じ画像を白黒に変換</button>
-                    <a href="?" id="board-home" class="action-link">ホームに戻る</a>
                     <div id="board-share" class="puzzle-share" role="group" aria-label="問題を共有" hidden>
                         <p>共有リンクには元のPNGが含まれ、リンクを受け取った人は画像や答えを復元できます。</p>
                         <div class="toolbar-group">
@@ -176,6 +176,7 @@
         </div>
     </header>
     <main id="mosaic-panel" hidden>
+        <p><a href="?" class="action-link">ホームに戻る</a></p>
         <h2 id="mosaic-title" tabindex="-1">分割ノノグラム</h2>
         <div id="mosaic-instructions">
             <p>区画を選んで遊びます。すべて完成すると、1枚の絵になります。</p>
@@ -210,7 +211,6 @@
             </div>
         </div>
         <p id="mosaic-share-message" class="quality-result" role="status"></p>
-        <p><a href="?" class="action-link">ホームに戻る</a></p>
     </main>
     <dialog id="settings-dialog" aria-labelledby="settings-title">
         <div class="settings-heading">
