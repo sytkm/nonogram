@@ -16,7 +16,7 @@
     <script src="mosaic.js?v=creator-preview"></script>
     <script src="share-controls.js?v=mosaic-share"></script>
     <script src="guide-tabs.js?v=preview-tabs"></script>
-    <script src="importfile.js?v=clue-operation-help"></script>
+    <script src="importfile.js?v=first-shared-guide"></script>
     <link rel="stylesheet" href="style.css?v=clue-operation-help">
     <script src="dialog-dismiss.js" defer></script>
     <title>画像でノノグラム</title>
@@ -255,6 +255,7 @@
         </div>
         <div class="guide-content">
             <section id="guide-basic" role="tabpanel" aria-labelledby="guide-tab-basic" tabindex="0">
+                <p id="play-guide-shared-intro" hidden></p>
                 <h3>数字を手がかりに塗る</h3>
                 <p>左の数字は行、上の数字は列のヒントです。数字の数だけ、続けて塗ります。</p>
                 <table class="guide-example" aria-label="3マスの横一行の例">
@@ -274,9 +275,11 @@
                     </tbody>
                 </table>
                 <p>「3」は続けて3マス。「1 1」は1マスずつ2組です。同じ色の組の間は、1マス以上空けます。空白には斜線で印を付けられます。</p>
-                <h3>最初の一手を試す</h3>
-                <p>サンプルの真ん中の行は「5」。パレットで青を選び、横5マスをすべて塗ってみましょう。</p>
-                <a href="?sample" class="action-link">サンプル問題で遊ぶ</a>
+                <div id="play-guide-sample">
+                    <h3>最初の一手を試す</h3>
+                    <p>サンプルの真ん中の行は「5」。パレットで青を選び、横5マスをすべて塗ってみましょう。</p>
+                    <a href="?sample" class="action-link">サンプル問題で遊ぶ</a>
+                </div>
             </section>
             <section id="guide-color" role="tabpanel" aria-labelledby="guide-tab-color" tabindex="0" hidden>
                 <h3>カラーの塗り方</h3>

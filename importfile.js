@@ -22,6 +22,7 @@ window.onload = async function () {
     setupProgressRestore();
     setupBoardMenus();
     setupSettings();
+    const showFirstSharedGuide = setupPlayGuide();
     updatePaletteNavigation = setupPaletteNavigation();
     window.addEventListener('resize', () => refreshBoard?.());
     window.setInterval(() => {
@@ -39,6 +40,7 @@ window.onload = async function () {
     if (hash.startsWith(mosaicSharePrefix)) {
         try {
             openMosaic(await readMosaicShare(hash));
+            showFirstSharedGuide(true);
         } catch {
             showInvalidSharedPuzzle();
         }
@@ -51,6 +53,7 @@ window.onload = async function () {
             await startPuzzle(decodeLegacyPng(samplePNG), { sample: true });
         } else {
             await startPuzzle(decodeLegacyPng(decodeURIComponent(query.slice(1))), { shared: true });
+            showFirstSharedGuide(false);
         }
     } catch {
         showInvalidSharedPuzzle();
@@ -339,24 +342,56 @@ function saveBoardSetting(name, value) {
     }
 }
 
-function setupSettings() {
-    const dialog = document.getElementById('settings-dialog');
+function setupPlayGuide() {
     const playGuide = document.getElementById('play-guide-dialog');
     const resetGuideTabs = setupGuideTabs(playGuide);
-    for (const button of document.querySelectorAll('[data-open-play-guide]')) {
-        button.onclick = () => {
-            syncGuideSymbols();
-            resetGuideTabs();
-            playGuide.showModal();
-        };
-    }
+    const sample = document.getElementById('play-guide-sample');
+    const sharedIntro = document.getElementById('play-guide-shared-intro');
     const playPanel = document.getElementById('play-panel');
-    function syncGuideSymbols() {
+
+    function openGuide(returnTarget) {
+        sample.hidden = Boolean(returnTarget);
+        sharedIntro.hidden = !returnTarget;
         const visible = boardSetting('showSymbols', playPanel.hidden ? undefined : boardForSettings);
         for (const symbol of playGuide.querySelectorAll('[data-guide-symbol]')) {
             symbol.hidden = !visible;
         }
+        resetGuideTabs();
+        playGuide.showModal();
+        if (returnTarget) {
+            playGuide.addEventListener('close', () => returnTarget.focus({ preventScroll: true }), { once: true });
+        }
     }
+
+    for (const button of document.querySelectorAll('[data-open-play-guide]')) {
+        button.onclick = () => openGuide();
+    }
+
+    return split => {
+        if (document.querySelector('dialog[open]')) return;
+        const key = 'nonogram:shared-play-guide:v1';
+        // Use tab storage when browser-wide storage is blocked. If neither is
+        // available, leave the guide available through Settings.
+        for (const storageName of ['localStorage', 'sessionStorage']) {
+            try {
+                const storage = window[storageName];
+                if (storage.getItem(key)) return;
+                storage.setItem(key, '1');
+            } catch {
+                continue;
+            }
+            sharedIntro.textContent = split
+                ? '閉じると、受け取った分割問題の全体図に進みます。'
+                : '閉じると、受け取った問題で遊べます。';
+            openGuide(document.getElementById(split ? 'mosaic-title' : 'canvas'));
+            return;
+        }
+    };
+}
+
+function setupSettings() {
+    const dialog = document.getElementById('settings-dialog');
+    const playPanel = document.getElementById('play-panel');
     const settingsInputs = {
         stickClues: document.getElementById('stick-clues'),
         showSymbols: document.getElementById('color-symbols'),
@@ -373,7 +408,6 @@ function setupSettings() {
     for (const [name, input] of Object.entries(settingsInputs)) {
         input.onchange = () => {
             saveBoardSetting(name, input.checked);
-            syncGuideSymbols();
             if (!playPanel.hidden) refreshBoardSettings?.();
         };
     }
