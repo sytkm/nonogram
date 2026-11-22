@@ -16,7 +16,7 @@
     <script src="mosaic.js?v=creator-preview"></script>
     <script src="share-controls.js?v=mosaic-share"></script>
     <script src="guide-tabs.js?v=preview-tabs"></script>
-    <script src="importfile.js?v=first-shared-guide"></script>
+    <script src="importfile.js?v=prefer-split-preview"></script>
     <link rel="stylesheet" href="style.css?v=board-spacing">
     <script src="dialog-dismiss.js" defer></script>
     <title>画像でノノグラム</title>
@@ -70,10 +70,10 @@
             <section id="image-preview" aria-labelledby="preview-heading" hidden>
                 <h2 id="preview-heading" tabindex="-1">ノノグラムのプレビュー</h2>
                 <div class="toolbar-group" role="group" aria-label="プレビューした問題で遊ぶ">
+                    <button type="button" id="split-preview" class="action-link action-primary" aria-describedby="preview-split-help" hidden>10×10に分けて遊ぶ</button>
                     <button type="button" id="play-preview" class="action-link action-primary">この問題で遊ぶ</button>
-                    <button type="button" id="split-preview" class="action-link" aria-describedby="preview-split-help" hidden>10×10に分けて遊ぶ</button>
                 </div>
-                <p id="preview-split-help" hidden>分割では、区画を解いて1枚の絵を完成させます。</p>
+                <p id="preview-split-help" hidden>10×10の小さな区画を解いて、1枚の絵を完成させます。</p>
                 <div class="preview-layout">
                     <figure class="preview-image">
                         <canvas id="preview-canvas" role="img" aria-label="問題に使う画像"></canvas>

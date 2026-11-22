@@ -163,6 +163,8 @@ function setupImagePicker() {
                 ' ／ 盤面 ' + matrix[0].length + ' × ' + matrix.length + ' マス';
         }
         splitPreview.hidden = !canSplitPuzzle(matrix);
+        playPreview.className = splitPreview.hidden ? 'action-link action-primary' : 'action-link';
+        playPreview.textContent = splitPreview.hidden ? 'この問題で遊ぶ' : '分けずに遊ぶ';
         document.getElementById('preview-split-help').hidden = splitPreview.hidden;
         if (!playPreview.disabled) {
             updatePreviewSharing(puzzle, exactColor ? currentImage.shareSource : undefined);
