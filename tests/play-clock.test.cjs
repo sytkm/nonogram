@@ -26,25 +26,25 @@ test('最初の操作で計測し、一時停止と再開を繰り返しても�
     assert.equal(clock.elapsed(), 3250);
 });
 
-test('答えを見た回数と行数に応じて加算し、クリア後の時刻は変わらない', () => {
+test('秒単位で加算し、クリア後の時刻は変わらない', () => {
     let now = 0;
     const clock = context.createPlayClock(() => now);
-    clock.addPenalty(10);
+    clock.addPenalty(10 * 60);
     now = 2000;
-    clock.addPenalty(10);
+    clock.addPenalty(10 * 60);
     clock.finish();
     now = 80_000;
     clock.resume();
     clock.start();
-    clock.addPenalty(10);
+    clock.addPenalty(10 * 60);
     assert.equal(clock.elapsed(), 1_202_000);
 });
 
 test('行または列のヒントと答え表示の加算を合計する', () => {
     const clock = context.createPlayClock(() => 1000);
-    clock.addPenalty(1);
-    clock.addPenalty(1);
-    clock.addPenalty(5);
+    clock.addPenalty(60);
+    clock.addPenalty(60);
+    clock.addPenalty(300);
     assert.equal(context.formatPlayTime(clock.elapsed()), '07:00');
 });
 
@@ -77,7 +77,7 @@ test('プレイ時間の保存から復元し、ページを閉じていた時�
     const clock = context.createPlayClock(() => now);
     clock.start();
     now += 2000;
-    clock.addPenalty(1);
+    clock.addPenalty(60);
     const saved = clock.snapshot();
     now += 10_000;
     const restored = context.createPlayClock(() => now, saved);
@@ -94,7 +94,7 @@ test('プレイ時間の保存から復元し、ページを閉じていた時�
 test('クリア後に再スタートすると経過時間と加算を消し、初回操作から計測できる', () => {
     let now = 1000;
     const clock = context.createPlayClock(() => now);
-    clock.addPenalty(5);
+    clock.addPenalty(300);
     now += 2000;
     clock.finish();
     assert.equal(clock.elapsed(), 302_000);
@@ -106,4 +106,15 @@ test('クリア後に再スタートすると経過時間と加算を消し、�
     clock.start();
     now += 1100;
     assert.equal(clock.elapsed(), 1100);
+});
+
+test('80秒の行ヒントと30秒の考え方ヒントを足して保存・復元できる', () => {
+    const clock = context.createPlayClock(() => 0);
+    clock.addPenalty(80);
+    clock.addPenalty(30);
+    const restored = context.createPlayClock(() => 0, clock.snapshot());
+    assert.equal(restored.elapsed(), 110_000);
+    assert.equal(context.formatPenaltyTime(80), '1分20秒');
+    assert.equal(context.formatPenaltyTime(120), '2分');
+    assert.equal(context.formatPenaltyTime(80 * 60), '1時間20分');
 });

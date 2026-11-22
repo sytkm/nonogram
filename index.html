@@ -7,7 +7,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <script src="inflate.min.js"></script>
     <script src="image-input.js?v=color-png"></script>
-    <script src="play-clock.js"></script>
+    <script src="play-clock.js?v=hint-penalties"></script>
     <script src="board-tools.js?v=clue-eyedropper"></script>
     <script src="line-logic.js"></script>
     <script src="progress-store.js?v=recovery-messages"></script>
@@ -16,7 +16,7 @@
     <script src="mosaic.js?v=creator-preview"></script>
     <script src="share-controls.js?v=mosaic-share"></script>
     <script src="guide-tabs.js?v=preview-tabs"></script>
-    <script src="importfile.js?v=prefer-split-preview"></script>
+    <script src="importfile.js?v=hint-penalties"></script>
     <link rel="stylesheet" href="style.css?v=home-credits">
     <script src="dialog-dismiss.js" defer></script>
     <title>画像でノノグラム</title>
@@ -195,10 +195,10 @@
                     </dl>
                 </div>
                 <div id="hint-tools" class="board-menu play-only" role="group" aria-label="ヒント・確認" hidden>
-                    <button type="button" id="logic-hint" data-close-board-menu>考え方ヒント</button>
-                    <button type="button" id="line-hint" data-close-board-menu>行・列ヒント <small class="penalty">+1分</small></button>
-                    <button type="button" id="check-conflicts" data-close-board-menu>矛盾チェック</button>
-                    <button type="button" id="solve" data-close-board-menu>答えを見る <small class="penalty" id="answer-penalty"></small></button>
+                    <button type="button" id="logic-hint" data-close-board-menu>考え方ヒント <small class="penalty"></small></button>
+                    <button type="button" id="line-hint" data-close-board-menu>行・列ヒント <small class="penalty"></small></button>
+                    <button type="button" id="check-conflicts" data-close-board-menu>矛盾チェック <small class="penalty"></small></button>
+                    <button type="button" id="solve" data-close-board-menu>答えを見る <small class="penalty"></small></button>
                 </div>
                 <p id="hint-message" class="play-only" role="status"></p>
                 <p id="conflict-message" role="status"></p>
@@ -324,7 +324,7 @@
                 </details>
                 <details class="guide-more">
                     <summary>ヒントとプレイ時間</summary>
-                    <p>「ヒント・確認」でヒントや答えを見られます。「行・列ヒント」は1分、「答えを見る」は1行につき1分をプレイ時間に加えます。</p>
+                    <p>「ヒント・確認」でヒントや答えを見られます。「行・列ヒント」は選ばれた行または列の全マス数、「答えを見る」は盤面の全マス数に、1マスあたり10秒を加えます。「考え方ヒント」はヒントが出たときに30秒、「矛盾チェック」は矛盾がなくても1分を加えます。同じ盤面で続けて同じ考え方ヒントやチェック結果を見ても、追加では加算しません。</p>
                 </details>
                 <details class="guide-more">
                     <summary>マウス・キーボード操作</summary>

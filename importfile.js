@@ -606,29 +606,28 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
     const download = document.getElementById('downl');
     download.hidden = true;
     document.getElementById('solve').hidden = options.shared === true;
-    document.getElementById('answer-penalty').textContent = '+' + matrix.length + '分';
     download.onclick = () => {
         const link = document.createElement('a');
         link.href = document.getElementById('canvas').toDataURL('image/png');
         link.download = 'nonogram.png';
         link.click();
     };
-    function showClear() {
+    function showClear(note = '') {
         controls.finish();
         result.classList.add('is-complete');
         if (options.tileLabel) {
             playPanel.classList.add('is-viewing-tile');
             document.getElementById('fix-phone-under-menu').hidden = true;
-            result.textContent = options.review ? '完成済みの区画を表示しています。' : '区画クリア！';
+            result.textContent = options.review ? '完成済みの区画を表示しています。' : '区画クリア！' + note;
             returnToMosaic.focus({ preventScroll: true });
         } else {
-            result.textContent = 'クリア！';
+            result.textContent = 'クリア！' + note;
             download.hidden = options.shared === true;
             restart.textContent = 'もう一度遊ぶ';
         }
     }
 
-    function checkCompletion(save = true) {
+    function checkCompletion(save = true, note = '') {
         if (board.finished) return;
         const solved = board.quality === 'unique'
             ? matchesIntendedImage(matrix, cells, blank)
@@ -636,14 +635,14 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
         if (!solved) return;
         clock.finish();
         updatePlayTime();
-        showClear();
+        showClear(note);
         if (save) queueProgressSave();
         options.onSolved?.();
     }
 
-    function onEdit() {
+    function onEdit(note = '') {
         result.textContent = '';
-        checkCompletion();
+        checkCompletion(true, note);
     }
 
     restart.onclick = () => {
@@ -1041,11 +1040,31 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     zoomOut.onclick = () => resizeBoard(Math.max(1, Math.floor(cellSize / 1.25)), true);
     document.getElementById('zoom-fit').onclick = fitBoard;
     const solve = document.getElementById('solve');
+    const rowPenalty = columns * secondsPerPuzzleCell;
+    const columnPenalty = rows * secondsPerPuzzleCell;
+    const answerPenalty = rows * rowPenalty;
+    logicHint.querySelector('.penalty').textContent = '+' + formatPenaltyTime(logicHintPenalty);
+    checkConflicts.querySelector('.penalty').textContent = '+' + formatPenaltyTime(conflictCheckPenalty);
+    solve.querySelector('.penalty').textContent = '+' + formatPenaltyTime(answerPenalty);
+    hint.querySelector('.penalty').textContent = rowPenalty === columnPenalty
+        ? '+' + formatPenaltyTime(rowPenalty)
+        : '+' + formatPenaltyTime(Math.min(rowPenalty, columnPenalty)) +
+            '〜' + formatPenaltyTime(Math.max(rowPenalty, columnPenalty));
+
+    function addHintPenalty(seconds) {
+        clock.addPenalty(seconds);
+        updatePlayTime();
+        queueProgressSave();
+        return '（' + formatPenaltyTime(seconds) + '加算）';
+    }
+
     hintMessage.textContent = '';
     conflictMessage.textContent = '';
     checkConflicts.disabled = false;
     checkConflicts.onclick = () => {
+        if (board.finished || board.paused) return;
         stopStroke();
+        if (conflicts) return;
         conflicts = findBoardConflicts(cells, rowsOfClues, columnsOfClues, blank);
         const rowCount = conflicts.rows.size;
         const columnCount = conflicts.columns.size;
@@ -1058,11 +1077,14 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         } else {
             conflictMessage.textContent = '今のところ、ヒント数字と矛盾する行・列はありません。';
         }
+        conflictMessage.textContent += addHintPenalty(conflictCheckPenalty);
         renderBoard(true);
     };
     logicHint.disabled = false;
     logicHint.onclick = () => {
+        if (board.finished || board.paused) return;
         stopStroke();
+        if (logicalHintShown) return;
         highlightedHint = undefined;
         logicalHintShown = true;
         const current = findBoardConflicts(cells, rowsOfClues, columnsOfClues, blank);
@@ -1072,6 +1094,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
             const deduction = findLogicalHint(cells, rowsOfClues, columnsOfClues, blank);
             if (deduction) {
                 showLogicalHint(deduction);
+                hintMessage.append(addHintPenalty(logicHintPenalty));
             } else {
                 hintMessage.textContent = '今の状態から、行・列を個別に見て確定できるマスは見つかりませんでした。';
             }
@@ -1111,21 +1134,21 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
 
     hint.disabled = false;
     hint.onclick = () => {
+        if (board.finished || board.paused) return;
         stopStroke();
         const result = pickLineHint(answer, cells, blank);
         if (!result) {
             onEdit();
             return;
         }
-        clock.addPenalty(1);
-        updatePlayTime();
         const { axis, index, changes } = result;
+        const note = addHintPenalty(axis === 'row' ? rowPenalty : columnPenalty);
         const action = [];
         for (const { row, column, color } of changes) applyColor({ row, column }, color, action);
         record(action, true);
         highlightedHint = { axis, index };
         const lineLabel = axis === 'row' ? '上から' + (index + 1) + '行目' : '左から' + (index + 1) + '列目';
-        hintMessage.textContent = lineLabel + 'をヒントで埋めました（1分加算）。';
+        hintMessage.textContent = lineLabel + 'をヒントで埋めました。' + note;
         positionHintMarker();
         const gutters = clueGutters();
         if (axis === 'row') {
@@ -1139,13 +1162,13 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
                 viewport.scrollLeft = left - Math.max(0, (viewport.clientWidth - cellSize) / 2);
             }
         }
-        onEdit();
+        onEdit(note);
     };
     solve.disabled = false;
     solve.onclick = () => {
+        if (board.finished || board.paused) return;
         stopStroke();
-        clock.addPenalty(rows);
-        updatePlayTime();
+        const note = addHintPenalty(answerPenalty);
         const action = [];
         answer.forEach((line, row) => line.forEach((color, column) => applyColor({ row, column }, color, action)));
         record(action);
@@ -1153,7 +1176,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         hintMessage.textContent = '';
         positionHintMarker();
         renderBoard(true);
-        onEdit();
+        onEdit(note);
     };
     pauseButton.disabled = false;
     pauseButton.textContent = '一時停止';
