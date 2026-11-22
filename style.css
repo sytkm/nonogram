@@ -113,9 +113,18 @@ header:has(#start-panel:not([hidden]) #image-preview[hidden]) .site-heading {
     font-size: 0.875rem;
 }
 
-#start-panel:has(#image-preview[hidden]) #saved-progress {
+.home-recovery:has(#saved-progress:not([hidden]), #shared-link-status:not(:empty)) {
     padding-block-start: 0.75rem;
     border-top: 1px solid var(--puzzle-rule);
+}
+
+#shared-link-status {
+    margin: 0;
+    line-height: 1.65;
+}
+
+#shared-link-status:not(:empty) + #saved-progress:not([hidden]) {
+    margin-block-start: 0.65rem;
 }
 
 #start-panel:has(#image-preview[hidden]) .home-art {

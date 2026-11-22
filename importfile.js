@@ -61,7 +61,7 @@ window.onload = async function () {
 };
 
 function showInvalidSharedPuzzle() {
-    document.getElementById('image-status').textContent =
+    document.getElementById('shared-link-status').textContent =
         '共有リンクを開けませんでした。リンクが途中で切れていないか確認してください。';
 }
 
@@ -240,6 +240,7 @@ function setupImagePicker() {
     input.addEventListener('change', async () => {
         const file = input.files[0];
         if (!file) return;
+        document.getElementById('shared-link-status').textContent = '';
         const selection = {};
         currentImage = selection;
         updatePreviewSharing();
