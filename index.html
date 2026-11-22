@@ -16,8 +16,8 @@
     <script src="mosaic.js?v=creator-preview"></script>
     <script src="share-controls.js?v=mosaic-share"></script>
     <script src="guide-tabs.js"></script>
-    <script src="importfile.js?v=creator-preview"></script>
-    <link rel="stylesheet" href="style.css?v=creator-preview">
+    <script src="importfile.js?v=creator-preview-layout"></script>
+    <link rel="stylesheet" href="style.css?v=creator-preview-layout">
     <script src="dialog-dismiss.js" defer></script>
     <title>画像でノノグラム</title>
 </head>
@@ -62,15 +62,26 @@
                     <figcaption>サンプルの最初の一手。左が「5」の行は、5マスすべてを塗れます。</figcaption>
                 </figure>
             </div>
+            <div class="toolbar-group preview-navigation" role="group" aria-label="作成画面の移動">
+                <a href="?" class="action-link">ホームに戻る</a>
+                <button type="button" id="change-preview-image" class="action-link">別の画像を選ぶ</button>
+            </div>
             <p id="image-status" role="status"></p>
-            <div id="image-preview" hidden>
+            <section id="image-preview" aria-labelledby="preview-heading" hidden>
                 <h2 id="preview-heading" tabindex="-1">ノノグラムのプレビュー</h2>
+                <p class="preview-intro">
+                    画像を確認し、必要なら色やマス数を調整します。
+                    <a href="#preview-play-heading">開始ボタンへ</a>
+                </p>
                 <div class="preview-layout">
                     <figure class="preview-image">
-                        <canvas id="preview-canvas" role="img" aria-label="変換した画像"></canvas>
+                        <canvas id="preview-canvas" role="img" aria-label="問題に使う画像"></canvas>
                         <figcaption id="preview-size"></figcaption>
+                        <p id="preview-message" class="quality-result" role="status"></p>
                     </figure>
-                    <div class="preview-settings">
+                    <section class="preview-settings" aria-labelledby="preview-settings-heading">
+                        <h3 id="preview-settings-heading">色とマス数</h3>
+                        <p id="preview-original-color" hidden>元画像の色とマス数を使います。マス数を変えるには白黒に切り替えます。</p>
                         <div id="puzzle-mode-panel" hidden>
                             <label for="puzzle-mode">問題の色</label>
                             <select id="puzzle-mode">
@@ -90,52 +101,59 @@
                             <p>境目は画像に合わせて自動で選びます。値を上げると、より明るい部分も黒になります。</p>
                         </div>
                         <p id="color-note" hidden>近い色を最大7色にまとめます。白に近い部分は空白になります。</p>
-                        <p id="preview-message" role="status"></p>
-                        <div class="toolbar-group" role="group" aria-label="プレビューした問題で遊ぶ">
-                            <button type="button" id="play-preview" class="action-link action-primary">この問題で遊ぶ</button>
-                            <button type="button" id="split-preview" class="action-link" hidden>10×10に分けて遊ぶ</button>
-                        </div>
-                        <div id="preview-share" class="puzzle-share" role="group" aria-label="通常問題を共有" hidden>
-                            <p>共有リンクには元のPNGが含まれ、リンクを受け取った人は画像や答えを復元できます。</p>
-                            <div class="toolbar-group">
-                                <a class="action-link" data-share-bluesky target="_blank" rel="noopener noreferrer" hidden>Blueskyで共有</a>
-                                <button type="button" class="action-link" data-share-copy>通常問題の共有リンクをコピー</button>
-                            </div>
-                            <p class="quality-result" data-share-status role="status"></p>
-                            <div data-share-manual hidden>
-                                <label>共有リンク <input type="text" readonly></label>
-                            </div>
-                        </div>
-                        <div id="preview-mosaic-share" class="puzzle-share" role="group" aria-label="分割ノノグラムを共有" hidden>
-                            <p>共有リンクには完成画像を復元できる情報が含まれます。進み具合やプレイ時間は含まれません。</p>
-                            <div class="toolbar-group">
-                                <button type="button" class="action-link" data-share-copy>分割問題の共有リンクをコピー</button>
-                            </div>
-                            <p class="quality-result" data-share-status role="status"></p>
-                            <div data-share-manual hidden>
-                                <label>共有リンク <input type="text" readonly></label>
-                            </div>
-                        </div>
-                        <p id="preview-mosaic-share-message" class="quality-result" role="status"></p>
-                        <details class="guide-more">
-                            <summary>画像から問題を作るには</summary>
-                            <p>色やマス数を調整し、プレビューを確かめて「この問題で遊ぶ」を押します。マス数を減らすと、小さな盤面になります。</p>
-                            <p>「10×10に分けて遊ぶ」では、1枚の絵を区画ごとに解きます。共有リンクは遊び始める前にこの画面で作れます。</p>
-                        </details>
-                        <div class="preview-checks">
-                            <p>「答えが一つか調べる」で、ヒント数字に合うマスの塗り方が一通りか確認できます。複数あると分かった場合は、遊び始めるときに固定の青い斜線を加え、答えを一つに絞ります。確認しきれなかった場合は、ヒント数字に合う塗り方でクリアできます。</p>
-                            <button type="button" id="preview-quality" class="action-link">答えが一つか調べる</button>
+                    </section>
+                </div>
+                <section class="preview-section" aria-labelledby="preview-check-heading">
+                    <h3 id="preview-check-heading">問題を調べる</h3>
+                    <p>盤面全体を調べます。確認は任意です。</p>
+                    <div class="preview-checks">
+                        <div>
+                            <button type="button" id="preview-quality" class="action-link" aria-describedby="preview-quality-help">答えが一つか調べる</button>
+                            <p id="preview-quality-help">同じヒント数字で、別の塗り方ができるかを調べます。</p>
                             <p id="preview-quality-result" class="quality-result" role="status"></p>
-                            <section class="advanced-options" aria-labelledby="preview-check-heading">
-                                <h3 id="preview-check-heading">解き方の確認</h3>
-                                <p>「考え方ヒント」を繰り返す方法で、最後まで解けるか調べます。</p>
-                                <button type="button" id="preview-logic" class="action-link">行・列の推理で解けるか調べる</button>
-                                <p id="preview-logic-result" class="quality-result" role="status"></p>
-                            </section>
+                        </div>
+                        <div>
+                            <button type="button" id="preview-logic" class="action-link" aria-describedby="preview-logic-help">行・列の推理で解けるか調べる</button>
+                            <p id="preview-logic-help">行と列を一つずつ見て、確実に決まるマスだけで最後まで解けるかを調べます。</p>
+                            <p id="preview-logic-result" class="quality-result" role="status"></p>
                         </div>
                     </div>
-                </div>
-            </div>
+                </section>
+                <section id="preview-sharing" class="preview-section" aria-labelledby="preview-sharing-heading" hidden>
+                    <h3 id="preview-sharing-heading">問題を共有する</h3>
+                    <p>リンクから答えの画像を復元できます。進み具合やプレイ時間は含まれません。</p>
+                    <div id="preview-share" class="puzzle-share" role="group" aria-label="通常問題を共有" hidden>
+                        <p>通常問題のリンクには元のPNGが含まれます。</p>
+                        <div class="toolbar-group">
+                            <a class="action-link" data-share-bluesky target="_blank" rel="noopener noreferrer" hidden>Blueskyで共有</a>
+                            <button type="button" class="action-link" data-share-copy>通常問題の共有リンクをコピー</button>
+                        </div>
+                        <p class="quality-result" data-share-status role="status"></p>
+                        <div data-share-manual hidden>
+                            <label>共有リンク <input type="text" readonly></label>
+                        </div>
+                    </div>
+                    <div id="preview-mosaic-share" class="puzzle-share" role="group" aria-label="分割ノノグラムを共有" hidden>
+                        <p>分割問題のリンクには、プレビューした色とマスの配置が含まれます。</p>
+                        <div class="toolbar-group">
+                            <button type="button" class="action-link" data-share-copy>分割問題の共有リンクをコピー</button>
+                        </div>
+                        <p class="quality-result" data-share-status role="status"></p>
+                        <div data-share-manual hidden>
+                            <label>共有リンク <input type="text" readonly></label>
+                        </div>
+                    </div>
+                    <p id="preview-mosaic-share-message" class="quality-result" role="status"></p>
+                </section>
+                <section class="preview-section" aria-labelledby="preview-play-heading">
+                    <h3 id="preview-play-heading" tabindex="-1">遊び始める</h3>
+                    <p id="preview-split-help" hidden>そのまま1問で遊ぶか、10×10の区画に分けて1枚の絵を完成させます。</p>
+                    <div class="toolbar-group" role="group" aria-label="プレビューした問題で遊ぶ">
+                        <button type="button" id="play-preview" class="action-link action-primary">この問題で遊ぶ</button>
+                        <button type="button" id="split-preview" class="action-link" hidden>10×10に分けて遊ぶ</button>
+                    </div>
+                </section>
+            </section>
         </div>
         <div id="play-panel" hidden>
             <div class="play-clock">
