@@ -32,7 +32,10 @@ header:has(#play-panel:not([hidden])) {
 
 h1 {
     margin: 0;
-    font-size: 1.5rem;
+    font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
+    font-size: clamp(1.4rem, 3vw, 2.25rem);
+    font-weight: 700;
+    color: var(--puzzle-ink);
 }
 
 :root {
@@ -64,11 +67,6 @@ header:has(#start-panel:not([hidden]) #image-preview[hidden]) .site-heading,
 header:has(#start-panel:not([hidden]) #image-preview[hidden]) .site-heading {
     padding-block-end: 0.85rem;
     border-bottom: 1px solid var(--puzzle-rule);
-}
-
-header:has(#start-panel:not([hidden]) #image-preview[hidden]) h1 {
-    font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
-    font-size: clamp(1.4rem, 3vw, 2.25rem);
 }
 
 #start-panel:has(#image-preview[hidden]) .home-intro {
