@@ -885,3 +885,64 @@ dialog button:focus-visible {
 .guide-color-example th > span + span {
     margin-inline-start: 0.5rem;
 }
+
+/* The guide keeps navigation visible while only its text scrolls. */
+#play-guide-dialog[open] {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#play-guide-dialog .settings-heading,
+.guide-tabs {
+    flex: 0 0 auto;
+}
+
+#play-guide-title {
+    font-size: 1.5rem;
+    margin: 0;
+}
+
+.guide-tabs {
+    display: flex;
+    gap: 0.5rem;
+    padding-block: 0.75rem;
+    border-bottom: 1px solid var(--puzzle-rule);
+}
+
+.guide-tabs [role="tab"] {
+    flex: 1;
+    min-width: 0;
+    min-height: 44px;
+    font: inherit;
+    font-weight: 700;
+}
+
+.guide-tabs [aria-selected="true"] {
+    background: var(--puzzle-accent);
+    color: #fff;
+    border-color: var(--puzzle-accent);
+    text-decoration: underline;
+    text-underline-offset: 0.3em;
+}
+
+.guide-content {
+    overflow-y: auto;
+    min-height: 0;
+    padding-inline-end: 0.25rem;
+    line-height: 1.65;
+}
+
+#play-guide-dialog h3 {
+    font-size: 1.125rem;
+    margin: 0.75rem 0 0.5rem;
+}
+
+#play-guide-dialog summary {
+    font-weight: 700;
+}
+
+#play-guide-dialog [role="tabpanel"]:focus-visible {
+    outline: 2px solid var(--puzzle-accent);
+    outline-offset: -2px;
+}
