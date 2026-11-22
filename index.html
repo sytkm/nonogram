@@ -16,8 +16,8 @@
     <script src="mosaic.js?v=creator-preview"></script>
     <script src="share-controls.js?v=mosaic-share"></script>
     <script src="guide-tabs.js?v=preview-tabs"></script>
-    <script src="importfile.js?v=palette-layout"></script>
-    <link rel="stylesheet" href="style.css?v=palette-layout">
+    <script src="importfile.js?v=clue-operation-help"></script>
+    <link rel="stylesheet" href="style.css?v=clue-operation-help">
     <script src="dialog-dismiss.js" defer></script>
     <title>画像でノノグラム</title>
 </head>
@@ -177,9 +177,18 @@
                     </div>
                     <div class="toolbar-group play-only" role="group" aria-labelledby="clue-mode-label">
                         <span id="clue-mode-label">ヒント数字</span>
-                        <button type="button" class="clue-mode" id="clue-mark-mode" aria-pressed="true">チェック</button>
-                        <button type="button" class="clue-mode" id="clue-color-mode" aria-pressed="false">色を選ぶ</button>
+                        <button type="button" class="clue-mode" id="clue-mark-mode" aria-pressed="true" aria-describedby="clue-help-mark">チェック</button>
+                        <button type="button" class="clue-mode" id="clue-color-mode" aria-pressed="false" aria-describedby="clue-help-color">色を選ぶ</button>
+                        <button type="button" class="board-menu-button" id="clue-help-toggle" aria-label="ヒント数字の操作説明" aria-controls="clue-help" aria-expanded="false">説明</button>
                     </div>
+                </div>
+                <div id="clue-help" class="board-menu play-only" role="region" aria-labelledby="clue-help-toggle" hidden>
+                    <dl>
+                        <dt>チェック</dt>
+                        <dd id="clue-help-mark">押した数字に目印を付けます。もう一度押すと外れます。</dd>
+                        <dt>色を選ぶ</dt>
+                        <dd id="clue-help-color">押した数字と同じ色をパレットで選びます。0では色は変わりません。</dd>
+                    </dl>
                 </div>
                 <div id="hint-tools" class="board-menu play-only" role="group" aria-label="ヒント・確認" hidden>
                     <button type="button" id="logic-hint" data-close-board-menu>考え方ヒント</button>

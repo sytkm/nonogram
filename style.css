@@ -489,6 +489,23 @@ header:has(#play-panel:not([hidden])) {
     background: #f2f6fb;
 }
 
+#clue-help dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.35rem 0.65rem;
+    margin: 0;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+#clue-help dt {
+    font-weight: 600;
+}
+
+#clue-help dd {
+    margin: 0;
+}
+
 .play-clock button,
 .paint-tools button,
 .board-tools button,
