@@ -311,7 +311,13 @@ function showBoardMenu(selected) {
 
 function setupBoardMenus() {
     for (const button of document.querySelectorAll('.board-menu-button')) {
-        button.onclick = () => showBoardMenu(button.getAttribute('aria-expanded') === 'false' ? button : undefined);
+        button.onclick = () => {
+            const open = button.getAttribute('aria-expanded') === 'false';
+            showBoardMenu(open ? button : undefined);
+            if (open && button.id === 'clue-help-toggle') {
+                document.getElementById('clue-help').scrollIntoView({ block: 'nearest' });
+            }
+        };
     }
     document.getElementById('hint-tools').addEventListener('click', event => {
         if (!event.target.closest('button[data-close-board-menu]')) return;
