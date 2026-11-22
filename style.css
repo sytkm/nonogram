@@ -316,7 +316,7 @@ header:has(#start-panel:not([hidden]) #image-preview:not([hidden])) {
     font-size: 0.875rem;
 }
 
-.preview-tab-panel .puzzle-share:not([hidden]) + .puzzle-share:not([hidden]) {
+#puzzle-sharing .puzzle-share:not([hidden]) ~ .puzzle-share:not([hidden]) {
     margin-block-start: 0.65rem;
 }
 

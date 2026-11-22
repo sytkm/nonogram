@@ -28,15 +28,16 @@ function setup({ decodeFails = false, pngColorType } = {}) {
     const context = vm.createContext({
         window: { location: { href: 'https://example.com/nonogram/' } }, document: { getElementById: element },
         setupTabs: () => () => {},
-        setupPuzzleShare(group, url) { group.url = url; },
-        legacyPuzzleShareURL: (_, source) => '?' + source,
+        maxSharedPuzzleCells: 40_000,
         puzzleShareURL: (_, puzzle) => new Promise(resolve => normalShares.push({ puzzle, resolve })),
         mosaicShareURL: (_, puzzle) => new Promise(resolve => splitShares.push({ puzzle, resolve })),
         setupQualityCheck: () => () => {}, canSplitPuzzle: matrix => matrix[0].length > 10,
     });
-    for (const name of ['image-input.js', 'importfile.js']) {
+    for (const name of ['image-input.js', 'share-controls.js', 'importfile.js']) {
         vm.runInContext(fs.readFileSync(path.join(__dirname, '..', name), 'utf8'), context);
     }
+    context.setupPuzzleShare = (group, url) => { group.url = url; };
+    context.legacyPuzzleShareURL = (_, source) => '?' + source;
     if (pngColorType === undefined) {
         context.readPuzzleImage = async () => ({
             image: { naturalWidth: 201, naturalHeight: 2 }, canPlayLegacyColor: true,
