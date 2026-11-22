@@ -13,11 +13,11 @@
     <script src="progress-store.js"></script>
     <script src="quality-controls.js?v=check-result-wording"></script>
     <script src="mosaic-share.js"></script>
-    <script src="mosaic.js?v=mosaic-share"></script>
+    <script src="mosaic.js?v=overview-wording"></script>
     <script src="share-controls.js?v=mosaic-share"></script>
     <script src="guide-tabs.js"></script>
     <script src="importfile.js?v=compact-play-guide"></script>
-    <link rel="stylesheet" href="style.css?v=stable-guide-tabs">
+    <link rel="stylesheet" href="style.css?v=mosaic-toggle-text">
     <title>画像でノノグラム</title>
 </head>
 
@@ -96,7 +96,7 @@
                         <details class="guide-more">
                             <summary>画像から問題を作るには</summary>
                             <p>色やマス数を調整し、プレビューを確かめて「この問題で遊ぶ」を押します。マス数を減らすと、小さな盤面になります。</p>
-                            <p>「10×10に分けて遊ぶ」では、1枚の絵を区画ごとに解きます。分割一覧で共有リンクを作れます。リンクには完成画像を復元できる情報が含まれ、途中経過やプレイ時間は含まれません。</p>
+                            <p>「10×10に分けて遊ぶ」では、1枚の絵を区画ごとに解きます。分割一覧で共有リンクを作れます。リンクには完成画像を復元できる情報が含まれ、進み具合やプレイ時間は含まれません。</p>
                         </details>
                         <div class="preview-checks">
                             <p>「答えが一つか調べる」で、ヒント数字に合うマスの塗り方が一通りか確認できます。複数あると分かった場合は、遊び始めるときに固定の青い斜線を加え、答えを一つに絞ります。確認しきれなかった場合は、ヒント数字に合う塗り方でクリアできます。</p>
@@ -178,14 +178,14 @@
     <main id="mosaic-panel" hidden>
         <h2 id="mosaic-title" tabindex="-1">分割ノノグラム</h2>
         <div id="mosaic-instructions">
-            <p>区画を選んで遊びます。クリアした区画がつながって、一枚の絵になります。</p>
-            <p>元の画像からはみ出す端のマスは空白です。空白だけの区画は最初から完成しています。</p>
-            <p>途中の状態は、このブラウザに自動保存されます。完成済みの区画も開いて見返せます。</p>
+            <p>区画を選んで遊びます。すべて完成すると、1枚の絵になります。</p>
+            <p>端の余ったマスは空白です。空白だけの区画は完成済みです。</p>
+            <p>進み具合はこのブラウザに自動保存します。完成済みの区画も開けます。</p>
         </div>
         <p id="mosaic-progress" role="status"></p>
         <p>合計プレイ時間 <span id="mosaic-total-time">00:00</span></p>
         <div class="toolbar-group" role="group" aria-label="全体図の表示">
-            <button type="button" id="mosaic-time-toggle" class="action-link" aria-controls="mosaic-map" aria-pressed="false">区画の時間を表示</button>
+            <button type="button" id="mosaic-time-toggle" class="action-link" aria-controls="mosaic-map" aria-pressed="false">区画のプレイ時間を表示</button>
             <button type="button" id="mosaic-review-toggle" class="action-link" aria-controls="mosaic-map" aria-pressed="false" hidden>区画を見返す</button>
         </div>
         <div class="mosaic-map" id="mosaic-map" role="region" aria-label="区画の全体図" tabindex="0">
@@ -196,11 +196,11 @@
             <canvas id="mosaic-image" role="img" aria-label="すべての区画をつないだ完成画像"></canvas>
             <div class="toolbar-group" role="group" aria-label="完成画像を保存">
                 <a class="action-link action-primary" id="mosaic-save" download="nonogram-mosaic.png">完成画像を保存</a>
-                <a class="action-link" id="mosaic-save-large" download="nonogram-mosaic-large.png" hidden>拡大PNGを保存</a>
+                <a class="action-link" id="mosaic-save-large" download="nonogram-mosaic-large.png" hidden>拡大した画像を保存</a>
             </div>
         </section>
         <div id="mosaic-share" class="puzzle-share" role="group" aria-label="分割ノノグラムを共有" hidden>
-            <p>共有リンクから完成画像を復元できます。途中経過やプレイ時間は含まれません。</p>
+            <p>共有リンクには完成画像を復元できる情報が含まれます。進み具合やプレイ時間は含まれません。</p>
             <div class="toolbar-group">
                 <button type="button" class="action-link" data-share-copy>共有リンクをコピー</button>
             </div>
