@@ -428,6 +428,10 @@ header:has(#play-panel:not([hidden])) {
     font-weight: 700;
 }
 
+#downl {
+    margin-block-start: 0.65rem;
+}
+
 #canvas.is-painting {
     touch-action: none;
     cursor: crosshair;
