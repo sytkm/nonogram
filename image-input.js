@@ -27,7 +27,7 @@ async function readPuzzleImage(file) {
     const header = new Uint8Array(await file.slice(0, 29).arrayBuffer());
     const format = detectImageFormat(header);
     if (!format) {
-        throw new Error('PNG、JPEG、WebPの画像を選んでください。');
+        throw new Error('この画像形式には対応していません。PNG・JPEG・WebPを選んでください。');
     }
 
     const source = URL.createObjectURL(file);
