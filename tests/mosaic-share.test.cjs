@@ -57,7 +57,7 @@ test('圧縮できても共有URLが8,000文字を超える場合は作成を中
     assert.equal(await puzzleShareURL(base, puzzle), null);
 });
 
-test('分割できない小さなカラー問題も、通常リンクで寸法・色・空白を復元できる', async () => {
+test('小さなカラー問題の寸法・色・空白が通常リンクと1区画の分割リンクで復元できる', async () => {
     const puzzle = {
         matrix: [[0, 2, 1], [2, 0, 1]],
         palette: [[20, 80, 150], [200, 100, 20]],
@@ -67,7 +67,10 @@ test('分割できない小さなカラー問題も、通常リンクで寸法�
     assert.equal(link.search, '');
     assert.match(link.hash, /^#puzzle=1\./);
     assert.deepEqual(normalize(await readPuzzleShare(link.hash)), puzzle);
-    await assert.rejects(readMosaicShare(link.hash.replace('#puzzle=', '#mosaic=')));
+    const splitLink = new URL(await mosaicShareURL(base, puzzle));
+    const splitPuzzle = await readMosaicShare(splitLink.hash);
+    assert.deepEqual(normalize(splitPuzzle), puzzle);
+    assert.equal(splitMosaic(splitPuzzle.matrix, splitPuzzle.blank).tiles.length, 1);
 });
 
 test('通常リンクで空の行やマス数の上限を超えた盤面は開かない', async () => {

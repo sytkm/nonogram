@@ -82,6 +82,8 @@ function setupImagePicker() {
     const threshold = document.getElementById('threshold');
     const playPreview = document.getElementById('play-preview');
     const splitPreview = document.getElementById('split-preview');
+    const playOptions = document.getElementById('preview-play-options');
+    const splitHelp = document.getElementById('preview-split-help');
     let currentImage;
     const previewQuality = document.getElementById('preview-quality');
     const previewLogic = document.getElementById('preview-logic');
@@ -112,10 +114,7 @@ function setupImagePicker() {
     function updatePreview() {
         const useColor = mode.value === 'color';
         const exactColor = useColor && Boolean(currentImage.originalPuzzle);
-        if (exactColor) {
-            playPreview.disabled = false;
-            splitPreview.disabled = false;
-        }
+        if (exactColor) playPreview.disabled = false;
         resetPreviewChecks();
         if (useColor && !exactColor && !currentImage.colorPuzzle) {
             currentImage.colorPuzzle = makeColorPuzzle(currentImage.imageData);
@@ -134,10 +133,25 @@ function setupImagePicker() {
                 '元画像 ' + matrix[0].length + ' × ' + matrix.length +
                 ' ／ 盤面 ' + matrix[0].length + ' × ' + matrix.length + ' マス';
         }
-        splitPreview.hidden = !canSplitPuzzle(matrix);
-        playPreview.className = splitPreview.hidden ? 'action-link action-primary' : 'action-link';
-        playPreview.textContent = splitPreview.hidden ? 'この問題で遊ぶ' : '分けずに遊ぶ';
-        document.getElementById('preview-split-help').hidden = splitPreview.hidden;
+        const tileCount = mosaicTileCount(matrix);
+        const withinLimit = tileCount <= MAX_MOSAIC_TILES;
+        splitPreview.disabled = playPreview.disabled || !withinLimit;
+        const preferSplit = withinLimit && tileCount > 1;
+        const primary = preferSplit ? splitPreview : playPreview;
+        splitPreview.className = preferSplit ? 'action-link action-primary' : 'action-link';
+        playPreview.className = preferSplit ? 'action-link' : 'action-link action-primary';
+        if (playOptions.firstElementChild !== primary) playOptions.prepend(primary);
+        if (!withinLimit) {
+            const resizeHelp = exactColor
+                ? '白黒に切り替えてマス数を減らすか、画像を縮小して読み込み直してください。'
+                : '「色とマス数」でマス数を減らしてください。';
+            splitHelp.textContent = 'この画像は' + tileCount + '区画になります。分割は' + MAX_MOSAIC_TILES +
+                '区画までです。' + resizeHelp;
+        } else {
+            splitHelp.textContent = tileCount === 1
+                ? '10×10に収まる画像は、分けて遊ぶと1区画になります。'
+                : '10×10の小さな区画を解いて、1枚の絵を完成させます。';
+        }
         if (!playPreview.disabled) {
             updatePuzzleSharing(puzzle, exactColor ? currentImage.shareSource : undefined);
         }
@@ -182,7 +196,6 @@ function setupImagePicker() {
             '元画像 ' + image.naturalWidth + ' × ' + image.naturalHeight +
             ' ／ 盤面 ' + imageData.width + ' × ' + imageData.height + ' マス';
         playPreview.disabled = false;
-        splitPreview.disabled = false;
         resetThreshold();
     }
 
@@ -196,7 +209,6 @@ function setupImagePicker() {
         mode.value = hasColorMode ? 'color' : 'monochrome';
         const exactColor = mode.value === 'color' && currentImage.originalPuzzle;
         playPreview.disabled = false;
-        splitPreview.disabled = false;
         if (exactColor) updatePreview();
         else updateSize();
         status.textContent = !exactColor && originalSide > MAX_PUZZLE_SIDE

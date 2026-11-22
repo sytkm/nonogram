@@ -18,6 +18,7 @@ function setup({ decodeFails = false, pngColorType } = {}) {
             validity: { valid: true }, files: [{}],
             get valueAsNumber() { return Number(this.value); },
             addEventListener(type, handler) { this[type] = handler; },
+            prepend(child) { this.firstElementChild = child; },
             focus() {}, getContext: () => ctx,
         };
     }
@@ -31,9 +32,9 @@ function setup({ decodeFails = false, pngColorType } = {}) {
         maxSharedPuzzleCells: 40_000,
         puzzleShareURL: (_, puzzle) => new Promise(resolve => normalShares.push({ puzzle, resolve })),
         mosaicShareURL: (_, puzzle) => new Promise(resolve => splitShares.push({ puzzle, resolve })),
-        setupQualityCheck: () => () => {}, canSplitPuzzle: matrix => matrix[0].length > 10,
+        setupQualityCheck: () => () => {},
     });
-    for (const name of ['image-input.js', 'share-controls.js', 'importfile.js']) {
+    for (const name of ['image-input.js', 'mosaic.js', 'share-controls.js', 'importfile.js']) {
         vm.runInContext(fs.readFileSync(path.join(__dirname, '..', name), 'utf8'), context);
     }
     context.setupPuzzleShare = (group, url) => { group.url = url; };
@@ -139,12 +140,18 @@ test('白黒に切り替えると古い共有リンクを消し、新しい通�
     await new Promise(setImmediate);
     assert.equal(ui.element('preview-share').url, null);
     assert.equal(ui.element('preview-mosaic-share').url, null);
+    const singleTile = ui.splitShares.at(-1);
+    singleTile.resolve('#mosaic=1.single');
     ui.normalShares[0].resolve('#puzzle=1.monochrome');
     await new Promise(setImmediate);
     assert.equal(ui.element('preview-share').url, '#puzzle=1.monochrome');
+    assert.equal(ui.element('preview-mosaic-share').url, '#mosaic=1.single');
+    assert.equal(ui.element('preview-play-options').firstElementChild, ui.element('play-preview'));
+    assert.equal(ui.element('split-preview').disabled, false);
     ui.element('puzzle-mode').value = 'color';
     ui.element('puzzle-mode').change();
     assert.equal(ui.element('preview-share').url, '?original-png');
+    assert.equal(ui.element('preview-play-options').firstElementChild, ui.element('split-preview'));
 });
 
 test('RGB・RGBAのPNGは通常のカラー変換で遊べる', async () => {

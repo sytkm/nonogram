@@ -1,10 +1,15 @@
 const MOSAIC_SIDE = 10;
 const MAX_MOSAIC_TILES = 400;
 
-function canSplitPuzzle(matrix) {
-    const across = Math.ceil(matrix[0].length / MOSAIC_SIDE);
+function mosaicTileCount(matrix) {
+    const across = Math.ceil((matrix[0]?.length ?? 0) / MOSAIC_SIDE);
     const down = Math.ceil(matrix.length / MOSAIC_SIDE);
-    return across * down > 1 && across * down <= MAX_MOSAIC_TILES;
+    return across * down;
+}
+
+function canSplitPuzzle(matrix) {
+    const count = mosaicTileCount(matrix);
+    return count > 0 && count <= MAX_MOSAIC_TILES;
 }
 
 function splitMosaic(matrix, blank) {

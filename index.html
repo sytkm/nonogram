@@ -13,10 +13,10 @@
     <script src="progress-store.js?v=recovery-messages"></script>
     <script src="quality-controls.js?v=check-result-wording"></script>
     <script src="mosaic-share.js?v=normal-share"></script>
-    <script src="mosaic.js?v=play-sharing"></script>
+    <script src="mosaic.js?v=always-show-play-options"></script>
     <script src="share-controls.js?v=play-sharing"></script>
     <script src="guide-tabs.js?v=preview-tabs"></script>
-    <script src="importfile.js?v=play-sharing"></script>
+    <script src="importfile.js?v=always-show-play-options"></script>
     <link rel="stylesheet" href="style.css?v=play-sharing">
     <script src="dialog-dismiss.js?v=play-sharing" defer></script>
     <title>画像でノノグラム</title>
@@ -76,11 +76,11 @@
             <p id="image-status" role="status"></p>
             <section id="image-preview" aria-labelledby="preview-heading" hidden>
                 <h2 id="preview-heading" tabindex="-1">ノノグラムのプレビュー</h2>
-                <div class="toolbar-group" role="group" aria-label="プレビューした問題で遊ぶ">
-                    <button type="button" id="split-preview" class="action-link action-primary" aria-describedby="preview-split-help" hidden>10×10に分けて遊ぶ</button>
-                    <button type="button" id="play-preview" class="action-link action-primary">この問題で遊ぶ</button>
+                <div class="toolbar-group" id="preview-play-options" role="group" aria-label="プレビューした問題で遊ぶ">
+                    <button type="button" id="split-preview" class="action-link action-primary" aria-describedby="preview-split-help">10×10に分けて遊ぶ</button>
+                    <button type="button" id="play-preview" class="action-link">分けずに遊ぶ</button>
                 </div>
-                <p id="preview-split-help" hidden>10×10の小さな区画を解いて、1枚の絵を完成させます。</p>
+                <p id="preview-split-help"></p>
                 <div class="preview-layout">
                     <figure class="preview-image">
                         <canvas id="preview-canvas" role="img" aria-label="問題に使う画像"></canvas>

@@ -40,12 +40,15 @@ test('完全に空白の区画だけを完成済みとして扱う', () => {
     assert.deepEqual(Array.from(tiles, tile => tile.complete), [false, true, true]);
 });
 
-test('1区画だけの画像や、400区画を超える画像には分割を出さない', () => {
+test('1区画から400区画まで分割で開始できる', () => {
     const image = (width, height) => Array.from({ length: height }, () => Array(width).fill(0));
-    assert.equal(context.canSplitPuzzle(image(10, 10)), false);
+    assert.equal(context.canSplitPuzzle(image(0, 0)), false);
+    assert.equal(context.canSplitPuzzle(image(8, 9)), true);
+    assert.equal(context.canSplitPuzzle(image(10, 10)), true);
     assert.equal(context.canSplitPuzzle(image(10, 11)), true);
     assert.equal(context.canSplitPuzzle(image(200, 200)), true);
     assert.equal(context.canSplitPuzzle(image(201, 200)), false);
+    assert.equal(context.mosaicTileCount(image(201, 200)), 420);
 });
 
 test('拡大PNGは整数倍のまま最長辺を抑え、すでに大きい画像は拡大しない', () => {
