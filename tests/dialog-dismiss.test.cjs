@@ -13,7 +13,7 @@ function setup() {
         getBoundingClientRect: () => ({ left: 10, right: 110, top: 20, bottom: 120 }),
         close(value) { this.open = false; closed.push(value); listeners.close(); },
     };
-    const context = vm.createContext({});
+    const context = vm.createContext({ document: { addEventListener() {} } });
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../dialog-dismiss.js'), 'utf8'), context);
     context.setupDialogDismiss(dialog);
     const emit = (type, overrides = {}) => {

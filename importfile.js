@@ -290,10 +290,6 @@ function saveBoardSetting(name, value) {
 }
 
 function setupSettings() {
-    // Preparation has no cancel operation; keep it blocking until the check finishes.
-    for (const id of ['settings-dialog', 'play-guide-dialog', 'restart-dialog']) {
-        setupDialogDismiss(document.getElementById(id));
-    }
     const dialog = document.getElementById('settings-dialog');
     const playGuide = document.getElementById('play-guide-dialog');
     const resetGuideTabs = setupGuideTabs(playGuide);

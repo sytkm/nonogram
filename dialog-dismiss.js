@@ -36,3 +36,10 @@ function setupDialogDismiss(dialog) {
         dialog.close('cancel');
     });
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    // Preparation has no cancel operation; keep it blocking until the check finishes.
+    for (const id of ['settings-dialog', 'play-guide-dialog', 'restart-dialog']) {
+        setupDialogDismiss(document.getElementById(id));
+    }
+});
