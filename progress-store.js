@@ -37,7 +37,7 @@ function writeProgress() {
         document.getElementById('saved-progress').hidden = false;
     } catch {
         document.getElementById('progress-warning').textContent =
-            '途中経過を保存できませんでした。このページを開いている間は続けて遊べます。';
+            '進み具合を保存できませんでした。遊び続けられますが、ページを閉じると今回の進み具合が失われる場合があります。';
     }
 }
 
@@ -90,7 +90,7 @@ function setupProgressRestore() {
                 });
             }
         } catch {
-            document.getElementById('progress-warning').textContent = '前回の問題を開けませんでした。';
+            document.getElementById('progress-warning').textContent = '前回の問題を開けませんでした。元の画像や共有リンクから、もう一度問題を開いてください。';
         }
     };
 }

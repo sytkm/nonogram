@@ -59,7 +59,7 @@ window.onload = async function () {
 
 function showInvalidSharedPuzzle() {
     document.getElementById('image-status').textContent =
-        '共有された問題を開けませんでした。リンクを確認するか、画像を選んで新しく作れます。';
+        '共有リンクを開けませんでした。リンクが途中で切れていないか確認してください。';
 }
 
 function setupImagePicker() {
@@ -238,7 +238,7 @@ function setupImagePicker() {
             currentImage = { image: decoded.image, format: decoded.format };
             openPreview(true);
         } catch {
-            document.getElementById('progress-warning').textContent = '元の画像を開けませんでした。';
+            document.getElementById('progress-warning').textContent = '元の画像を開けませんでした。白黒に変換するには、ホームから画像を選び直してください。';
         }
     });
     resumeColor.addEventListener('click', () => {
