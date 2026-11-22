@@ -13,12 +13,12 @@
     <script src="progress-store.js?v=recovery-messages"></script>
     <script src="quality-controls.js?v=check-result-wording"></script>
     <script src="mosaic-share.js?v=normal-share"></script>
-    <script src="mosaic.js?v=always-show-play-options"></script>
+    <script src="mosaic.js?v=play-menu"></script>
     <script src="share-controls.js?v=play-sharing"></script>
     <script src="guide-tabs.js?v=preview-tabs"></script>
-    <script src="importfile.js?v=indexed-color-size"></script>
-    <link rel="stylesheet" href="style.css?v=play-sharing">
-    <script src="dialog-dismiss.js?v=play-sharing" defer></script>
+    <script src="importfile.js?v=play-menu"></script>
+    <link rel="stylesheet" href="style.css?v=play-menu">
+    <script src="dialog-dismiss.js?v=play-menu" defer></script>
     <title>画像でノノグラム</title>
 </head>
 
@@ -26,8 +26,11 @@
     <header>
         <div class="site-heading">
             <h1>画像でノノグラム</h1>
-            <button type="button" id="open-settings" aria-haspopup="dialog" aria-controls="settings-dialog">
+            <button type="button" id="open-settings" data-open-settings aria-haspopup="dialog" aria-controls="settings-dialog">
                 <span aria-hidden="true">⚙</span> 設定
+            </button>
+            <button type="button" id="open-play-menu" class="action-link" aria-haspopup="dialog" aria-controls="play-menu-dialog">
+                <span aria-hidden="true">☰</span>&nbsp;メニュー
             </button>
         </div>
         <div id="start-panel">
@@ -169,18 +172,13 @@
         </div>
         <div id="play-panel" hidden>
             <div class="play-clock">
-                <div class="toolbar-group">
-                    <a href="?" id="board-home" class="action-link">ホームに戻る</a>
-                    <button type="button" id="return-mosaic" hidden>全体図に戻る</button>
-                    <button type="button" id="board-share" class="action-link" aria-haspopup="dialog" aria-controls="play-share-dialog">共有</button>
-                </div>
+                <button type="button" id="return-mosaic" hidden>全体図に戻る</button>
                 <div>プレイ時間 <span id="play-time" role="timer" aria-label="プレイ時間">00:00</span></div>
                 <button type="button" id="pause-play" class="play-only">一時停止</button>
-                <button type="button" id="restart-board" class="play-only" aria-haspopup="dialog" aria-controls="restart-dialog">最初からやり直す</button>
             </div>
             <div id="play-actions">
                 <p id="mosaic-tile-label" class="play-instructions" hidden></p>
-                <p class="play-instructions play-only" id="paint-instructions">パレットで色を選び、マスを押して塗ります。大きな盤面は上下左右にスクロールできます。</p>
+                <p class="play-instructions play-only" id="paint-instructions" hidden>パレットで色を選び、マスを押して塗ります。大きな盤面は上下左右にスクロールできます。</p>
                 <div class="board-tools" role="group" aria-label="盤面の操作">
                     <div class="toolbar-group" role="group" aria-label="盤面の大きさ">
                         <button type="button" id="zoom-out" aria-label="盤面を縮小">−</button>
@@ -220,10 +218,6 @@
         </div>
     </header>
     <main id="mosaic-panel" hidden>
-        <p class="toolbar-group">
-            <a href="?" class="action-link">ホームに戻る</a>
-            <button type="button" id="mosaic-share" class="action-link" aria-haspopup="dialog" aria-controls="play-share-dialog">共有</button>
-        </p>
         <h2 id="mosaic-title" tabindex="-1">分割ノノグラム</h2>
         <div id="mosaic-instructions">
             <p>区画を選んで遊びます。すべて完成すると、1枚の絵になります。</p>
@@ -248,6 +242,19 @@
             </div>
         </section>
     </main>
+    <dialog id="play-menu-dialog" aria-labelledby="play-menu-title">
+        <div class="settings-heading">
+            <h2 id="play-menu-title">プレイメニュー</h2>
+            <form method="dialog"><button type="submit" autofocus>閉じる</button></form>
+        </div>
+        <div class="play-menu-actions">
+            <button type="button" id="board-share" class="action-link" aria-haspopup="dialog" aria-controls="play-share-dialog">共有</button>
+            <button type="button" class="action-link" data-open-settings aria-haspopup="dialog" aria-controls="settings-dialog">設定</button>
+            <button type="button" class="action-link" data-open-play-guide aria-haspopup="dialog" aria-controls="play-guide-dialog">遊び方</button>
+            <button type="button" id="restart-board" class="action-link" aria-haspopup="dialog" aria-controls="restart-dialog" hidden>最初からやり直す</button>
+            <a href="?" class="action-link">ホームに戻る</a>
+        </div>
+    </dialog>
     <dialog id="play-share-dialog" aria-labelledby="play-share-title">
         <div class="settings-heading">
             <h2 id="play-share-title">問題を共有</h2>
@@ -340,7 +347,7 @@
                     <summary>取り消し・保存・最初からやり直す</summary>
                     <p>「↶」で直前の操作を取り消し、「↷」で取り消した操作を戻します。</p>
                     <p>自分で作った通常問題やサンプルをクリアすると、「完成画像を保存」でPNGを保存できます。分割問題はすべての区画が完成すると、全体図から保存できます。</p>
-                    <p>「最初からやり直す」で入力とプレイ時間をリセットします。最初からある青い斜線と、他の区画の進み具合は残ります。</p>
+                    <p>画面右上の「メニュー」から「最初からやり直す」を選ぶと、入力とプレイ時間をリセットできます。最初からある青い斜線と、他の区画の進み具合は残ります。</p>
                 </details>
                 <details class="guide-more">
                     <summary>ヒントとプレイ時間</summary>

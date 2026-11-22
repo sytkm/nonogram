@@ -58,7 +58,6 @@ function openMosaic(puzzle, saved) {
         if (state.clock) tile.clock = createPlayClock(undefined, state.clock);
     });
     const panel = document.getElementById('mosaic-panel');
-    document.getElementById('mosaic-share').onclick = () => openPlayShare(puzzle);
     const title = document.getElementById('mosaic-title');
     const progress = document.getElementById('mosaic-progress');
     const totalTime = document.getElementById('mosaic-total-time');
@@ -88,6 +87,8 @@ function openMosaic(puzzle, saved) {
 
     function updateOverview(focusTarget) {
         setPlaying(false);
+        document.getElementById('board-share').onclick = () => openPlayShare(puzzle);
+        document.getElementById('restart-board').hidden = true;
         document.getElementById('start-panel').hidden = true;
         panel.hidden = false;
         progress.textContent = completedCount + ' / ' + mosaic.tiles.length + ' 区画が完成';

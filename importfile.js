@@ -22,6 +22,10 @@ window.onload = async function () {
     setupProgressRestore();
     setupBoardMenus();
     setupSettings();
+    document.getElementById('open-play-menu').onclick = () => {
+        showBoardMenu();
+        document.getElementById('play-menu-dialog').showModal();
+    };
     const showFirstSharedGuide = setupPlayGuide();
     updatePaletteNavigation = setupPaletteNavigation();
     window.addEventListener('resize', () => refreshBoard?.());
@@ -381,7 +385,7 @@ function setupPlayGuide() {
         if (document.querySelector('dialog[open]')) return;
         const key = 'nonogram:shared-play-guide:v1';
         // Use tab storage when browser-wide storage is blocked. If neither is
-        // available, leave the guide available through Settings.
+        // available, leave the guide available through the play menu.
         for (const storageName of ['localStorage', 'sessionStorage']) {
             try {
                 const storage = window[storageName];
@@ -421,13 +425,15 @@ function setupSettings() {
             if (!playPanel.hidden) refreshBoardSettings?.();
         };
     }
-    document.getElementById('open-settings').onclick = () => {
-        showBoardMenu();
-        for (const [name, input] of Object.entries(settingsInputs)) {
-            input.checked = boardSetting(name, playPanel.hidden ? undefined : boardForSettings);
-        }
-        dialog.showModal();
-    };
+    for (const button of document.querySelectorAll('[data-open-settings]')) {
+        button.onclick = () => {
+            showBoardMenu();
+            for (const [name, input] of Object.entries(settingsInputs)) {
+                input.checked = boardSetting(name, playPanel.hidden ? undefined : boardForSettings);
+            }
+            dialog.showModal();
+        };
+    }
 }
 
 function setPlaying(playing) {
@@ -563,6 +569,7 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
     const result = document.getElementById('board-result');
     const restart = document.getElementById('restart-board');
     const restartDialog = document.getElementById('restart-dialog');
+    restart.hidden = false;
     restart.textContent = '最初からやり直す';
     result.textContent = '';
     result.classList.remove('is-complete');
@@ -609,7 +616,6 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
     const returnToMosaic = document.getElementById('return-mosaic');
     returnToMosaic.hidden = !options.onReturn;
     returnToMosaic.onclick = options.onReturn ?? null;
-    document.getElementById('board-home').hidden = Boolean(options.onReturn);
     document.getElementById('board-share').onclick = () =>
         openPlayShare(options.sharePuzzle ?? { matrix, palette, blank }, options.shareSource);
 
@@ -627,6 +633,7 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
         result.classList.add('is-complete');
         if (options.tileLabel) {
             playPanel.classList.add('is-viewing-tile');
+            restart.hidden = true;
             document.getElementById('fix-phone-under-menu').hidden = true;
             result.textContent = options.review ? '完成済みの区画を表示しています。' : '区画クリア！' + note;
             returnToMosaic.focus({ preventScroll: true });
@@ -664,6 +671,7 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
     };
     restartDialog.onclose = async () => {
         if (restartDialog.returnValue !== 'restart') return;
+        document.getElementById('play-menu-dialog').close();
         finishStroke();
         // Keep the same board object so a mosaic retains the fresh state for this tile.
         delete board.cells;
@@ -1234,6 +1242,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
             pick: '塗ったマスを押すと色を拾えます。キーボードでは Space または Enter を押します。',
         };
         instructions.textContent = messages[mode];
+        instructions.hidden = mode === 'paint';
     }
 
     function pickCellColor({ row, column }) {
