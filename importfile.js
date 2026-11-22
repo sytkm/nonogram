@@ -599,7 +599,10 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
     }
     if (board.finished) showClear();
     else if (!board.paused) checkCompletion(hasSavedCells);
-    if (options.tileLabel) returnToMosaic.focus();
+    if (options.tileLabel) {
+        controls.fitInitially();
+        returnToMosaic.focus();
+    }
 }
 
 function boardResolution(width, height, pixelRatio) {
@@ -676,6 +679,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     let stroke;
     let pressedClue;
     let pausedPosition;
+    let initialFitPending = false;
     let highlightedHint;
     let logicalHintShown = false;
     let conflicts;
@@ -943,11 +947,18 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         zoomOut.disabled = cellSize <= 1;
     }
 
+    function fitBoard() {
+        resizeBoard(fit(), false);
+        // Scrollbars can disappear after shrinking the board and free more space.
+        const adjustedSize = fit();
+        if (adjustedSize !== cellSize) resizeBoard(adjustedSize, false);
+    }
+
     const onSmallScreen = window.matchMedia('(max-width: 600px), (pointer: coarse)').matches;
     resizeBoard(onSmallScreen ? Math.max(28, Math.min(44, fit())) : Math.min(initialCellSize, maxCellSize), false);
     zoomIn.onclick = () => resizeBoard(Math.min(maxCellSize, Math.ceil(cellSize * 1.25)), true);
     zoomOut.onclick = () => resizeBoard(Math.max(1, Math.floor(cellSize / 1.25)), true);
-    document.getElementById('zoom-fit').onclick = () => resizeBoard(fit(), false);
+    document.getElementById('zoom-fit').onclick = fitBoard;
     const solve = document.getElementById('solve');
     hintMessage.textContent = '';
     conflictMessage.textContent = '';
@@ -1071,6 +1082,10 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
             viewport.scrollLeft = pausedPosition.left;
             viewport.scrollTop = pausedPosition.top;
             pausedPosition = undefined;
+            if (initialFitPending) {
+                initialFitPending = false;
+                fitBoard();
+            }
             clock.resume();
         } else {
             stopStroke();
@@ -1273,6 +1288,10 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     refreshBoard = () => renderBoard();
     finishStroke = stopStroke;
     return {
+        fitInitially() {
+            if (viewport.hidden) initialFitPending = true;
+            else fitBoard();
+        },
         finish() {
             board.finished = true;
             if (inputMode === 'pick') setInputMode('paint');
