@@ -16,7 +16,7 @@
     <script src="mosaic.js?v=overview-wording"></script>
     <script src="share-controls.js?v=mosaic-share"></script>
     <script src="guide-tabs.js"></script>
-    <script src="importfile.js?v=recovery-messages"></script>
+    <script src="importfile.js?v=indexed-png-preview"></script>
     <link rel="stylesheet" href="style.css?v=visible-solver-checks">
     <script src="dialog-dismiss.js" defer></script>
     <title>画像でノノグラム</title>
@@ -78,8 +78,10 @@
                                 <option value="monochrome">白黒</option>
                             </select>
                         </div>
-                        <label for="puzzle-side">長い辺のマス数</label>
-                        <input id="puzzle-side" type="number" min="1" step="1" inputmode="numeric">
+                        <div id="puzzle-size-panel">
+                            <label for="puzzle-side">長い辺のマス数</label>
+                            <input id="puzzle-side" type="number" min="1" step="1" inputmode="numeric">
+                        </div>
                         <div id="threshold-panel">
                             <label for="threshold">黒にする明るさの境目</label>
                             <input id="threshold" type="range" min="1" max="255" value="128">
