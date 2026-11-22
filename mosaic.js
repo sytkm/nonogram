@@ -1,6 +1,5 @@
 const MOSAIC_SIDE = 10;
 const MAX_MOSAIC_TILES = 400;
-let mosaicShareRequest;
 
 function canSplitPuzzle(matrix) {
     const across = Math.ceil(matrix[0].length / MOSAIC_SIDE);
@@ -201,7 +200,6 @@ function openMosaic({ matrix, palette, blank }, saved) {
         updateTimeView();
     };
     updateOverview(title);
-    updateMosaicShare({ matrix, palette, blank });
     setProgressSource(() => ({
         kind: 'mosaic',
         puzzle: { matrix, palette, blank },
@@ -210,21 +208,4 @@ function openMosaic({ matrix, palette, blank }, saved) {
             complete: tile.complete, board: tile.board, clock: tile.clock?.snapshot(),
         })),
     }), saved?.id);
-}
-
-function updateMosaicShare(puzzle) {
-    const group = document.getElementById('mosaic-share');
-    const message = document.getElementById('mosaic-share-message');
-    setupPuzzleShare(group, null);
-    message.textContent = '';
-    const request = mosaicShareURL(window.location.href, puzzle);
-    mosaicShareRequest = request;
-    request.then(url => {
-        if (mosaicShareRequest !== request) return;
-        setupPuzzleShare(group, url);
-        if (!url) message.textContent = '共有リンクが8,000文字を超えるため、この分割問題はリンクで共有できません。';
-    }).catch(() => {
-        if (mosaicShareRequest !== request) return;
-        message.textContent = 'このブラウザでは分割問題の共有リンクを作成できませんでした。';
-    });
 }

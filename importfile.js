@@ -12,8 +12,6 @@ const boardSettings = {};
 const boardSettingsKey = 'nonogram.settings';
 let finishStroke;
 let playClock;
-let restoredColorSource;
-let resetBoardLogicCheck;
 
 // 5×5の十字を描いたパレット形式のサンプルPNG。
 const samplePNG = 'iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAMAAAC6sdbXAAAABlBMVEX///8wW6NnOUAjAAAAFUlEQVR4nGNgYGBkAAEQyQgCDEgiAAClAAqu0sLdAAAAAElFTkSuQmCC';
@@ -71,7 +69,10 @@ function setupImagePicker() {
     const side = document.getElementById('puzzle-side');
     const mode = document.getElementById('puzzle-mode');
     const threshold = document.getElementById('threshold');
-    const resumeColor = document.getElementById('resume-color');
+    const previewShare = document.getElementById('preview-share');
+    const mosaicShare = document.getElementById('preview-mosaic-share');
+    const mosaicShareMessage = document.getElementById('preview-mosaic-share-message');
+    let mosaicShareRequest;
     const playPreview = document.getElementById('play-preview');
     const splitPreview = document.getElementById('split-preview');
     let currentImage;
@@ -101,6 +102,27 @@ function setupImagePicker() {
         previewLogicResult = undefined;
     }
 
+    function updatePreviewSharing(puzzle, shareSource) {
+        setupPuzzleShare(previewShare, shareSource
+            ? legacyPuzzleShareURL(window.location.href, shareSource)
+            : null);
+        setupPuzzleShare(mosaicShare, null);
+        mosaicShareMessage.textContent = '';
+        mosaicShareRequest = undefined;
+        if (!puzzle || !canSplitPuzzle(puzzle.matrix)) return;
+
+        const request = mosaicShareURL(window.location.href, puzzle);
+        mosaicShareRequest = request;
+        request.then(url => {
+            if (mosaicShareRequest !== request) return;
+            setupPuzzleShare(mosaicShare, url);
+            if (!url) mosaicShareMessage.textContent = '共有リンクが8,000文字を超えるため、この分割問題はリンクで共有できません。';
+        }).catch(() => {
+            if (mosaicShareRequest !== request) return;
+            mosaicShareMessage.textContent = 'このブラウザでは分割問題の共有リンクを作成できませんでした。';
+        });
+    }
+
     function updatePreview() {
         const useColor = mode.value === 'color';
         const exactColor = useColor && Boolean(currentImage.originalPuzzle);
@@ -126,6 +148,9 @@ function setupImagePicker() {
                 ' ／ 盤面 ' + matrix[0].length + ' × ' + matrix.length + ' マス';
         }
         splitPreview.hidden = !canSplitPuzzle(matrix);
+        if (!playPreview.disabled) {
+            updatePreviewSharing(puzzle, exactColor ? currentImage.shareSource : undefined);
+        }
         document.getElementById('threshold-panel').hidden = useColor;
         document.getElementById('color-note').hidden = !useColor || exactColor;
         document.getElementById('threshold-value').value = threshold.value;
@@ -171,14 +196,14 @@ function setupImagePicker() {
         resetThreshold();
     }
 
-    function openPreview(fromColor) {
+    function openPreview() {
         const image = currentImage.image;
         const originalSide = Math.max(image.naturalWidth, image.naturalHeight);
         side.max = String(Math.min(originalSide, MAX_PUZZLE_SIDE));
         side.value = String(originalSide <= MAX_PUZZLE_SIDE ? originalSide : SUGGESTED_PHOTO_SIDE);
         const hasColorMode = Boolean(currentImage.originalPuzzle) || ['jpeg', 'webp'].includes(currentImage.format);
         document.getElementById('puzzle-mode-panel').hidden = !hasColorMode;
-        mode.value = hasColorMode && !fromColor ? 'color' : 'monochrome';
+        mode.value = hasColorMode ? 'color' : 'monochrome';
         const exactColor = mode.value === 'color' && currentImage.originalPuzzle;
         playPreview.disabled = false;
         splitPreview.disabled = false;
@@ -188,7 +213,6 @@ function setupImagePicker() {
             ? '大きな画像なので、最長辺' + SUGGESTED_PHOTO_SIDE + 'マスを提案します。' +
               MAX_PUZZLE_SIDE + 'マスまで変更できます。'
             : '';
-        resumeColor.hidden = !fromColor;
         preview.hidden = false;
         setPlaying(false);
         document.getElementById('preview-heading').focus();
@@ -199,6 +223,7 @@ function setupImagePicker() {
         if (!file) return;
         const selection = {};
         currentImage = selection;
+        updatePreviewSharing();
         resetPreviewChecks();
         preview.hidden = true;
         status.textContent = '画像を読み込んでいます…';
@@ -213,16 +238,16 @@ function setupImagePicker() {
                     if (currentImage !== selection) return;
                     selection.originalPuzzle = decodeLegacyPng(src);
                     selection.shareSource = src;
-                    openPreview(false);
+                    openPreview();
                     return;
                 } catch {
                     if (currentImage !== selection) return;
-                    openPreview(false);
+                    openPreview();
                     status.textContent = 'このPNGはカラー問題にできません。白黒のプレビューを表示しました。';
                     return;
                 }
             }
-            openPreview(false);
+            openPreview();
         } catch (error) {
             if (currentImage !== selection) return;
             currentImage = undefined;
@@ -236,6 +261,7 @@ function setupImagePicker() {
         splitPreview.disabled = playPreview.disabled;
         if (playPreview.disabled) {
             resetPreviewChecks();
+            updatePreviewSharing();
         } else {
             updateSize();
         }
@@ -249,35 +275,11 @@ function setupImagePicker() {
     });
     threshold.addEventListener('input', updatePreview);
     document.getElementById('reset-threshold').addEventListener('click', resetThreshold);
-    document.getElementById('preview-monochrome').addEventListener('click', async () => {
-        const source = restoredColorSource;
-        if (!source) {
-            openPreview(true);
-            return;
-        }
-        const selection = currentImage;
-        try {
-            const bytes = Uint8Array.from(atob(source), character => character.charCodeAt(0));
-            const decoded = await readPuzzleImage(new Blob([bytes], { type: 'image/png' }));
-            if (source !== restoredColorSource || selection !== currentImage) return;
-            currentImage = { image: decoded.image, format: decoded.format };
-            openPreview(true);
-        } catch {
-            document.getElementById('progress-warning').textContent = '元の画像を開けませんでした。白黒に変換するには、ホームから画像を選び直してください。';
-        }
-    });
-    resumeColor.addEventListener('click', () => {
-        resetPreviewChecks();
-        setPlaying(true);
-        refreshBoardSettings?.();
-    });
     playPreview.addEventListener('click', () => {
         const initialCheck = previewLogicResult;
         resetPreviewChecks();
-        const options = currentImage.originalPuzzle && mode.value === 'color'
-            ? { shareSource: currentImage.shareSource, canConvert: true }
-            : { generated: true };
-        startPuzzle(currentImage.puzzle, { ...options, initialCheck });
+        const generated = currentImage.puzzle !== currentImage.originalPuzzle;
+        startPuzzle(currentImage.puzzle, { generated, initialCheck });
     });
     splitPreview.addEventListener('click', () => {
         resetPreviewChecks();
@@ -467,7 +469,6 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
     finishStroke?.();
     playClock?.suspend();
     const board = options.board ?? {};
-    resetBoardLogicCheck?.();
     const hasSavedCells = Boolean(board.cells);
     const rowClues = makeNumber(matrix, blank);
     const columnClues = makeNumber(transpose(matrix), blank);
@@ -493,7 +494,6 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
 
     const clock = options.clock ?? createPlayClock();
     playClock = clock;
-    restoredColorSource = options.progressId && options.canConvert ? options.shareSource : undefined;
     const playPanel = document.getElementById('play-panel');
     playPanel.classList.remove('is-viewing-tile');
     const result = document.getElementById('board-result');
@@ -513,13 +513,6 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
             ? '答えが一つか確認できなかったため、ヒント数字に合う配置でクリアになります。'
             : '';
     qualityNote.hidden = !qualityNote.textContent;
-    resetBoardLogicCheck = setupQualityCheck(document.getElementById('board-logic'),
-        document.getElementById('board-logic-result'),
-        () => ({
-            rows: rowClues[0], columns: columnClues[0], blank,
-            fixedSlashes: board.fixedSlashes, check: 'logic',
-        }),
-        lineSolvabilityMessage, '行・列の推理で解けるか調べています…');
     const usedColors = options.generated
         ? new Set([...palette.slice(1).map((_, i) => i + 1), blank])
         : new Set(matrix.flat());
@@ -546,10 +539,6 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
         setPlaying(false);
         throw error;
     }
-    document.getElementById('preview-monochrome').hidden = !options.canConvert;
-    const splitBoard = document.getElementById('split-board');
-    splitBoard.hidden = options.shared === true || Boolean(options.tileLabel) || !canSplitPuzzle(matrix);
-    splitBoard.onclick = () => openMosaic({ matrix, palette, blank });
     const tileLabel = document.getElementById('mosaic-tile-label');
     tileLabel.hidden = !options.tileLabel;
     tileLabel.textContent = options.tileLabel ?? '';
@@ -558,12 +547,8 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
     returnToMosaic.onclick = options.onReturn ?? null;
     document.getElementById('board-home').hidden = Boolean(options.onReturn);
 
-    setupPuzzleShare(document.getElementById('board-share'), options.shareSource
-        ? legacyPuzzleShareURL(window.location.href, options.shareSource)
-        : undefined);
-
     const download = document.getElementById('downl');
-    download.hidden = options.shared === true || Boolean(options.tileLabel);
+    download.hidden = true;
     document.getElementById('solve').hidden = options.shared === true;
     document.getElementById('answer-penalty').textContent = '+' + matrix.length + '分';
     download.onclick = () => {
@@ -582,6 +567,7 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
             returnToMosaic.focus({ preventScroll: true });
         } else {
             result.textContent = 'クリア！';
+            download.hidden = options.shared === true;
             restart.textContent = 'もう一度遊ぶ';
         }
     }
@@ -627,11 +613,11 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
         document.getElementById('canvas').focus({ preventScroll: true });
     };
     if (!options.onReturn) {
-        const { sample, shared, generated, shareSource, canConvert } = options;
+        const { sample, shared, generated } = options;
         setProgressSource(() => ({
             kind: 'board',
             puzzle: { matrix, palette, blank },
-            options: { sample, shared, generated, shareSource, canConvert },
+            options: { sample, shared, generated },
             board,
             clock: clock.snapshot(),
         }), options.progressId);
