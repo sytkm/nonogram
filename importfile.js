@@ -293,9 +293,18 @@ function setupSettings() {
     const dialog = document.getElementById('settings-dialog');
     const playGuide = document.getElementById('play-guide-dialog');
     for (const button of document.querySelectorAll('[data-open-play-guide]')) {
-        button.onclick = () => playGuide.showModal();
+        button.onclick = () => {
+            syncGuideSymbols();
+            playGuide.showModal();
+        };
     }
     const playPanel = document.getElementById('play-panel');
+    function syncGuideSymbols() {
+        const visible = boardSetting('showSymbols', playPanel.hidden ? undefined : boardForSettings);
+        for (const symbol of playGuide.querySelectorAll('[data-guide-symbol]')) {
+            symbol.hidden = !visible;
+        }
+    }
     const settingsInputs = {
         stickClues: document.getElementById('stick-clues'),
         showSymbols: document.getElementById('color-symbols'),
@@ -312,6 +321,7 @@ function setupSettings() {
     for (const [name, input] of Object.entries(settingsInputs)) {
         input.onchange = () => {
             saveBoardSetting(name, input.checked);
+            syncGuideSymbols();
             if (!playPanel.hidden) refreshBoardSettings?.();
         };
     }
