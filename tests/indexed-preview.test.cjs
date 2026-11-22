@@ -4,7 +4,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const test = require('node:test');
 
-function setup(decodeFails = false) {
+function setup({ decodeFails = false, pngColorType } = {}) {
     const elements = {};
     const painted = [];
     const starts = [];
@@ -35,9 +35,22 @@ function setup(decodeFails = false) {
     for (const name of ['image-input.js', 'importfile.js']) {
         vm.runInContext(fs.readFileSync(path.join(__dirname, '..', name), 'utf8'), context);
     }
-    context.readPuzzleImage = async () => ({
-        image: { naturalWidth: 201, naturalHeight: 2 }, format: 'png', canPlayLegacyColor: true,
-    });
+    if (pngColorType === undefined) {
+        context.readPuzzleImage = async () => ({
+            image: { naturalWidth: 201, naturalHeight: 2 }, canPlayLegacyColor: true,
+        });
+    } else {
+        const header = new Uint8Array(29);
+        header.set([137, 80, 78, 71, 13, 10, 26, 10]);
+        header[25] = pngColorType;
+        element('file').files = [{ slice: () => ({ arrayBuffer: async () => header.buffer }) }];
+        context.URL = { createObjectURL: () => 'blob:image', revokeObjectURL() {} };
+        context.Image = class {
+            naturalWidth = 2;
+            naturalHeight = 2;
+            async decode() {}
+        };
+    }
     context.readBase64 = async () => 'original-png';
     context.decodeLegacyPng = () => {
         if (decodeFails) throw new Error('unsupported');
@@ -45,6 +58,9 @@ function setup(decodeFails = false) {
     };
     context.rasterizePuzzleImage = () => {
         rasterizations++;
+        if (pngColorType !== undefined) {
+            return { width: 2, height: 2, data: [230, 20, 40, 255, 12, 45, 235, 255, 0, 0, 0, 0, 255, 255, 255, 255] };
+        }
         return { width: 2, height: 1, data: [0, 0, 0, 255, 255, 255, 255, 255] };
     };
     context.setPlaying = () => {};
@@ -101,7 +117,7 @@ test('白黒を調整した後、不正なサイズからでも元のカラー�
 });
 
 test('カラーPNGの読み込みが失敗した場合は従来の白黒プレビューに戻す', async () => {
-    const ui = setup(true);
+    const ui = setup({ decodeFails: true });
     await ui.element('file').change();
     assert.equal(ui.starts.length, 0);
     assert.equal(ui.element('puzzle-size-panel').hidden, false);
@@ -120,4 +136,20 @@ test('白黒に切り替えると元のPNGの共有と古い分割リンクが�
     await Promise.resolve();
     assert.equal(ui.element('preview-share').url, null);
     assert.equal(ui.element('preview-mosaic-share').url, null);
+});
+
+test('RGB・RGBAのPNGは通常のカラー変換で遊べる', async () => {
+    for (const pngColorType of [2, 6]) {
+        const ui = setup({ pngColorType });
+        await ui.element('file').change();
+        assert.equal(ui.element('puzzle-mode-panel').hidden, false);
+        assert.equal(ui.element('puzzle-mode').value, 'color');
+        assert.equal(ui.element('preview-share').url, null);
+        ui.element('play-preview').click();
+        const { matrix, palette, blank } = ui.starts[0].puzzle;
+        assert.notEqual(matrix[0][0], matrix[0][1]);
+        assert.deepEqual([...palette[matrix[0][0]]], [230, 20, 40]);
+        assert.deepEqual([...palette[matrix[0][1]]], [12, 45, 235]);
+        assert.equal(matrix[1][0], blank);
+    }
 });

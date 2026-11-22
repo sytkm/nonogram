@@ -42,6 +42,8 @@ async function readPuzzleImage(file) {
         return {
             image,
             format,
+            // PNGの色タイプ2はRGB、6はRGBA。どちらも変換して遊べる。
+            canMakeConvertedColor: format !== 'png' || [2, 6].includes(header[25]),
             canPlayLegacyColor: format === 'png' && header[25] === 3 && header[28] === 0,
         };
     } finally {
@@ -110,7 +112,7 @@ function makeMonochromeMatrix({ data, width, height }, threshold) {
 }
 
 function makeColorPuzzle({ data, width, height }) {
-    // 白に合成し、JPEGの白背景に出るわずかな色の差は空白にまとめる。
+    // 透明な部分を白に合成し、白に近い画素は空白にまとめる。
     const colors = new Map();
     const pixels = [];
     for (let i = 0; i < data.length; i += 4) {

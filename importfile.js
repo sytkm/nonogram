@@ -212,7 +212,7 @@ function setupImagePicker() {
         const originalSide = Math.max(image.naturalWidth, image.naturalHeight);
         side.max = String(Math.min(originalSide, MAX_PUZZLE_SIDE));
         side.value = String(originalSide <= MAX_PUZZLE_SIDE ? originalSide : SUGGESTED_PHOTO_SIDE);
-        const hasColorMode = Boolean(currentImage.originalPuzzle) || ['jpeg', 'webp'].includes(currentImage.format);
+        const hasColorMode = Boolean(currentImage.originalPuzzle) || currentImage.canMakeConvertedColor;
         document.getElementById('puzzle-mode-panel').hidden = !hasColorMode;
         mode.value = hasColorMode ? 'color' : 'monochrome';
         const exactColor = mode.value === 'color' && currentImage.originalPuzzle;
@@ -243,7 +243,7 @@ function setupImagePicker() {
             const decoded = await readPuzzleImage(file);
             if (currentImage !== selection) return;
             selection.image = decoded.image;
-            selection.format = decoded.format;
+            selection.canMakeConvertedColor = decoded.canMakeConvertedColor;
             if (decoded.canPlayLegacyColor) {
                 try {
                     const src = await readBase64(file);
