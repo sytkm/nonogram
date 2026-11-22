@@ -304,11 +304,14 @@ header:has(#start-panel:not([hidden]) #image-preview:not([hidden])) {
 }
 
 .play-workspace:has(#pixelcanvas:not([hidden])) {
+    background: var(--puzzle-paper);
     display: flex;
     flex-direction: column;
 }
 
+/* スクロール領域の外に余白を置き、固定ヒントと入力の座標系を揃える。 */
 #pixelcanvas {
+    margin: 0.75rem 1rem;
     position: relative;
     min-width: 0;
     flex: 1 0 0;
