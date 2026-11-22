@@ -70,13 +70,13 @@
                     </figure>
                     <div class="preview-settings">
                         <div id="puzzle-mode-panel" hidden>
-                            <label for="puzzle-mode">遊び方</label>
+                            <label for="puzzle-mode">問題の色</label>
                             <select id="puzzle-mode">
                                 <option value="color">カラー</option>
                                 <option value="monochrome">白黒</option>
                             </select>
                         </div>
-                        <label for="puzzle-side">盤面の最長辺（マス）</label>
+                        <label for="puzzle-side">長い辺のマス数</label>
                         <input id="puzzle-side" type="number" min="1" step="1" inputmode="numeric">
                         <div id="threshold-panel">
                             <label for="threshold">黒にする明るさの境目</label>
@@ -92,7 +92,13 @@
                             <button type="button" id="split-preview" class="action-link" hidden>10×10に分けて遊ぶ</button>
                             <button type="button" id="resume-color" class="action-link" hidden>カラー問題に戻る</button>
                         </div>
+                        <details class="guide-more">
+                            <summary>画像から問題を作るには</summary>
+                            <p>色やマス数を調整し、プレビューを確かめて「この問題で遊ぶ」を押します。マス数を減らすと、小さな盤面になります。</p>
+                            <p>「10×10に分けて遊ぶ」では、1枚の絵を区画ごとに解きます。分割一覧で共有リンクを作れます。リンクには完成画像を復元できる情報が含まれ、途中経過やプレイ時間は含まれません。</p>
+                        </details>
                         <div class="preview-checks">
+                            <p>「答えが一つか調べる」で、ヒント数字に合うマスの塗り方が一通りか確認できます。複数あると分かった場合は、遊び始めるときに固定の青い斜線を加え、答えを一つに絞ります。確認しきれなかった場合は、ヒント数字に合う塗り方でクリアできます。</p>
                             <button type="button" id="preview-quality" class="action-link">答えが一つか調べる</button>
                             <p id="preview-quality-result" class="quality-result" role="status"></p>
                             <details class="advanced-options">
@@ -223,6 +229,7 @@
             <h2 id="play-guide-title">遊び方</h2>
             <form method="dialog"><button type="submit" autofocus>閉じる</button></form>
         </div>
+        <h3>数字を手がかりに塗る</h3>
         <p>盤面の左の数字は横一行、上の数字は縦一列のヒントです。数字は、続けて塗るマスの数を表します。</p>
         <table class="guide-example" aria-label="3マスの横一行の例">
             <tbody>
@@ -241,13 +248,25 @@
             </tbody>
         </table>
         <p>「3」は3マス続けて塗ります。「1 1」は1マスずつのまとまりが2つです。同じ色のまとまりの間には、空白が少なくとも1マス入ります。空白だと分かったマスには、パレットで斜線を選んで印を付けられます。</p>
+        <h3>最初の一手を試す</h3>
         <p>サンプルは横5マスです。左に「5」とある真ん中の行は、下のパレットで青を選び、5マスすべてを塗れます。</p>
         <a href="?sample" class="action-link">サンプル問題で遊ぶ</a>
         <details class="guide-more">
-            <summary>カラー・分割・ヒント・キーボード操作</summary>
-            <p>カラー問題では、ヒント数字と同じ色を塗ります。違う色のまとまりは隣り合うことがあります。「ヒント数字」で、数字のチェックと色選択を切り替えられます。「0」を押しても色は変わりません。「スポイト」では、塗ったマスから色を選べます。</p>
-            <p>大きな画像は「10×10に分けて遊ぶ」で区画ごとに解けます。「なぞり塗り」をオンにすると複数のマスをまとめて塗れます。指で盤面を移動するときはオフにします。</p>
-            <p>行・列ヒントはプレイ時間に1分、答えを見ると1行につき1分が加わります。</p>
+            <summary>カラー問題のルール</summary>
+            <p>ヒント数字と同じ色で、その数だけ続けて塗ります。同じ色のまとまりの間には少なくとも1マスの空白が必要です。違う色のまとまりは、空白を挟まずに隣り合うこともあります。</p>
+        </details>
+        <details class="guide-more">
+            <summary>マスの塗り方・盤面の動かし方</summary>
+            <p>下のパレットで色や斜線を選び、マスを押して塗ります。「なぞり塗り」をオンにすると、指やマウスで通ったマスをまとめて塗れます。指で盤面をスクロールするときはオフにします。</p>
+            <p>「ヒント数字」で、数字を押したときにチェックを付けるか、その色を選ぶかを切り替えられます。「0」を押しても色は変わりません。「スポイト」では、塗ったマスから色を選べます。</p>
+            <p>「＋」「−」で拡大・縮小し、「全体を表示」で盤面全体が収まる大きさにできます。分割問題では「全体図に戻る」で別の区画を選べます。</p>
+        </details>
+        <details class="guide-more">
+            <summary>ヒントとプレイ時間</summary>
+            <p>「ヒント・確認」から、考え方ヒント、行・列ヒント、矛盾チェック、答えの表示を使えます。行・列ヒントはプレイ時間に1分、答えを見ると1行につき1分が加わります。</p>
+        </details>
+        <details class="guide-more">
+            <summary>マウス・キーボード操作</summary>
             <p id="keyboard-instructions">右クリックで斜線。Tabで盤面を選び、矢印キーで移動、SpaceまたはEnterで塗り、Xで斜線、Deleteで消去します。</p>
         </details>
     </dialog>
