@@ -658,6 +658,29 @@ header:has(#play-panel:not([hidden])) {
     flex: none;
 }
 
+#open-play-menu {
+    flex: none;
+}
+
+body:has(#play-panel:not([hidden]), #mosaic-panel:not([hidden])) #open-settings,
+body:not(:has(#play-panel:not([hidden]), #mosaic-panel:not([hidden]))) #open-play-menu {
+    display: none;
+}
+
+#play-menu-dialog {
+    width: min(24rem, calc(100% - 2rem));
+}
+
+.play-menu-actions {
+    display: grid;
+    gap: 0.5rem;
+    margin-block-start: 0.75rem;
+}
+
+.play-menu-actions .action-link:not([hidden]) {
+    justify-content: flex-start;
+}
+
 dialog {
     box-sizing: border-box;
     width: min(34rem, calc(100% - 2rem));
