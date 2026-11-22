@@ -17,7 +17,7 @@
     <script src="share-controls.js?v=mosaic-share"></script>
     <script src="guide-tabs.js"></script>
     <script src="importfile.js?v=compact-play-guide"></script>
-    <link rel="stylesheet" href="style.css?v=compact-play-guide">
+    <link rel="stylesheet" href="style.css?v=stable-guide-tabs">
     <title>画像でノノグラム</title>
 </head>
 
@@ -231,9 +231,9 @@
             <form method="dialog"><button type="submit" autofocus>閉じる</button></form>
         </div>
         <div class="guide-tabs" role="tablist" aria-label="遊び方の項目">
-            <button type="button" role="tab" id="guide-tab-basic" aria-controls="guide-basic" aria-selected="true">基本</button>
-            <button type="button" role="tab" id="guide-tab-color" aria-controls="guide-color" aria-selected="false" tabindex="-1">カラー</button>
-            <button type="button" role="tab" id="guide-tab-controls" aria-controls="guide-controls" aria-selected="false" tabindex="-1">操作</button>
+            <button type="button" class="action-link" role="tab" id="guide-tab-basic" aria-controls="guide-basic" aria-selected="true">基本</button>
+            <button type="button" class="action-link" role="tab" id="guide-tab-color" aria-controls="guide-color" aria-selected="false" tabindex="-1">カラー</button>
+            <button type="button" class="action-link" role="tab" id="guide-tab-controls" aria-controls="guide-controls" aria-selected="false" tabindex="-1">操作</button>
         </div>
         <div class="guide-content">
             <section id="guide-basic" role="tabpanel" aria-labelledby="guide-tab-basic" tabindex="0">
