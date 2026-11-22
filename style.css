@@ -302,8 +302,20 @@ body:has(#mosaic-panel:not([hidden])) .site-heading {
     }
 }
 
+.play-workspace {
+    display: none;
+    flex: 1 1 0;
+    min-height: 0;
+}
+
+.play-workspace:has(#pixelcanvas:not([hidden])) {
+    display: flex;
+    flex-direction: column;
+}
+
 #pixelcanvas {
     position: relative;
+    min-width: 0;
     flex: 1 0 0;
     min-height: 0;
     overflow: auto;
@@ -545,6 +557,8 @@ header:has(#play-panel:not([hidden])) {
     background: var(--puzzle-accent-active);
 }
 
+#palette-blank[aria-pressed="true"],
+#palette-slash[aria-pressed="true"],
 #paint-mode[aria-pressed="true"],
 #pick-painted-color[aria-pressed="true"],
 .board-tools .clue-mode[aria-pressed="true"] {
@@ -724,6 +738,7 @@ dialog button:focus-visible {
 
 #fix-phone-under-menu {
     flex: 0 0 auto;
+    min-width: 0;
     border-top: 1px solid var(--puzzle-rule);
     padding: 0.375rem max(0.5rem, env(safe-area-inset-right))
         max(0.375rem, env(safe-area-inset-bottom)) max(0.5rem, env(safe-area-inset-left));
@@ -731,19 +746,39 @@ dialog button:focus-visible {
 
 #fix-phone-under-menu:not([hidden]) {
     display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 0.25rem 0.75rem;
+    flex-direction: column;
+    gap: 0.375rem;
 }
 
 #palette-panel {
-    flex: 1 1 100%;
     min-width: 0;
+    display: flex;
+    flex-direction: column;
 }
 
+.palette-label,
 #palette-scroll-note {
     margin: 0 0 0.125rem;
     font-size: 0.75rem;
+}
+
+.palette-label {
+    font-weight: 600;
+}
+
+#palette-scroll-note {
+    display: none;
+}
+
+#palette-strip {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: center;
+}
+
+#palette-strip[data-scrollable] {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    gap: 0.25rem;
 }
 
 #color-palette {
@@ -753,6 +788,87 @@ dialog button:focus-visible {
     padding: 0.25rem;
     overflow-x: auto;
     overscroll-behavior-x: contain;
+}
+
+.palette-step:not([hidden]) {
+    min-width: 44px;
+    font-size: 1.3rem;
+    padding-inline: 0.25rem;
+    line-height: 1;
+}
+
+.palette-step[aria-disabled="true"] {
+    opacity: 0.5;
+    cursor: default;
+}
+
+#fix-phone-under-menu .paint-tools {
+    gap: 0.25rem;
+}
+
+#fix-phone-under-menu .paint-tools button {
+    min-width: 44px;
+    padding-inline: 0.3rem;
+    font-size: 0.8125rem;
+}
+
+#fix-phone-under-menu .paint-tools .history-control {
+    font-size: 1.125rem;
+}
+
+@media (min-width: 44rem) and (orientation: landscape) {
+    #fix-phone-under-menu:not([hidden]) {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    #palette-panel {
+        flex: 1 1 auto;
+    }
+
+    #fix-phone-under-menu .paint-tools {
+        flex: 0 0 auto;
+    }
+}
+
+@media (min-width: 64rem) and (min-height: 37rem) and (hover: hover) and (pointer: fine) {
+    .play-workspace:has(#pixelcanvas:not([hidden])) {
+        flex-direction: row;
+    }
+
+    #fix-phone-under-menu:not([hidden]) {
+        flex: 0 0 16rem;
+        flex-direction: column;
+        align-items: stretch;
+        border-top: 0;
+        border-left: 1px solid var(--puzzle-rule);
+        padding: 0.75rem;
+    }
+
+    #palette-panel {
+        flex: 0 1 auto;
+        min-height: 0;
+    }
+
+    #palette-strip {
+        display: flex;
+        align-items: stretch;
+        min-height: 0;
+    }
+
+    #color-palette {
+        width: 100%;
+        display: grid;
+        grid-template-columns: repeat(auto-fill, 44px);
+        align-content: start;
+        overflow: auto;
+        overscroll-behavior: contain;
+    }
+
+    #palette-scroll-note:not([hidden]) {
+        display: block;
+        margin-top: 0.25rem;
+    }
 }
 
 .palette-color {
@@ -783,8 +899,9 @@ dialog button:focus-visible {
     box-sizing: border-box;
 }
 
-.palette-mark {
-    background: linear-gradient(135deg, white 46%, #222 47% 53%, white 54%);
+.palette-color:focus-visible {
+    outline: 2px solid #175caa;
+    outline-offset: 2px;
 }
 
 #mosaic-panel {

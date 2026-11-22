@@ -16,8 +16,8 @@
     <script src="mosaic.js?v=creator-preview"></script>
     <script src="share-controls.js?v=mosaic-share"></script>
     <script src="guide-tabs.js?v=preview-tabs"></script>
-    <script src="importfile.js?v=preview-tabs-color-png"></script>
-    <link rel="stylesheet" href="style.css?v=preview-tabs">
+    <script src="importfile.js?v=palette-layout"></script>
+    <link rel="stylesheet" href="style.css?v=palette-layout">
     <script src="dialog-dismiss.js" defer></script>
     <title>画像でノノグラム</title>
 </head>
@@ -165,7 +165,7 @@
             </div>
             <div id="play-actions">
                 <p id="mosaic-tile-label" class="play-instructions" hidden></p>
-                <p class="play-instructions play-only" id="paint-instructions">下で色を選び、マスを押して塗ります。大きな盤面は上下左右にスクロールできます。</p>
+                <p class="play-instructions play-only" id="paint-instructions">パレットで色を選び、マスを押して塗ります。大きな盤面は上下左右にスクロールできます。</p>
                 <div class="board-tools" role="group" aria-label="盤面の操作">
                     <div class="toolbar-group" role="group" aria-label="盤面の大きさ">
                         <button type="button" id="zoom-out" aria-label="盤面を縮小">−</button>
@@ -266,7 +266,7 @@
                 </table>
                 <p>「3」は続けて3マス。「1 1」は1マスずつ2組です。同じ色の組の間は、1マス以上空けます。空白には斜線で印を付けられます。</p>
                 <h3>最初の一手を試す</h3>
-                <p>サンプルの真ん中の行は「5」。下で青を選び、横5マスをすべて塗ってみましょう。</p>
+                <p>サンプルの真ん中の行は「5」。パレットで青を選び、横5マスをすべて塗ってみましょう。</p>
                 <a href="?sample" class="action-link">サンプル問題で遊ぶ</a>
             </section>
             <section id="guide-color" role="tabpanel" aria-labelledby="guide-tab-color" tabindex="0" hidden>
@@ -296,13 +296,13 @@
                 <h3>必要な操作を調べる</h3>
                 <details class="guide-more">
                     <summary>マスの塗り方・盤面の動かし方</summary>
-                    <p>下で色や斜線を選び、マスを押します。「なぞり塗り」は通ったマスを塗ります。指でスクロールするときはオフにします。</p>
-                    <p>「ヒント数字」の「チェック」「色を選ぶ」で、数字を押したときの操作を切り替えます。「0」では色は変わりません。「スポイト」は塗ったマスの色を選びます。</p>
+                    <p>パレットで色や斜線を選び、マスを押します。「なぞり塗り」は通ったマスを塗ります。指でスクロールするときはオフにします。</p>
+                    <p>「ヒント数字」の「チェック」「色を選ぶ」で、数字を押したときの操作を切り替えます。「0」では色は変わりません。「空白」は塗りを消し、「斜線」は空白の印を付けます。「スポイト」は塗ったマスの色を選びます。</p>
                     <p>「＋」「−」で拡大・縮小。「全体を表示」で盤面を収めます。分割問題は「全体図に戻る」で区画を選びます。</p>
                 </details>
                 <details class="guide-more">
                     <summary>取り消し・保存・最初からやり直す</summary>
-                    <p>「操作を取り消す」で直前の操作を取り消し、「取り消しを戻す」で戻します。</p>
+                    <p>「↶」で直前の操作を取り消し、「↷」で取り消した操作を戻します。</p>
                     <p>自分で作った通常問題やサンプルをクリアすると、「完成画像を保存」でPNGを保存できます。分割問題はすべての区画が完成すると、全体図から保存できます。</p>
                     <p>「最初からやり直す」で入力とプレイ時間をリセットします。最初からある青い斜線と、他の区画の進み具合は残ります。</p>
                 </details>
@@ -337,22 +337,31 @@
             <p>「再開」を押すと、続きから遊べます。</p>
         </div>
     </section>
-    <div id="pixelcanvas" hidden>
-        <div class="fixed-clues" aria-hidden="true"><canvas id="fixed-clues" hidden></canvas></div>
-        <canvas id="canvas" tabindex="0" aria-label="ノノグラムの盤面" aria-describedby="keyboard-instructions"></canvas>
-        <div id="keyboard-cell-marker" aria-hidden="true" hidden></div>
-        <div id="hint-line-marker" aria-hidden="true" hidden></div>
-    </div>
-    <div id="fix-phone-under-menu" hidden>
-        <div class="toolbar-group paint-tools" role="group" aria-label="塗りと編集">
-            <button type="button" id="paint-mode" aria-pressed="false" aria-describedby="paint-instructions">なぞり塗り</button>
-            <button type="button" id="pick-painted-color" aria-pressed="false" aria-describedby="paint-instructions">スポイト</button>
-            <button type="button" id="board-undo" disabled>操作を取り消す</button>
-            <button type="button" id="board-redo" disabled>取り消しを戻す</button>
+    <div class="play-workspace">
+        <div id="pixelcanvas" hidden>
+            <div class="fixed-clues" aria-hidden="true"><canvas id="fixed-clues" hidden></canvas></div>
+            <canvas id="canvas" tabindex="0" aria-label="ノノグラムの盤面" aria-describedby="keyboard-instructions"></canvas>
+            <div id="keyboard-cell-marker" aria-hidden="true" hidden></div>
+            <div id="hint-line-marker" aria-hidden="true" hidden></div>
         </div>
-        <div id="palette-panel">
-            <p id="palette-scroll-note">塗る色 · 隠れている色は左右にスクロール</p>
-            <div id="color-palette" role="group" aria-label="塗る色" aria-describedby="palette-scroll-note"></div>
+        <div id="fix-phone-under-menu" hidden>
+            <div id="palette-panel">
+                <p class="palette-label" id="palette-label">塗る色</p>
+                <div id="palette-strip">
+                    <button type="button" id="palette-prev" class="palette-step action-link" aria-label="前の色を表示" aria-controls="color-palette" hidden>‹</button>
+                    <div id="color-palette" role="group" aria-labelledby="palette-label"></div>
+                    <button type="button" id="palette-next" class="palette-step action-link" aria-label="次の色を表示" aria-controls="color-palette" hidden>›</button>
+                </div>
+                <p id="palette-scroll-note" hidden>スクロールすると他の色を選べます。</p>
+            </div>
+            <div class="toolbar-group paint-tools" role="group" aria-label="塗りと編集">
+                <button type="button" id="palette-blank" aria-label="空白に戻す" aria-pressed="false">空白</button>
+                <button type="button" id="palette-slash" aria-label="斜線で印を付ける" aria-pressed="false">斜線</button>
+                <button type="button" id="pick-painted-color" aria-pressed="false" aria-describedby="paint-instructions">スポイト</button>
+                <button type="button" id="paint-mode" aria-pressed="false" aria-describedby="paint-instructions">なぞり塗り</button>
+                <button type="button" id="board-undo" class="history-control" aria-label="操作を取り消す" title="操作を取り消す" disabled>↶</button>
+                <button type="button" id="board-redo" class="history-control" aria-label="取り消しを戻す" title="取り消しを戻す" disabled>↷</button>
+            </div>
         </div>
     </div>
 </body>
