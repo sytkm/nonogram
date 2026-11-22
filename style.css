@@ -438,9 +438,9 @@ header:has(#play-panel:not([hidden])) {
     margin-block: 0.25rem;
 }
 
-.advanced-options summary {
-    padding-block: 0.65rem;
-    cursor: pointer;
+.advanced-options h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1rem;
 }
 
 .advanced-options p {
