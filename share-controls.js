@@ -44,3 +44,62 @@ function setupPuzzleShare(group, puzzleURL) {
     }
     copy.onclick = puzzleURL ? copyLink : null;
 }
+
+let puzzleShareRequest;
+
+function updatePuzzleSharing(puzzle, shareSource) {
+    const previewSharing = document.getElementById('preview-sharing');
+    const previewShareUnavailable = document.getElementById('preview-share-unavailable');
+    const previewShare = document.getElementById('preview-share');
+    const previewShareMessage = document.getElementById('preview-share-message');
+    const mosaicShare = document.getElementById('preview-mosaic-share');
+    const mosaicShareMessage = document.getElementById('preview-mosaic-share-message');
+    const request = {};
+    puzzleShareRequest = request;
+    setupPuzzleShare(previewShare, null);
+    setupPuzzleShare(mosaicShare, null);
+    previewShareMessage.textContent = '';
+    mosaicShareMessage.textContent = '';
+    previewSharing.hidden = !puzzle;
+    previewShareUnavailable.hidden = Boolean(puzzle);
+    if (!puzzle) return;
+
+    const pageURL = window.location.href;
+    if (shareSource) {
+        setupPuzzleShare(previewShare, legacyPuzzleShareURL(pageURL, shareSource));
+    } else if (puzzle.matrix.length * puzzle.matrix[0].length > maxSharedPuzzleCells) {
+        previewShareMessage.textContent = 'この盤面はマス数が多く、共有リンクを作れません。元画像からマス数を減らしてお試しください。';
+    } else {
+        prepareLink(previewShare, previewShareMessage, '通常問題', puzzleShareURL(pageURL, puzzle));
+    }
+    if (canSplitPuzzle(puzzle.matrix)) {
+        prepareLink(mosaicShare, mosaicShareMessage, '分割問題', mosaicShareURL(pageURL, puzzle));
+    }
+
+    async function prepareLink(group, message, label, link) {
+        message.textContent = label + 'の共有リンクを準備しています…';
+        try {
+            const url = await link;
+            if (puzzleShareRequest !== request) return;
+            setupPuzzleShare(group, url);
+            message.textContent = url ? '' : label +
+                'の共有リンクが8,000文字を超えます。マス数を減らすか、別の画像を選んでください。';
+        } catch {
+            if (puzzleShareRequest !== request) return;
+            message.textContent = 'このブラウザでは' + label +
+                'の共有リンクを作成できませんでした。別のブラウザをお試しください。';
+        }
+    }
+}
+
+function openPlayShare(puzzle, shareSource) {
+    const dialog = document.getElementById('play-share-dialog');
+    if (dialog.open) return;
+    const sharing = document.getElementById('puzzle-sharing');
+    dialog.append(sharing);
+    updatePuzzleSharing(puzzle, shareSource);
+    dialog.onclose = () => {
+        if (!dialog.open) document.getElementById('preview-share-panel').append(sharing);
+    };
+    dialog.showModal();
+}

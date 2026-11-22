@@ -42,7 +42,8 @@ function prepareMosaicDownload(link, canvas) {
     }, 'image/png');
 }
 
-function openMosaic({ matrix, palette, blank }, saved) {
+function openMosaic(puzzle, saved) {
+    const { matrix, palette, blank } = puzzle;
     const mosaic = splitMosaic(matrix, blank);
     mosaic.tiles.forEach((tile, index) => {
         const state = saved?.tiles[index];
@@ -52,6 +53,7 @@ function openMosaic({ matrix, palette, blank }, saved) {
         if (state.clock) tile.clock = createPlayClock(undefined, state.clock);
     });
     const panel = document.getElementById('mosaic-panel');
+    document.getElementById('mosaic-share').onclick = () => openPlayShare(puzzle);
     const title = document.getElementById('mosaic-title');
     const progress = document.getElementById('mosaic-progress');
     const totalTime = document.getElementById('mosaic-total-time');
@@ -173,6 +175,7 @@ function openMosaic({ matrix, palette, blank }, saved) {
                 tile.board ??= { cells: tile.answer.map(row => row.slice()), finished: true };
             }
             startPuzzle({ matrix: tile.answer, palette, blank }, {
+                sharePuzzle: puzzle,
                 tileLabel: label + ' / ' + mosaic.tiles.length,
                 board: tile.board ??= {},
                 clock: tile.clock,

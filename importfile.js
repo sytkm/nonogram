@@ -53,9 +53,10 @@ window.onload = async function () {
 
     try {
         if (query === '?sample') {
-            await startPuzzle(decodeLegacyPng(samplePNG), { sample: true });
+            await startPuzzle(decodeLegacyPng(samplePNG), { sample: true, shareSource: samplePNG });
         } else {
-            await startPuzzle(decodeLegacyPng(decodeURIComponent(query.slice(1))), { shared: true });
+            const shareSource = decodeURIComponent(query.slice(1));
+            await startPuzzle(decodeLegacyPng(shareSource), { shared: true, shareSource });
             showFirstSharedGuide(false);
         }
     } catch {
@@ -79,13 +80,6 @@ function setupImagePicker() {
     const side = document.getElementById('puzzle-side');
     const mode = document.getElementById('puzzle-mode');
     const threshold = document.getElementById('threshold');
-    const previewSharing = document.getElementById('preview-sharing');
-    const previewShareUnavailable = document.getElementById('preview-share-unavailable');
-    const previewShare = document.getElementById('preview-share');
-    const previewShareMessage = document.getElementById('preview-share-message');
-    const mosaicShare = document.getElementById('preview-mosaic-share');
-    const mosaicShareMessage = document.getElementById('preview-mosaic-share-message');
-    let previewShareRequest;
     const playPreview = document.getElementById('play-preview');
     const splitPreview = document.getElementById('split-preview');
     let currentImage;
@@ -113,43 +107,6 @@ function setupImagePicker() {
         previewQuality.disabled = playPreview.disabled;
         previewLogic.disabled = playPreview.disabled;
         previewLogicResult = undefined;
-    }
-
-    function updatePreviewSharing(puzzle, shareSource) {
-        const request = {};
-        previewShareRequest = request;
-        setupPuzzleShare(previewShare, null);
-        setupPuzzleShare(mosaicShare, null);
-        previewShareMessage.textContent = '';
-        mosaicShareMessage.textContent = '';
-        previewSharing.hidden = !puzzle;
-        previewShareUnavailable.hidden = Boolean(puzzle);
-        if (!puzzle) return;
-
-        const pageURL = window.location.href;
-        if (shareSource) {
-            setupPuzzleShare(previewShare, legacyPuzzleShareURL(pageURL, shareSource));
-        } else {
-            prepareLink(previewShare, previewShareMessage, '通常問題', puzzleShareURL(pageURL, puzzle));
-        }
-        if (canSplitPuzzle(puzzle.matrix)) {
-            prepareLink(mosaicShare, mosaicShareMessage, '分割問題', mosaicShareURL(pageURL, puzzle));
-        }
-
-        async function prepareLink(group, message, label, link) {
-            message.textContent = label + 'の共有リンクを準備しています…';
-            try {
-                const url = await link;
-                if (previewShareRequest !== request) return;
-                setupPuzzleShare(group, url);
-                message.textContent = url ? '' : label +
-                    'の共有リンクが8,000文字を超えます。マス数を減らすか、別の画像を選んでください。';
-            } catch {
-                if (previewShareRequest !== request) return;
-                message.textContent = 'このブラウザでは' + label +
-                    'の共有リンクを作成できませんでした。別のブラウザをお試しください。';
-            }
-        }
     }
 
     function updatePreview() {
@@ -182,7 +139,7 @@ function setupImagePicker() {
         playPreview.textContent = splitPreview.hidden ? 'この問題で遊ぶ' : '分けずに遊ぶ';
         document.getElementById('preview-split-help').hidden = splitPreview.hidden;
         if (!playPreview.disabled) {
-            updatePreviewSharing(puzzle, exactColor ? currentImage.shareSource : undefined);
+            updatePuzzleSharing(puzzle, exactColor ? currentImage.shareSource : undefined);
         }
         document.getElementById('threshold-panel').hidden = useColor;
         document.getElementById('color-note').hidden = !useColor || exactColor;
@@ -258,7 +215,7 @@ function setupImagePicker() {
         document.getElementById('shared-link-status').textContent = '';
         const selection = {};
         currentImage = selection;
-        updatePreviewSharing();
+        updatePuzzleSharing();
         resetPreviewChecks();
         preview.hidden = true;
         status.textContent = '画像を読み込んでいます…';
@@ -296,7 +253,7 @@ function setupImagePicker() {
         splitPreview.disabled = playPreview.disabled;
         if (playPreview.disabled) {
             resetPreviewChecks();
-            updatePreviewSharing();
+            updatePuzzleSharing();
         } else {
             updateSize();
         }
@@ -314,7 +271,8 @@ function setupImagePicker() {
         const initialCheck = previewLogicResult;
         resetPreviewChecks();
         const generated = currentImage.puzzle !== currentImage.originalPuzzle;
-        startPuzzle(currentImage.puzzle, { generated, initialCheck });
+        const shareSource = generated ? undefined : currentImage.shareSource;
+        startPuzzle(currentImage.puzzle, { generated, initialCheck, shareSource });
     });
     splitPreview.addEventListener('click', () => {
         resetPreviewChecks();
@@ -618,6 +576,8 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
     returnToMosaic.hidden = !options.onReturn;
     returnToMosaic.onclick = options.onReturn ?? null;
     document.getElementById('board-home').hidden = Boolean(options.onReturn);
+    document.getElementById('board-share').onclick = () =>
+        openPlayShare(options.sharePuzzle ?? { matrix, palette, blank }, options.shareSource);
 
     const download = document.getElementById('downl');
     download.hidden = true;
@@ -684,11 +644,13 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
         document.getElementById('canvas').focus({ preventScroll: true });
     };
     if (!options.onReturn) {
-        const { sample, shared, generated } = options;
+        const { sample, shared, generated, shareSource } = options;
+        // Retain short legacy links for resume without storing large source PNGs.
+        const savedShareSource = shareSource?.length <= maxPuzzleShareLength ? shareSource : undefined;
         setProgressSource(() => ({
             kind: 'board',
             puzzle: { matrix, palette, blank },
-            options: { sample, shared, generated },
+            options: { sample, shared, generated, shareSource: savedShareSource },
             board,
             clock: clock.snapshot(),
         }), options.progressId);
