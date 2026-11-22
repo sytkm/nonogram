@@ -292,9 +292,11 @@ function saveBoardSetting(name, value) {
 function setupSettings() {
     const dialog = document.getElementById('settings-dialog');
     const playGuide = document.getElementById('play-guide-dialog');
+    const resetGuideTabs = setupGuideTabs(playGuide);
     for (const button of document.querySelectorAll('[data-open-play-guide]')) {
         button.onclick = () => {
             syncGuideSymbols();
+            resetGuideTabs();
             playGuide.showModal();
         };
     }
