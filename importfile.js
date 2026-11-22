@@ -78,6 +78,7 @@ function setupImagePicker() {
     const resetPreviewTabs = setupTabs(preview);
     const canvas = document.getElementById('preview-canvas');
     const side = document.getElementById('puzzle-side');
+    const resetSize = document.getElementById('reset-puzzle-side');
     const mode = document.getElementById('puzzle-mode');
     const threshold = document.getElementById('threshold');
     const playPreview = document.getElementById('play-preview');
@@ -111,28 +112,36 @@ function setupImagePicker() {
         previewLogicResult = undefined;
     }
 
+    function usesIndexedColors() {
+        return mode.value === 'color' && Boolean(currentImage.originalPuzzle);
+    }
+
     function updatePreview() {
         const useColor = mode.value === 'color';
-        const exactColor = useColor && Boolean(currentImage.originalPuzzle);
-        if (exactColor) playPreview.disabled = false;
+        const indexed = usesIndexedColors();
         resetPreviewChecks();
-        if (useColor && !exactColor && !currentImage.colorPuzzle) {
-            currentImage.colorPuzzle = makeColorPuzzle(currentImage.imageData);
+        let puzzle;
+        if (indexed) {
+            puzzle = resizeIndexedPuzzle(currentImage.originalPuzzle, side.valueAsNumber);
+        } else if (useColor) {
+            currentImage.colorPuzzle ??= makeColorPuzzle(currentImage.imageData);
+            puzzle = currentImage.colorPuzzle;
+        } else {
+            puzzle = {
+                matrix: makeMonochromeMatrix(currentImage.imageData, Number(threshold.value)),
+                palette: [[255, 255, 255], [0, 0, 0]],
+                blank: 0,
+            };
         }
-        const puzzle = exactColor ? currentImage.originalPuzzle : useColor ? currentImage.colorPuzzle : {
-            matrix: makeMonochromeMatrix(currentImage.imageData, Number(threshold.value)),
-            palette: [[255, 255, 255], [0, 0, 0]],
-            blank: 0,
-        };
         currentImage.puzzle = puzzle;
         const { matrix, palette, blank } = puzzle;
-        document.getElementById('puzzle-size-panel').hidden = exactColor;
-        document.getElementById('preview-original-color').hidden = !exactColor;
-        if (exactColor) {
-            document.getElementById('preview-size').textContent =
-                '元画像 ' + matrix[0].length + ' × ' + matrix.length +
-                ' ／ 盤面 ' + matrix[0].length + ' × ' + matrix.length + ' マス';
-        }
+        const { naturalWidth, naturalHeight } = currentImage.image;
+        document.getElementById('preview-size').textContent =
+            '元画像 ' + naturalWidth + ' × ' + naturalHeight +
+            ' ／ 盤面 ' + matrix[0].length + ' × ' + matrix.length + ' マス';
+        document.getElementById('preview-original-color').hidden = !indexed;
+        resetSize.hidden = !indexed;
+        resetSize.disabled = puzzle === currentImage.originalPuzzle;
         const tileCount = mosaicTileCount(matrix);
         const withinLimit = tileCount <= MAX_MOSAIC_TILES;
         splitPreview.disabled = playPreview.disabled || !withinLimit;
@@ -142,21 +151,18 @@ function setupImagePicker() {
         playPreview.className = preferSplit ? 'action-link' : 'action-link action-primary';
         if (playOptions.firstElementChild !== primary) playOptions.prepend(primary);
         if (!withinLimit) {
-            const resizeHelp = exactColor
-                ? '白黒に切り替えてマス数を減らすか、画像を縮小して読み込み直してください。'
-                : '「色とマス数」でマス数を減らしてください。';
             splitHelp.textContent = 'この画像は' + tileCount + '区画になります。分割は' + MAX_MOSAIC_TILES +
-                '区画までです。' + resizeHelp;
+                '区画までです。「色とマス数」でマス数を減らしてください。';
         } else {
             splitHelp.textContent = tileCount === 1
                 ? '10×10に収まる画像は、分けて遊ぶと1区画になります。'
                 : '10×10の小さな区画を解いて、1枚の絵を完成させます。';
         }
         if (!playPreview.disabled) {
-            updatePuzzleSharing(puzzle, exactColor ? currentImage.shareSource : undefined);
+            updatePuzzleSharing(puzzle, puzzle === currentImage.originalPuzzle ? currentImage.shareSource : undefined);
         }
         document.getElementById('threshold-panel').hidden = useColor;
-        document.getElementById('color-note').hidden = !useColor || exactColor;
+        document.getElementById('color-note').hidden = !useColor || indexed;
         document.getElementById('threshold-value').value = threshold.value;
         canvas.width = matrix[0].length;
         canvas.height = matrix.length;
@@ -172,9 +178,7 @@ function setupImagePicker() {
         const uniform = matrix.every(row => row.every(value => value === first));
         let message = '';
         if (uniform) {
-            message = exactColor
-                ? '盤面が一色です。別の画像を選ぶか、白黒に切り替えて調整できます。'
-                : useColor
+            message = useColor
                 ? '盤面が一色になっています。別の画像やマス数をお試しください。'
                 : '白か黒の一色になっています。境目を調整するか、明暗の差がある画像をお試しください。';
         }
@@ -187,31 +191,39 @@ function setupImagePicker() {
     }
 
     function updateSize() {
+        playPreview.disabled = false;
+        if (usesIndexedColors()) {
+            updatePreview();
+            return;
+        }
         const image = currentImage.image;
         const imageData = rasterizePuzzleImage(image, side.valueAsNumber);
         currentImage.imageData = imageData;
         currentImage.colorPuzzle = undefined;
         currentImage.suggestedThreshold = suggestMonochromeThreshold(imageData);
-        document.getElementById('preview-size').textContent =
-            '元画像 ' + image.naturalWidth + ' × ' + image.naturalHeight +
-            ' ／ 盤面 ' + imageData.width + ' × ' + imageData.height + ' マス';
-        playPreview.disabled = false;
         resetThreshold();
+    }
+
+    function updateSizeLimit(reset) {
+        const { naturalWidth, naturalHeight } = currentImage.image;
+        const originalSide = Math.max(naturalWidth, naturalHeight);
+        const indexed = usesIndexedColors();
+        const limit = indexed ? originalSide : Math.min(originalSide, MAX_PUZZLE_SIDE);
+        side.max = String(limit);
+        if (reset || !side.validity.valid || !side.value) {
+            side.value = String(!indexed && originalSide > MAX_PUZZLE_SIDE ? SUGGESTED_PHOTO_SIDE : originalSide);
+        }
     }
 
     function openPreview() {
         const image = currentImage.image;
         const originalSide = Math.max(image.naturalWidth, image.naturalHeight);
-        side.max = String(Math.min(originalSide, MAX_PUZZLE_SIDE));
-        side.value = String(originalSide <= MAX_PUZZLE_SIDE ? originalSide : SUGGESTED_PHOTO_SIDE);
         const hasColorMode = Boolean(currentImage.originalPuzzle) || currentImage.canMakeConvertedColor;
         document.getElementById('puzzle-mode-panel').hidden = !hasColorMode;
         mode.value = hasColorMode ? 'color' : 'monochrome';
-        const exactColor = mode.value === 'color' && currentImage.originalPuzzle;
-        playPreview.disabled = false;
-        if (exactColor) updatePreview();
-        else updateSize();
-        status.textContent = !exactColor && originalSide > MAX_PUZZLE_SIDE
+        updateSizeLimit(true);
+        updateSize();
+        status.textContent = !usesIndexedColors() && originalSide > MAX_PUZZLE_SIDE
             ? '大きな画像なので、最長辺' + SUGGESTED_PHOTO_SIDE + 'マスを提案します。' +
               MAX_PUZZLE_SIDE + 'マスまで変更できます。'
             : '';
@@ -264,6 +276,7 @@ function setupImagePicker() {
         playPreview.disabled = !side.validity.valid || !side.value;
         splitPreview.disabled = playPreview.disabled;
         if (playPreview.disabled) {
+            resetSize.disabled = false;
             resetPreviewChecks();
             updatePuzzleSharing();
         } else {
@@ -273,17 +286,26 @@ function setupImagePicker() {
     mode.addEventListener('change', () => {
         if (currentImage.originalPuzzle) {
             status.textContent = '';
-            if (mode.value === 'color') updatePreview();
-            else updateSize();
+            updateSizeLimit(false);
+            updateSize();
         } else updatePreview();
     });
-    threshold.addEventListener('input', updatePreview);
-    document.getElementById('reset-threshold').addEventListener('click', resetThreshold);
+    resetSize.addEventListener('click', () => {
+        side.value = side.max;
+        updateSize();
+        side.focus();
+    });
+    threshold.addEventListener('input', () => {
+        if (!playPreview.disabled) updatePreview();
+    });
+    document.getElementById('reset-threshold').addEventListener('click', () => {
+        if (!playPreview.disabled) resetThreshold();
+    });
     playPreview.addEventListener('click', () => {
         const initialCheck = previewLogicResult;
         resetPreviewChecks();
-        const generated = currentImage.puzzle !== currentImage.originalPuzzle;
-        const shareSource = generated ? undefined : currentImage.shareSource;
+        const generated = !usesIndexedColors();
+        const shareSource = currentImage.puzzle === currentImage.originalPuzzle ? currentImage.shareSource : undefined;
         startPuzzle(currentImage.puzzle, { generated, initialCheck, shareSource });
     });
     splitPreview.addEventListener('click', () => {
@@ -555,7 +577,7 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
             ? '答えが一つか確認できなかったため、ヒント数字に合う配置でクリアになります。'
             : '';
     qualityNote.hidden = !qualityNote.textContent;
-    const usedColors = options.generated
+    const usedColors = options.generated && !options.shared
         ? new Set([...palette.slice(1).map((_, i) => i + 1), blank])
         : new Set(matrix.flat());
     const paintColors = [...usedColors].filter(color => color !== blank);

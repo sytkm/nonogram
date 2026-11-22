@@ -79,10 +79,12 @@ test('パレットPNGは200マス超でも再変換せずプレビューし、�
     assert.equal(ui.starts.length, 0);
     assert.equal(ui.rasterizations(), 0);
     assert.equal(ui.element('image-preview').hidden, false);
-    assert.equal(ui.element('puzzle-size-panel').hidden, true);
+    assert.equal(ui.element('puzzle-size-panel').hidden, false);
     assert.equal(ui.element('threshold-panel').hidden, true);
     assert.equal(ui.element('color-note').hidden, true);
     assert.equal(ui.element('image-status').textContent, '');
+    assert.equal(ui.element('puzzle-side').value, '201');
+    assert.equal(ui.element('reset-puzzle-side').disabled, true);
     assert.equal(ui.element('preview-canvas').width, 201);
     assert.equal(ui.element('preview-canvas').height, 2);
     assert.match(ui.element('preview-size').textContent, /盤面 201 × 2/);
@@ -113,7 +115,7 @@ test('白黒を調整した後、不正なサイズからでも元のカラー�
     assert.equal(ui.element('play-preview').disabled, true);
     ui.element('puzzle-mode').value = 'color';
     ui.element('puzzle-mode').change();
-    assert.equal(ui.element('puzzle-size-panel').hidden, true);
+    assert.equal(ui.element('puzzle-size-panel').hidden, false);
     assert.equal(ui.element('play-preview').disabled, false);
     assert.equal(ui.element('preview-quality').disabled, false);
     ui.element('play-preview').click();
@@ -171,4 +173,26 @@ test('RGB・RGBAのPNGは通常のカラー変換で遊べる', async () => {
         assert.deepEqual([...palette[matrix[0][1]]], [12, 45, 235]);
         assert.equal(matrix[1][0], blank);
     }
+});
+
+test('カラーの縮小は元の色と空白を使い、通常共有には縮小後の盤面を渡す', async () => {
+    const ui = setup();
+    await ui.element('file').change();
+    ui.element('puzzle-side').value = '110';
+    ui.element('puzzle-side').input();
+    assert.equal(ui.rasterizations(), 0);
+    assert.equal(ui.element('preview-canvas').width, 110);
+    const resized = ui.normalShares.at(-1).puzzle;
+    assert.equal(resized.palette, ui.original.palette);
+    assert.equal(resized.blank, ui.original.blank);
+    ui.element('play-preview').click();
+    assert.equal(ui.starts.at(-1).puzzle, resized);
+    assert.equal(ui.starts.at(-1).options.generated, false);
+    assert.equal(ui.starts.at(-1).options.shareSource, undefined);
+
+    ui.element('reset-puzzle-side').click();
+    assert.equal(ui.element('puzzle-side').value, '201');
+    assert.equal(ui.element('preview-share').url, '?original-png');
+    ui.element('play-preview').click();
+    assert.equal(ui.starts.at(-1).puzzle, ui.original);
 });
