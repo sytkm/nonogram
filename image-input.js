@@ -13,6 +13,25 @@ function fitPuzzleSize(width, height, longestSide) {
     };
 }
 
+function resizeIndexedPuzzle(puzzle, longestSide) {
+    const { matrix, palette, blank } = puzzle;
+    const sourceWidth = matrix[0].length;
+    const sourceHeight = matrix.length;
+    const { width, height } = fitPuzzleSize(sourceWidth, sourceHeight, longestSide);
+    if (width === sourceWidth && height === sourceHeight) return puzzle;
+
+    // 中心に最も近い元のマスを選び、色番号と空白をそのまま使う。
+    const columns = Array.from({ length: width }, (_, x) => Math.floor((x + 0.5) * sourceWidth / width));
+    return {
+        matrix: Array.from({ length: height }, (_, y) => {
+            const sourceRow = matrix[Math.floor((y + 0.5) * sourceHeight / height)];
+            return columns.map(x => sourceRow[x]);
+        }),
+        palette,
+        blank,
+    };
+}
+
 function detectImageFormat(header) {
     const matches = (offset, signature) =>
         signature.every((byte, index) => header[offset + index] === byte);

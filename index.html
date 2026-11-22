@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <script src="inflate.min.js"></script>
-    <script src="image-input.js?v=color-png"></script>
+    <script src="image-input.js?v=indexed-color-size"></script>
     <script src="play-clock.js?v=hint-penalties"></script>
     <script src="board-tools.js?v=clue-eyedropper"></script>
     <script src="line-logic.js"></script>
@@ -16,7 +16,7 @@
     <script src="mosaic.js?v=always-show-play-options"></script>
     <script src="share-controls.js?v=play-sharing"></script>
     <script src="guide-tabs.js?v=preview-tabs"></script>
-    <script src="importfile.js?v=always-show-play-options"></script>
+    <script src="importfile.js?v=indexed-color-size"></script>
     <link rel="stylesheet" href="style.css?v=play-sharing">
     <script src="dialog-dismiss.js?v=play-sharing" defer></script>
     <title>画像でノノグラム</title>
@@ -94,7 +94,7 @@
                             <button type="button" class="action-link" id="preview-tab-share" role="tab" aria-selected="false" aria-controls="preview-share-panel" tabindex="-1">共有</button>
                         </div>
                         <section id="preview-settings-panel" class="preview-settings preview-tab-panel" role="tabpanel" aria-labelledby="preview-tab-settings" tabindex="0">
-                            <p id="preview-original-color" hidden>元画像の色とマス数を使います。マス数を変えるには白黒に切り替えます。</p>
+                            <p id="preview-original-color" hidden>元画像の色と空白を使います。マス数を減らすと細かい模様が省かれることがあります。</p>
                             <div id="puzzle-mode-panel" hidden>
                                 <label for="puzzle-mode">問題の色</label>
                                 <select id="puzzle-mode">
@@ -105,6 +105,7 @@
                             <div id="puzzle-size-panel">
                                 <label for="puzzle-side">長い辺のマス数</label>
                                 <input id="puzzle-side" type="number" min="1" step="1" inputmode="numeric">
+                                <button type="button" id="reset-puzzle-side" class="action-link" hidden>元のマス数に戻す</button>
                             </div>
                             <div id="threshold-panel">
                                 <label for="threshold">黒にする明るさの境目</label>
