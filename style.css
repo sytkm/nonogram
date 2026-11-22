@@ -47,8 +47,32 @@ h1 {
     --puzzle-accent-active: #194235;
 }
 
-.home-art {
+.home-art,
+.home-credits {
     display: none;
+}
+
+#start-panel:has(#image-preview[hidden]) .home-credits {
+    display: block;
+    margin-block-start: 1.5rem;
+    padding-block-start: 0.75rem;
+    border-top: 1px solid var(--puzzle-rule);
+    font-size: 0.875rem;
+    line-height: 1.7;
+}
+
+.home-credits p {
+    margin: 0.25rem 0;
+}
+
+.home-credits a {
+    color: var(--puzzle-accent);
+    text-underline-offset: 0.15em;
+}
+
+.home-credits a:focus-visible {
+    outline: 2px solid var(--puzzle-accent);
+    outline-offset: 3px;
 }
 
 header:has(#start-panel:not([hidden]) #image-preview[hidden]) {
