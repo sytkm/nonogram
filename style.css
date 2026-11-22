@@ -855,7 +855,8 @@ dialog button:focus-visible {
     image-rendering: pixelated;
 }
 
-#mosaic-share {
+#preview-share,
+#preview-mosaic-share {
     margin-block: 1rem;
     padding-block-start: 0.6rem;
     border-top: 1px solid var(--puzzle-rule);
