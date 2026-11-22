@@ -12,6 +12,7 @@ const boardSettings = {};
 const boardSettingsKey = 'nonogram.settings';
 let finishStroke;
 let playClock;
+let updatePaletteNavigation;
 
 // 5×5の十字を描いたパレット形式のサンプルPNG。
 const samplePNG = 'iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAMAAAC6sdbXAAAABlBMVEX///8wW6NnOUAjAAAAFUlEQVR4nGNgYGBkAAEQyQgCDEgiAAClAAqu0sLdAAAAAElFTkSuQmCC';
@@ -21,6 +22,7 @@ window.onload = async function () {
     setupProgressRestore();
     setupBoardMenus();
     setupSettings();
+    updatePaletteNavigation = setupPaletteNavigation();
     window.addEventListener('resize', () => refreshBoard?.());
     window.setInterval(() => {
         if (!document.getElementById('play-panel').hidden) updatePlayTime();
@@ -1150,7 +1152,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         canvas.classList.toggle('is-painting', mode === 'trace');
 
         const messages = {
-            paint: '下で色を選び、マスを押して塗ります。大きな盤面は上下左右にスクロールできます。',
+            paint: 'パレットで色を選び、マスを押して塗ります。大きな盤面は上下左右にスクロールできます。',
             trace: '指やマウスでなぞるとまとめて塗れます。盤面を移動するには「なぞり塗り」をオフにします。',
             pick: '塗ったマスを押すと色を拾えます。キーボードでは Space または Enter を押します。',
         };
@@ -1160,7 +1162,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     function pickCellColor({ row, column }) {
         const color = cells[row][column];
         if (color === blank || color < 0) return;
-        selectColor(color)?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+        selectColor(color);
         setInputMode('paint');
     }
 
@@ -1585,54 +1587,98 @@ function makeNumber(arr, alpha) {
 }
 
 // パレットを通常のボタンで表示し、指でもキーボードでも色を選べるようにする。
+function setupPaletteNavigation() {
+    const strip = document.getElementById('palette-strip');
+    const palette = document.getElementById('color-palette');
+    const previous = document.getElementById('palette-prev');
+    const next = document.getElementById('palette-next');
+    const note = document.getElementById('palette-scroll-note');
+
+    function update() {
+        const vertical = getComputedStyle(palette).display === 'grid';
+        const scrollable = !vertical && palette.scrollWidth > strip.clientWidth + 1;
+        strip.toggleAttribute('data-scrollable', scrollable);
+        previous.hidden = next.hidden = !scrollable;
+        previous.setAttribute('aria-disabled', String(palette.scrollLeft <= 1));
+        next.setAttribute('aria-disabled',
+            String(palette.scrollLeft + palette.clientWidth >= palette.scrollWidth - 1));
+        note.hidden = !vertical || palette.scrollHeight <= palette.clientHeight + 1;
+    }
+
+    for (const [button, direction] of [[previous, -1], [next, 1]]) {
+        button.onclick = () => {
+            if (button.getAttribute('aria-disabled') === 'true') return;
+            const distance = Math.max(50, palette.clientWidth - 50);
+            palette.scrollBy({ left: direction * distance });
+        };
+    }
+    palette.addEventListener('scroll', update);
+    const observer = new ResizeObserver(update);
+    observer.observe(strip);
+    observer.observe(palette);
+    return update;
+}
+
 function drawUnderPalette(palette, usedColors, blank) {
     const container = document.getElementById('color-palette');
     container.replaceChildren();
-    const colors = [...usedColors];
-    if (!usedColors.has(blank)) colors.push(blank);
-    colors.push(-1);
+    const buttons = new Map([
+        [blank, document.getElementById('palette-blank')],
+        [-1, document.getElementById('palette-slash')],
+    ]);
 
-    const buttons = new Map();
     function selectColor(color) {
         const button = buttons.get(color);
         if (!button) return;
         buttons.get(g_selectcolor)?.setAttribute('aria-pressed', 'false');
         button.setAttribute('aria-pressed', 'true');
         g_selectcolor = color;
+        if (container.contains(button)) {
+            // Move only the palette to reveal a color selected with a clue or the eyedropper.
+            const viewport = container.getBoundingClientRect();
+            const tile = button.getBoundingClientRect();
+            const left = tile.left < viewport.left ? tile.left - viewport.left - 4
+                : tile.right > viewport.left + container.clientWidth
+                    ? tile.right - viewport.left - container.clientWidth + 4 : 0;
+            const top = tile.top < viewport.top ? tile.top - viewport.top - 4
+                : tile.bottom > viewport.top + container.clientHeight
+                    ? tile.bottom - viewport.top - container.clientHeight + 4 : 0;
+            if (left || top) container.scrollBy({ left, top });
+        }
         return button;
     }
 
-    for (const color of colors) {
+    for (const color of usedColors) {
+        if (color === blank) continue;
         const button = document.createElement('button');
         const swatch = document.createElement('span');
+        const symbol = document.createElement('span');
+        const hexColor = '#' + palette[color].map(channel => channel.toString(16).padStart(2, '0')).join('');
+        const colorSymbol = paletteSymbol(color, blank);
+        const label = '色 ' + colorSymbol + ' ' + hexColor;
+
         button.type = 'button';
         button.className = 'palette-color';
-        swatch.className = 'palette-swatch';
-
-        let label;
-        if (color === -1) {
-            label = '斜線で印を付ける';
-            swatch.classList.add('palette-mark');
-        } else if (color === blank) {
-            label = '空白に戻す';
-        } else {
-            const hexColor = '#' + palette[color].map(channel => channel.toString(16).padStart(2, '0')).join('');
-            const symbol = document.createElement('span');
-            symbol.className = 'palette-symbol';
-            symbol.textContent = paletteSymbol(color, blank);
-            swatch.append(symbol);
-            label = '色 ' + symbol.textContent + ' ' + hexColor;
-            swatch.style.backgroundColor = hexColor;
-            swatch.style.color = chooseTextColor(...palette[color]);
-        }
         button.title = label;
         button.setAttribute('aria-label', label);
-        button.setAttribute('aria-pressed', String(g_selectcolor === color));
+        symbol.className = 'palette-symbol';
+        symbol.textContent = colorSymbol;
+        swatch.className = 'palette-swatch';
+        swatch.style.backgroundColor = hexColor;
+        swatch.style.color = chooseTextColor(...palette[color]);
+        swatch.append(symbol);
         button.append(swatch);
-        button.onclick = () => selectColor(color);
         buttons.set(color, button);
         container.append(button);
     }
+
+    for (const [color, button] of buttons) {
+        button.setAttribute('aria-pressed', String(g_selectcolor === color));
+        button.onclick = () => selectColor(color);
+    }
+    container.scrollLeft = 0;
+    container.scrollTop = 0;
+    updatePaletteNavigation();
     return selectColor;
 }
 
