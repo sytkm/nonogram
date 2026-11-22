@@ -9,6 +9,7 @@ function setup({ decodeFails = false, pngColorType } = {}) {
     const painted = [];
     const starts = [];
     const splitShares = [];
+    const normalShares = [];
     let rasterizations = 0;
     const ctx = { fillRect() { painted.push(this.fillStyle); } };
     function element(id) {
@@ -29,6 +30,7 @@ function setup({ decodeFails = false, pngColorType } = {}) {
         setupTabs: () => () => {},
         setupPuzzleShare(group, url) { group.url = url; },
         legacyPuzzleShareURL: (_, source) => '?' + source,
+        puzzleShareURL: (_, puzzle) => new Promise(resolve => normalShares.push({ puzzle, resolve })),
         mosaicShareURL: (_, puzzle) => new Promise(resolve => splitShares.push({ puzzle, resolve })),
         setupQualityCheck: () => () => {}, canSplitPuzzle: matrix => matrix[0].length > 10,
     });
@@ -66,7 +68,7 @@ function setup({ decodeFails = false, pngColorType } = {}) {
     context.setPlaying = () => {};
     context.startPuzzle = (puzzle, options) => starts.push({ puzzle, options });
     context.setupImagePicker();
-    return { element, original, painted, starts, splitShares, rasterizations: () => rasterizations };
+    return { element, original, painted, starts, splitShares, normalShares, rasterizations: () => rasterizations };
 }
 
 test('パレットPNGは200マス超でも再変換せずプレビューし、空白を白で描く', async () => {
@@ -126,16 +128,22 @@ test('カラーPNGの読み込みが失敗した場合は従来の白黒プレ�
     assert.match(ui.element('image-status').textContent, /白黒のプレビュー/);
 });
 
-test('白黒に切り替えると元のPNGの共有と古い分割リンクが残らない', async () => {
+test('白黒に切り替えると古い共有リンクを消し、新しい通常リンクを作る', async () => {
     const ui = setup();
     await ui.element('file').change();
     assert.equal(ui.splitShares[0].puzzle, ui.original);
     ui.element('puzzle-mode').value = 'monochrome';
     ui.element('puzzle-mode').change();
     ui.splitShares[0].resolve('#old-split');
-    await Promise.resolve();
+    await new Promise(setImmediate);
     assert.equal(ui.element('preview-share').url, null);
     assert.equal(ui.element('preview-mosaic-share').url, null);
+    ui.normalShares[0].resolve('#puzzle=1.monochrome');
+    await new Promise(setImmediate);
+    assert.equal(ui.element('preview-share').url, '#puzzle=1.monochrome');
+    ui.element('puzzle-mode').value = 'color';
+    ui.element('puzzle-mode').change();
+    assert.equal(ui.element('preview-share').url, '?original-png');
 });
 
 test('RGB・RGBAのPNGは通常のカラー変換で遊べる', async () => {
@@ -144,7 +152,10 @@ test('RGB・RGBAのPNGは通常のカラー変換で遊べる', async () => {
         await ui.element('file').change();
         assert.equal(ui.element('puzzle-mode-panel').hidden, false);
         assert.equal(ui.element('puzzle-mode').value, 'color');
-        assert.equal(ui.element('preview-share').url, null);
+        ui.normalShares[0].resolve('#puzzle=1.color');
+        await new Promise(setImmediate);
+        assert.equal(ui.element('preview-share').url, '#puzzle=1.color');
+        assert.equal(ui.element('preview-mosaic-share').url, null);
         ui.element('play-preview').click();
         const { matrix, palette, blank } = ui.starts[0].puzzle;
         assert.notEqual(matrix[0][0], matrix[0][1]);

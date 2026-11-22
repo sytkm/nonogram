@@ -12,11 +12,11 @@
     <script src="line-logic.js"></script>
     <script src="progress-store.js?v=recovery-messages"></script>
     <script src="quality-controls.js?v=check-result-wording"></script>
-    <script src="mosaic-share.js"></script>
+    <script src="mosaic-share.js?v=normal-share"></script>
     <script src="mosaic.js?v=creator-preview"></script>
     <script src="share-controls.js?v=mosaic-share"></script>
     <script src="guide-tabs.js?v=preview-tabs"></script>
-    <script src="importfile.js?v=shared-link-error-location"></script>
+    <script src="importfile.js?v=normal-share"></script>
     <link rel="stylesheet" href="style.css?v=shared-link-error-location">
     <script src="dialog-dismiss.js" defer></script>
     <title>画像でノノグラム</title>
@@ -131,13 +131,13 @@
                             </div>
                         </section>
                         <section id="preview-share-panel" class="preview-tab-panel" role="tabpanel" aria-labelledby="preview-tab-share" tabindex="0" hidden>
-                            <p id="preview-share-unavailable">この設定では共有リンクを作れません。通常問題のリンクはパレット形式PNGの元カラー、分割リンクは分割できる問題で作れます。</p>
+                            <p id="preview-share-unavailable">有効なマス数にすると、共有リンクを作れます。</p>
                             <div id="preview-sharing" hidden>
                                 <p>リンクから答えの画像を復元できます。進み具合やプレイ時間は含まれません。</p>
                                 <div id="preview-share" class="puzzle-share" role="group" aria-label="通常問題を共有" hidden>
-                                    <p>通常問題のリンクには元のPNGが含まれます。</p>
+                                    <p>通常問題のリンクを開くと、画像全体を1つの盤面で遊べます。</p>
                                     <div class="toolbar-group">
-                                        <a class="action-link" data-share-bluesky target="_blank" rel="noopener noreferrer" hidden>Blueskyで共有</a>
+                                        <a class="action-link" data-share-bluesky aria-label="Blueskyで共有（通常問題）" target="_blank" rel="noopener noreferrer" hidden>Blueskyで共有</a>
                                         <button type="button" class="action-link" data-share-copy>通常問題の共有リンクをコピー</button>
                                     </div>
                                     <p class="quality-result" data-share-status role="status"></p>
@@ -145,9 +145,11 @@
                                         <label>共有リンク <input type="text" readonly></label>
                                     </div>
                                 </div>
+                                <p id="preview-share-message" class="quality-result" role="status"></p>
                                 <div id="preview-mosaic-share" class="puzzle-share" role="group" aria-label="分割ノノグラムを共有" hidden>
-                                    <p>分割問題のリンクには、プレビューした色とマスの配置が含まれます。</p>
+                                    <p>分割問題のリンクを開くと、10×10の区画に分けて遊べます。</p>
                                     <div class="toolbar-group">
+                                        <a class="action-link" data-share-bluesky aria-label="Blueskyで共有（分割問題）" target="_blank" rel="noopener noreferrer" hidden>Blueskyで共有</a>
                                         <button type="button" class="action-link" data-share-copy>分割問題の共有リンクをコピー</button>
                                     </div>
                                     <p class="quality-result" data-share-status role="status"></p>
