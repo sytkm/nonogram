@@ -15,7 +15,7 @@
     <script src="mosaic-share.js"></script>
     <script src="mosaic.js?v=mosaic-share"></script>
     <script src="share-controls.js?v=mosaic-share"></script>
-    <script src="importfile.js?v=board-action-wording"></script>
+    <script src="importfile.js?v=guide-symbol-setting"></script>
     <link rel="stylesheet" href="style.css?v=color-rule-guide">
     <title>画像でノノグラム</title>
 </head>
@@ -253,23 +253,23 @@
         <a href="?sample" class="action-link">サンプル問題で遊ぶ</a>
         <details class="guide-more">
             <summary>カラー問題のルール</summary>
-            <p>数字の色を、その数だけ続けて塗ります。下の例では A が青、B が赤です。</p>
+            <p>数字の色を、その数だけ続けて塗ります。<span data-guide-symbol hidden>下の例では A が青、B が赤です。</span></p>
             <p>同じ色の組は、1マス以上空けます。</p>
             <table class="guide-example guide-color-example" aria-label="同じ青の1マスずつ2組。間に空白が必要">
                 <tbody><tr>
-                    <th scope="row"><span class="guide-clue-a">1 A</span> <span class="guide-clue-a">1 A</span></th>
-                    <td class="guide-color-a" aria-label="青 A">A</td>
+                    <th scope="row"><span class="guide-clue-a">1<span data-guide-symbol hidden> A</span></span> <span class="guide-clue-a">1<span data-guide-symbol hidden> A</span></span></th>
+                    <td class="guide-color-a" aria-label="青"><span data-guide-symbol hidden>A</span></td>
                     <td aria-label="空白"><span aria-hidden="true">／</span></td>
-                    <td class="guide-color-a" aria-label="青 A">A</td>
+                    <td class="guide-color-a" aria-label="青"><span data-guide-symbol hidden>A</span></td>
                 </tr></tbody>
             </table>
             <p>違う色の組は、空白なしで隣り合えます。</p>
             <table class="guide-example guide-color-example" aria-label="青が2マス、赤が1マス。空白なしで隣り合える">
                 <tbody><tr>
-                    <th scope="row"><span class="guide-clue-a">2 A</span> <span class="guide-clue-b">1 B</span></th>
-                    <td class="guide-color-a" aria-label="青 A">A</td>
-                    <td class="guide-color-a" aria-label="青 A">A</td>
-                    <td class="guide-color-b" aria-label="赤 B">B</td>
+                    <th scope="row"><span class="guide-clue-a">2<span data-guide-symbol hidden> A</span></span> <span class="guide-clue-b">1<span data-guide-symbol hidden> B</span></span></th>
+                    <td class="guide-color-a" aria-label="青"><span data-guide-symbol hidden>A</span></td>
+                    <td class="guide-color-a" aria-label="青"><span data-guide-symbol hidden>A</span></td>
+                    <td class="guide-color-b" aria-label="赤"><span data-guide-symbol hidden>B</span></td>
                 </tr></tbody>
             </table>
         </details>

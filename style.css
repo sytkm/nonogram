@@ -882,6 +882,6 @@ dialog button:focus-visible {
     color: #a52c38;
 }
 
-.guide-color-example th span + span {
+.guide-color-example th > span + span {
     margin-inline-start: 0.5rem;
 }
