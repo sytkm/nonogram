@@ -15,7 +15,7 @@
     <script src="mosaic-share.js"></script>
     <script src="mosaic.js?v=mosaic-share"></script>
     <script src="share-controls.js?v=mosaic-share"></script>
-    <script src="importfile.js?v=fit-mosaic-tile"></script>
+    <script src="importfile.js?v=board-action-wording"></script>
     <link rel="stylesheet" href="style.css?v=puzzle-paper-dialogs">
     <title>画像でノノグラム</title>
 </head>
@@ -146,9 +146,9 @@
                 </div>
                 <div id="play-options" class="board-menu play-only" role="group" aria-label="問題" hidden>
                     <button type="button" id="split-board" hidden>10×10に分けて遊ぶ</button>
-                    <button type="button" id="downl">画像を保存</button>
+                    <button type="button" id="downl">今の盤面をPNGで保存</button>
                     <button type="button" id="preview-monochrome" hidden>同じ画像を白黒に変換</button>
-                    <a href="?" id="board-home" class="action-link">最初の画面に戻る</a>
+                    <a href="?" id="board-home" class="action-link">ホームに戻る</a>
                     <div id="board-share" class="puzzle-share" role="group" aria-label="問題を共有" hidden>
                         <p>共有リンクには元のPNGが含まれ、リンクを受け取った人は画像や答えを復元できます。</p>
                         <div class="toolbar-group">
@@ -295,8 +295,8 @@
         <div class="toolbar-group paint-tools" role="group" aria-label="塗りと編集">
             <button type="button" id="paint-mode" aria-pressed="false" aria-describedby="paint-instructions">なぞり塗り</button>
             <button type="button" id="pick-painted-color" aria-pressed="false" aria-describedby="paint-instructions">スポイト</button>
-            <button type="button" id="board-undo" disabled>元に戻す</button>
-            <button type="button" id="board-redo" disabled>やり直す</button>
+            <button type="button" id="board-undo" disabled>操作を取り消す</button>
+            <button type="button" id="board-redo" disabled>取り消しを戻す</button>
         </div>
         <div id="palette-panel">
             <p id="palette-scroll-note">塗る色 · 隠れている色は左右にスクロール</p>
