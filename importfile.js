@@ -102,21 +102,32 @@ function setupImagePicker() {
     }
 
     function updatePreview() {
-        resetPreviewChecks();
         const useColor = mode.value === 'color';
-        if (useColor && !currentImage.colorPuzzle) {
+        const exactColor = useColor && Boolean(currentImage.originalPuzzle);
+        if (exactColor) {
+            playPreview.disabled = false;
+            splitPreview.disabled = false;
+        }
+        resetPreviewChecks();
+        if (useColor && !exactColor && !currentImage.colorPuzzle) {
             currentImage.colorPuzzle = makeColorPuzzle(currentImage.imageData);
         }
-        const puzzle = useColor ? currentImage.colorPuzzle : {
+        const puzzle = exactColor ? currentImage.originalPuzzle : useColor ? currentImage.colorPuzzle : {
             matrix: makeMonochromeMatrix(currentImage.imageData, Number(threshold.value)),
             palette: [[255, 255, 255], [0, 0, 0]],
             blank: 0,
         };
         currentImage.puzzle = puzzle;
-        const { matrix, palette } = puzzle;
+        const { matrix, palette, blank } = puzzle;
+        document.getElementById('puzzle-size-panel').hidden = exactColor;
+        if (exactColor) {
+            document.getElementById('preview-size').textContent =
+                '元画像 ' + matrix[0].length + ' × ' + matrix.length +
+                ' ／ 盤面 ' + matrix[0].length + ' × ' + matrix.length + ' マス';
+        }
         splitPreview.hidden = !canSplitPuzzle(matrix);
         document.getElementById('threshold-panel').hidden = useColor;
-        document.getElementById('color-note').hidden = !useColor;
+        document.getElementById('color-note').hidden = !useColor || exactColor;
         document.getElementById('threshold-value').value = threshold.value;
         canvas.width = matrix[0].length;
         canvas.height = matrix.length;
@@ -124,7 +135,7 @@ function setupImagePicker() {
         const context = canvas.getContext('2d');
         const styles = palette.map(rgb => 'rgb(' + rgb.join(',') + ')');
         matrix.forEach((row, y) => row.forEach((value, x) => {
-            context.fillStyle = styles[value];
+            context.fillStyle = value === blank ? '#fff' : styles[value];
             context.fillRect(x, y, 1, 1);
         }));
 
@@ -132,7 +143,9 @@ function setupImagePicker() {
         const uniform = matrix.every(row => row.every(value => value === first));
         let message = '';
         if (uniform) {
-            message = useColor
+            message = exactColor
+                ? '盤面が一色です。別の画像を選ぶか、白黒に切り替えて調整できます。'
+                : useColor
                 ? '盤面が一色になっています。別の画像やマス数をお試しください。'
                 : '白か黒の一色になっています。境目を調整するか、明暗の差がある画像をお試しください。';
         }
@@ -163,11 +176,15 @@ function setupImagePicker() {
         const originalSide = Math.max(image.naturalWidth, image.naturalHeight);
         side.max = String(Math.min(originalSide, MAX_PUZZLE_SIDE));
         side.value = String(originalSide <= MAX_PUZZLE_SIDE ? originalSide : SUGGESTED_PHOTO_SIDE);
-        const hasColorMode = ['jpeg', 'webp'].includes(currentImage.format);
+        const hasColorMode = Boolean(currentImage.originalPuzzle) || ['jpeg', 'webp'].includes(currentImage.format);
         document.getElementById('puzzle-mode-panel').hidden = !hasColorMode;
-        mode.value = hasColorMode ? 'color' : 'monochrome';
-        updateSize();
-        status.textContent = originalSide > MAX_PUZZLE_SIDE
+        mode.value = hasColorMode && !fromColor ? 'color' : 'monochrome';
+        const exactColor = mode.value === 'color' && currentImage.originalPuzzle;
+        playPreview.disabled = false;
+        splitPreview.disabled = false;
+        if (exactColor) updatePreview();
+        else updateSize();
+        status.textContent = !exactColor && originalSide > MAX_PUZZLE_SIDE
             ? '大きな画像なので、最長辺' + SUGGESTED_PHOTO_SIDE + 'マスを提案します。' +
               MAX_PUZZLE_SIDE + 'マスまで変更できます。'
             : '';
@@ -194,7 +211,9 @@ function setupImagePicker() {
                 try {
                     const src = await readBase64(file);
                     if (currentImage !== selection) return;
-                    await startPuzzle(decodeLegacyPng(src), { shareSource: src, canConvert: true });
+                    selection.originalPuzzle = decodeLegacyPng(src);
+                    selection.shareSource = src;
+                    openPreview(false);
                     return;
                 } catch {
                     if (currentImage !== selection) return;
@@ -221,7 +240,13 @@ function setupImagePicker() {
             updateSize();
         }
     });
-    mode.addEventListener('change', updatePreview);
+    mode.addEventListener('change', () => {
+        if (currentImage.originalPuzzle) {
+            status.textContent = '';
+            if (mode.value === 'color') updatePreview();
+            else updateSize();
+        } else updatePreview();
+    });
     threshold.addEventListener('input', updatePreview);
     document.getElementById('reset-threshold').addEventListener('click', resetThreshold);
     document.getElementById('preview-monochrome').addEventListener('click', async () => {
@@ -249,7 +274,10 @@ function setupImagePicker() {
     playPreview.addEventListener('click', () => {
         const initialCheck = previewLogicResult;
         resetPreviewChecks();
-        startPuzzle(currentImage.puzzle, { generated: true, initialCheck });
+        const options = currentImage.originalPuzzle && mode.value === 'color'
+            ? { shareSource: currentImage.shareSource, canConvert: true }
+            : { generated: true };
+        startPuzzle(currentImage.puzzle, { ...options, initialCheck });
     });
     splitPreview.addEventListener('click', () => {
         resetPreviewChecks();
