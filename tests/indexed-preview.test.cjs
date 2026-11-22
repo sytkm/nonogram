@@ -26,6 +26,7 @@ function setup({ decodeFails = false, pngColorType } = {}) {
     };
     const context = vm.createContext({
         window: { location: { href: 'https://example.com/nonogram/' } }, document: { getElementById: element },
+        setupTabs: () => () => {},
         setupPuzzleShare(group, url) { group.url = url; },
         legacyPuzzleShareURL: (_, source) => '?' + source,
         mosaicShareURL: (_, puzzle) => new Promise(resolve => splitShares.push({ puzzle, resolve })),

@@ -63,12 +63,16 @@ function showInvalidSharedPuzzle() {
 function setupImagePicker() {
     const input = document.getElementById('file');
     document.getElementById('open-image').onclick = () => input.click();
+    document.getElementById('change-preview-image').onclick = () => input.click();
     const status = document.getElementById('image-status');
     const preview = document.getElementById('image-preview');
+    const resetPreviewTabs = setupTabs(preview);
     const canvas = document.getElementById('preview-canvas');
     const side = document.getElementById('puzzle-side');
     const mode = document.getElementById('puzzle-mode');
     const threshold = document.getElementById('threshold');
+    const previewSharing = document.getElementById('preview-sharing');
+    const previewShareUnavailable = document.getElementById('preview-share-unavailable');
     const previewShare = document.getElementById('preview-share');
     const mosaicShare = document.getElementById('preview-mosaic-share');
     const mosaicShareMessage = document.getElementById('preview-mosaic-share-message');
@@ -109,14 +113,19 @@ function setupImagePicker() {
         setupPuzzleShare(mosaicShare, null);
         mosaicShareMessage.textContent = '';
         mosaicShareRequest = undefined;
-        if (!puzzle || !canSplitPuzzle(puzzle.matrix)) return;
+        const canShareSplit = Boolean(puzzle && canSplitPuzzle(puzzle.matrix));
+        previewSharing.hidden = !shareSource && !canShareSplit;
+        previewShareUnavailable.hidden = !previewSharing.hidden;
+        if (!canShareSplit) return;
+        mosaicShareMessage.textContent = '分割問題の共有リンクを準備しています…';
 
         const request = mosaicShareURL(window.location.href, puzzle);
         mosaicShareRequest = request;
         request.then(url => {
             if (mosaicShareRequest !== request) return;
             setupPuzzleShare(mosaicShare, url);
-            if (!url) mosaicShareMessage.textContent = '共有リンクが8,000文字を超えるため、この分割問題はリンクで共有できません。';
+            mosaicShareMessage.textContent = url ? ''
+                : '共有リンクが8,000文字を超えるため、この分割問題はリンクで共有できません。';
         }).catch(() => {
             if (mosaicShareRequest !== request) return;
             mosaicShareMessage.textContent = 'このブラウザでは分割問題の共有リンクを作成できませんでした。';
@@ -142,12 +151,14 @@ function setupImagePicker() {
         currentImage.puzzle = puzzle;
         const { matrix, palette, blank } = puzzle;
         document.getElementById('puzzle-size-panel').hidden = exactColor;
+        document.getElementById('preview-original-color').hidden = !exactColor;
         if (exactColor) {
             document.getElementById('preview-size').textContent =
                 '元画像 ' + matrix[0].length + ' × ' + matrix.length +
                 ' ／ 盤面 ' + matrix[0].length + ' × ' + matrix.length + ' マス';
         }
         splitPreview.hidden = !canSplitPuzzle(matrix);
+        document.getElementById('preview-split-help').hidden = splitPreview.hidden;
         if (!playPreview.disabled) {
             updatePreviewSharing(puzzle, exactColor ? currentImage.shareSource : undefined);
         }
@@ -213,6 +224,7 @@ function setupImagePicker() {
             ? '大きな画像なので、最長辺' + SUGGESTED_PHOTO_SIDE + 'マスを提案します。' +
               MAX_PUZZLE_SIDE + 'マスまで変更できます。'
             : '';
+        resetPreviewTabs();
         preview.hidden = false;
         setPlaying(false);
         document.getElementById('preview-heading').focus();

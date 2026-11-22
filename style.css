@@ -170,12 +170,13 @@ body:has(#mosaic-panel:not([hidden])) .site-heading {
     margin-inline: auto;
 }
 
-#start-panel:has(#image-preview:not([hidden])) .home-copy > p {
+#start-panel:has(#image-preview:not([hidden])) .home-intro,
+#start-panel:has(#image-preview[hidden]) .preview-navigation {
     display: none;
 }
 
-#start-panel:has(#image-preview:not([hidden])) .home-copy .toolbar-group {
-    margin-block-start: 0.5rem;
+.preview-navigation {
+    margin-block-start: 0.65rem;
 }
 
 #preview-heading,
@@ -188,6 +189,7 @@ body:has(#mosaic-panel:not([hidden])) .site-heading {
 }
 
 #preview-heading:focus-visible,
+#image-preview [role="tabpanel"]:focus-visible,
 #mosaic-title:focus-visible,
 #mosaic-finished-title:focus-visible {
     outline: 2px solid var(--puzzle-accent);
@@ -198,6 +200,7 @@ body:has(#mosaic-panel:not([hidden])) .site-heading {
     display: grid;
     align-items: start;
     gap: 1rem 2rem;
+    margin-block-start: 1rem;
 }
 
 .preview-image {
@@ -244,15 +247,58 @@ body:has(#mosaic-panel:not([hidden])) .site-heading {
     vertical-align: middle;
 }
 
+#preview-split-help,
+.preview-tab-panel p,
+.preview-image p {
+    margin-block: 0.35rem 0.65rem;
+    line-height: 1.5;
+}
+
+#preview-split-help {
+    font-size: 0.875rem;
+}
+
+.preview-options {
+    min-width: 0;
+}
+
+.preview-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    padding-block-end: 0.5rem;
+    border-bottom: 1px solid var(--puzzle-rule);
+}
+
+.preview-tabs .action-link {
+    padding-inline: 0.55rem;
+}
+
+.preview-tab-panel {
+    padding-block-start: 0.45rem;
+}
+
 .preview-checks {
-    margin-block: 0.85rem;
-    padding-block-start: 0.85rem;
-    border-top: 1px solid var(--puzzle-rule);
+    display: grid;
+    gap: 0.5rem 1.5rem;
+}
+
+.preview-checks p:not(.quality-result),
+.puzzle-share p:not(.quality-result) {
+    font-size: 0.875rem;
+}
+
+.preview-tab-panel .puzzle-share:not([hidden]) + .puzzle-share:not([hidden]) {
+    margin-block-start: 0.65rem;
 }
 
 @media (min-width: 48rem) {
     .preview-layout {
         grid-template-columns: minmax(14rem, 16rem) minmax(0, 1fr);
+    }
+
+    .preview-checks {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 }
 
@@ -417,35 +463,10 @@ header:has(#play-panel:not([hidden])) {
     column-gap: 0.75rem;
 }
 
-.puzzle-share {
-    flex-basis: 100%;
-    min-width: 0;
-}
-
-.puzzle-share p {
-    margin: 0.4rem 0;
-    font-size: 0.875rem;
-}
-
 .puzzle-share input {
     box-sizing: border-box;
     width: 100%;
     font: inherit;
-}
-
-.advanced-options {
-    flex-basis: 100%;
-    margin-block: 0.25rem;
-}
-
-.advanced-options h3 {
-    margin: 0 0 0.5rem;
-    font-size: 1rem;
-}
-
-.advanced-options p {
-    margin: 0 0 0.5rem;
-    font-size: 0.875rem;
 }
 
 .board-menu:not([hidden]) {
@@ -855,13 +876,6 @@ dialog button:focus-visible {
     image-rendering: pixelated;
 }
 
-#preview-share,
-#preview-mosaic-share {
-    margin-block: 1rem;
-    padding-block-start: 0.6rem;
-    border-top: 1px solid var(--puzzle-rule);
-}
-
 #keyboard-cell-marker {
     position: absolute;
     box-sizing: border-box;
@@ -946,7 +960,8 @@ dialog button:focus-visible {
     min-width: 0;
 }
 
-.guide-tabs .action-link[aria-selected="true"] {
+.guide-tabs .action-link[aria-selected="true"],
+.preview-tabs .action-link[aria-selected="true"] {
     background: var(--puzzle-accent);
     color: #fff;
     border-color: var(--puzzle-accent);
@@ -975,7 +990,9 @@ dialog button:focus-visible {
 }
 
 .guide-tabs .action-link[aria-selected="true"]:hover,
-.guide-tabs .action-link[aria-selected="true"]:active {
+.guide-tabs .action-link[aria-selected="true"]:active,
+.preview-tabs .action-link[aria-selected="true"]:hover,
+.preview-tabs .action-link[aria-selected="true"]:active {
     background: var(--puzzle-accent-active);
     border-color: var(--puzzle-accent-active);
 }

@@ -1,7 +1,6 @@
-function setupGuideTabs(dialog) {
-    const tabs = [...dialog.querySelectorAll('[role="tab"]')];
-    const panels = [...dialog.querySelectorAll('[role="tabpanel"]')];
-    const content = dialog.querySelector('.guide-content');
+function setupTabs(root, scrollContent) {
+    const tabs = [...root.querySelectorAll('[role="tab"]')];
+    const panels = [...root.querySelectorAll('[role="tabpanel"]')];
 
     function selectTab(selected, focus = false) {
         for (const tab of tabs) {
@@ -12,7 +11,7 @@ function setupGuideTabs(dialog) {
         for (const panel of panels) {
             panel.hidden = panel.id !== selected.getAttribute('aria-controls');
         }
-        content.scrollTop = 0;
+        if (scrollContent) scrollContent.scrollTop = 0;
         if (focus) selected.focus();
     }
 
@@ -30,4 +29,8 @@ function setupGuideTabs(dialog) {
         };
     }
     return () => selectTab(tabs[0]);
+}
+
+function setupGuideTabs(dialog) {
+    return setupTabs(dialog, dialog.querySelector('.guide-content'));
 }
