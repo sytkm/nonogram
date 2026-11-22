@@ -11,7 +11,7 @@
     <script src="board-tools.js?v=clue-eyedropper"></script>
     <script src="line-logic.js"></script>
     <script src="progress-store.js"></script>
-    <script src="quality-controls.js?v=line-solvability-options"></script>
+    <script src="quality-controls.js?v=check-result-wording"></script>
     <script src="mosaic-share.js"></script>
     <script src="mosaic.js?v=mosaic-share"></script>
     <script src="share-controls.js?v=mosaic-share"></script>
@@ -103,8 +103,8 @@
                             <button type="button" id="preview-quality" class="action-link">答えが一つか調べる</button>
                             <p id="preview-quality-result" class="quality-result" role="status"></p>
                             <details class="advanced-options">
-                                <summary>高度なオプション</summary>
-                                <p>「考え方ヒント」と同じ方法で、確実に分かるマスを繰り返し埋めると、最後まで解けるか調べます。</p>
+                                <summary>解き方の確認</summary>
+                                <p>「考え方ヒント」を繰り返す方法で、最後まで解けるか調べます。</p>
                                 <button type="button" id="preview-logic" class="action-link">行・列の推理で解けるか調べる</button>
                                 <p id="preview-logic-result" class="quality-result" role="status"></p>
                             </details>
@@ -162,8 +162,8 @@
                         </div>
                     </div>
                     <details id="board-advanced-options" class="advanced-options">
-                        <summary>高度なオプション</summary>
-                        <p>「考え方ヒント」と同じ方法で、開始時の盤面から最後まで解けるか調べます。</p>
+                        <summary>解き方の確認</summary>
+                        <p>「考え方ヒント」を繰り返す方法で、最初から最後まで解けるか調べます。途中の入力は使いません。</p>
                         <button type="button" id="board-logic">行・列の推理で解けるか調べる</button>
                         <p id="board-logic-result" class="quality-result" role="status"></p>
                     </details>
