@@ -21,6 +21,7 @@ function setupBoard({
     let showSymbols = multiColor && boardSetting('showSymbols', board);
     const palettePanel = document.getElementById('color-palette');
     palettePanel.classList.toggle('show-symbols', showSymbols);
+    const moveButton = document.getElementById('palette-move');
     const pickPaintedColor = document.getElementById('pick-painted-color');
     const instructions = document.getElementById('paint-instructions');
     const pauseButton = document.getElementById('pause-play');
@@ -325,10 +326,14 @@ function setupBoard({
         stopStroke();
         touchPan.reset();
         inputMode = mode;
+        paletteControls.showSelection(mode === 'paint' || mode === 'trace');
+        moveButton.setAttribute('aria-pressed', String(mode === 'move'));
+        canvas.classList.toggle('is-moving', mode === 'move');
         pickPaintedColor.setAttribute('aria-pressed', String(mode === 'pick'));
         canvas.classList.toggle('is-painting', mode === 'trace');
 
         const messages = {
+            move: '1本指やマウスで盤面を動かせます。塗るには色・空白・斜線を選んでください。',
             paint: 'マスを押して塗り、1本指または2本指で盤面を動かせます。',
             trace: '1本指でなぞると塗れます。2本指で盤面を動かせます。マウスでもなぞって塗れます。',
             pick: 'マスの色・空白・斜線や、ヒントの数字の色を拾えます。キーボードでマスから拾うには Space または Enter を押します。',
@@ -340,7 +345,7 @@ function setupBoard({
     const configuredPaintMode = () => boardSetting('tracePaint', board) ? 'trace' : 'paint';
 
     function pickColor(color) {
-        if (selectColor(color)) setInputMode(configuredPaintMode());
+        selectColor(color);
     }
 
     function applyColor({ row, column }, color, action) {
@@ -390,9 +395,11 @@ function setupBoard({
         pressedClue = undefined;
     }, boardView.pinch);
 
-    setInputMode(configuredPaintMode());
+    paletteControls.onSelect(() => setInputMode(configuredPaintMode()));
+    moveButton.onclick = () => setInputMode('move');
+    setInputMode('move');
     pickPaintedColor.disabled = false;
-    pickPaintedColor.onclick = () => setInputMode(inputMode === 'pick' ? configuredPaintMode() : 'pick');
+    pickPaintedColor.onclick = () => setInputMode(inputMode === 'pick' ? 'move' : 'pick');
     function editCell(cell, color) {
         if (board.finished) return;
         stopStroke();
@@ -409,7 +416,7 @@ function setupBoard({
     redo.onclick = () => moveHistory('redo');
     updateHistoryButtons();
     canvas.onclick = event => {
-        if (board.finished || !event.detail || touchPan.suppressesClick()) return;
+        if (inputMode === 'move' || board.finished || !event.detail || touchPan.suppressesClick()) return;
         const point = boardView.pointFor(event);
         const clue = boardClueAt(point, rowsOfClues, columnsOfClues);
         if (clue && clue.key === pressedClue) {
@@ -441,7 +448,7 @@ function setupBoard({
         const cell = boardCellAt(boardView.pointFor(event), columns, rows);
         if (!cell || board.finished) return;
         event.preventDefault();
-        if (inputMode !== 'pick') toggleSlash(cell);
+        if (inputMode !== 'pick' && inputMode !== 'move') toggleSlash(cell);
     };
     canvas.onfocus = () => {
         keyboardCell ??= { row: 0, column: 0 };
@@ -469,6 +476,8 @@ function setupBoard({
             event.preventDefault();
             if (inputMode === 'pick') {
                 if (!event.repeat && (key === ' ' || key === 'enter')) pickColor(cells[keyboardCell.row][keyboardCell.column]);
+            } else if (inputMode === 'move') {
+                return;
             } else if (key === 'x') {
                 if (!event.repeat) toggleSlash(keyboardCell);
             } else {
@@ -478,7 +487,7 @@ function setupBoard({
         }
     };
     canvas.onpointerdown = event => {
-        if (event.pointerType === 'touch') {
+        if (event.pointerType === 'touch' || (inputMode === 'move' && event.button === 0)) {
             canvas.setPointerCapture(event.pointerId);
             if (touchPan.down(event, inputMode !== 'trace' || board.finished)) return;
         } else touchPan.reset();
@@ -519,7 +528,7 @@ function setupBoard({
         },
         refreshSettings() {
             const mode = configuredPaintMode();
-            if (inputMode !== 'pick' && inputMode !== mode) setInputMode(mode);
+            if (inputMode !== 'pick' && inputMode !== 'move' && inputMode !== mode) setInputMode(mode);
             showSymbols = multiColor && boardSetting('showSymbols', board);
             palettePanel.classList.toggle('show-symbols', showSymbols);
             renderBoard(true);

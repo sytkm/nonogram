@@ -455,6 +455,7 @@ body:has(#play-panel.is-viewing-tile) #board-side-controls .play-only {
     background: var(--puzzle-accent-active);
 }
 
+#palette-move[aria-pressed="true"],
 #palette-blank[aria-pressed="true"],
 #palette-slash[aria-pressed="true"],
 #pick-painted-color[aria-pressed="true"] {
@@ -826,4 +827,15 @@ body:not(:has(#play-panel:not([hidden]), #mosaic-panel:not([hidden]))) #open-pla
 
 #progress-warning:empty {
     display: none;
+}
+
+#canvas.is-moving { cursor: grab; }
+#canvas.is-moving:active { cursor: grabbing; }
+#palette-move { display: inline-grid; place-items: center; }
+@media (max-width: 63.99rem) {
+    #fix-phone-under-menu .paint-tools { flex-wrap: nowrap; }
+    #fix-phone-under-menu .history-controls { margin-inline-start: auto; }
+    #board-undo, #board-redo { font-size: 0 !important; }
+    #board-undo::before { content: "↶"; font-size: 1.25rem; }
+    #board-redo::before { content: "↷"; font-size: 1.25rem; }
 }

@@ -77,7 +77,7 @@ function createTouchPan(viewport, cancelStroke, zoom) {
         const next = center();
         const span = Math.max(12, distance());
         // 位置だけを動かすとき、指の間隔の小さなぶれは倍率に反映しない。
-        gesture.scaling ||= Math.abs(span - gesture.distance) >= Math.max(6, gesture.distance * 0.08);
+        gesture.scaling ||= Math.abs(span - gesture.distance) >= Math.max(16, gesture.distance * 0.15);
         const size = gesture.scaling ? gesture.size * span / gesture.distance : gesture.size;
         zoom.apply(size, gesture.center, next);
         gesture.center = next;
