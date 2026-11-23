@@ -43,7 +43,7 @@ window.onload = async function () {
                 openMosaic(await readMosaicShare(hash), { fromShare: true });
                 showFirstSharedGuide(true);
             } else {
-                await startPuzzle(await readPuzzleShare(hash), { shared: true, generated: true }, guideBeforePlay);
+                await startPuzzle(await readPuzzleShare(hash), { shared: true, generated: true, fitOnStart: true }, guideBeforePlay);
             }
         } catch {
             showInvalidSharedPuzzle();
@@ -57,7 +57,7 @@ window.onload = async function () {
             await startPuzzle(decodeLegacyPng(samplePNG), { sample: true, shareSource: samplePNG });
         } else {
             const shareSource = decodeURIComponent(query.slice(1));
-            await startPuzzle(decodeLegacyPng(shareSource), { shared: true, shareSource }, guideBeforePlay);
+            await startPuzzle(decodeLegacyPng(shareSource), { shared: true, shareSource, fitOnStart: true }, guideBeforePlay);
         }
     } catch {
         showInvalidSharedPuzzle();
