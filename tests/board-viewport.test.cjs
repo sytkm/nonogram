@@ -22,10 +22,13 @@ test('標準と全体の倍率を切り替え、ピンチでは指の下の位�
         beforeResize() {}, redraw() {}, afterResize() {},
     });
     view.initialize(40);
+    assert.equal(buttons['zoom-fit'].disabled, false);
+    assert.equal(buttons['zoom-standard'].disabled, false);
     viewport.scrollLeft = 30;
     viewport.scrollTop = 50;
     buttons['zoom-standard'].onclick();
     assert.equal(view.cellSize, 44);
+    assert.equal(buttons['zoom-standard'].disabled, true);
     assert.ok(Math.abs(viewport.scrollLeft - 43) < 1e-9);
     assert.ok(Math.abs(viewport.scrollTop - 62.5) < 1e-9);
 
@@ -33,9 +36,27 @@ test('標準と全体の倍率を切り替え、ピンチでは指の下の位�
     view.pinch.apply(64, { x: 62, y: 50 }, { x: 72, y: 45 });
     assert.equal(view.cellSize, 64);
     assert.equal(buttons['zoom-in'].disabled, true);
+    assert.equal(buttons['zoom-standard'].disabled, false);
     assert.ok(Math.abs((viewport.scrollLeft + 60) / view.cellSize - before[0]) < 1e-9);
     assert.ok(Math.abs((viewport.scrollTop + 25) / view.cellSize - before[1]) < 1e-9);
     buttons['zoom-fit'].onclick();
     assert.equal(view.cellSize, 7);
     assert.deepEqual([viewport.scrollLeft, viewport.scrollTop], [0, 0]);
+    assert.equal(buttons['zoom-fit'].disabled, true);
+
+    viewport.clientWidth = 880;
+    viewport.clientHeight = 880;
+    view.updateZoomButtons();
+    assert.equal(buttons['zoom-fit'].disabled, false);
+
+    buttons['zoom-in'].onclick();
+    assert.equal(view.cellSize, 9);
+    view.pinch.apply(44, { x: 62, y: 50 }, { x: 62, y: 50 });
+    assert.equal(buttons['zoom-fit'].disabled, true);
+    assert.equal(buttons['zoom-standard'].disabled, true);
+
+    viewport.clientWidth = 640;
+    view.updateZoomButtons();
+    assert.equal(buttons['zoom-fit'].disabled, false);
+    assert.equal(buttons['zoom-standard'].disabled, true);
 });
