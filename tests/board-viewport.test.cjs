@@ -60,3 +60,35 @@ test('標準と全体の倍率を切り替え、ピンチでは指の下の位�
     assert.equal(buttons['zoom-fit'].disabled, false);
     assert.equal(buttons['zoom-standard'].disabled, true);
 });
+
+test('ミニマップの位置を固定ヒントを除いた中央へ合わせ、盤面の端で止める', () => {
+    const context = vm.createContext({
+        document: { getElementById: () => ({}) },
+        window: { matchMedia: () => ({ matches: false }) },
+    });
+    for (const file of ['board-tools.js', 'board-viewport.js']) {
+        vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/board', file), 'utf8'), context);
+    }
+    const viewport = {
+        clientWidth: 400, clientHeight: 320, scrollWidth: 880, scrollHeight: 880,
+        scrollLeft: 0, scrollTop: 0,
+    };
+    const canvas = { style: {} };
+    const view = context.createBoardViewport({
+        viewport, canvas, columns: 20, rows: 20, leftClueCount: 2, topClueCount: 2,
+        shouldStickClues: () => true, beforeResize() {}, redraw() {}, afterResize() {},
+    });
+    view.initialize(40);
+    view.centerOnCell(10, 10);
+    assert.deepEqual([viewport.scrollLeft, viewport.scrollTop], [240, 280]);
+
+    view.centerOnCell(19.9, 19.9);
+    assert.deepEqual([viewport.scrollLeft, viewport.scrollTop], [480, 560]);
+    view.centerOnCell(0, 0);
+    assert.deepEqual([viewport.scrollLeft, viewport.scrollTop], [0, 0]);
+
+    viewport.scrollWidth = viewport.clientWidth;
+    viewport.scrollHeight = viewport.clientHeight;
+    view.centerOnCell(19.9, 19.9);
+    assert.deepEqual([viewport.scrollLeft, viewport.scrollTop], [0, 0]);
+});

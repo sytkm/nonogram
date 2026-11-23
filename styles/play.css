@@ -338,11 +338,18 @@ body:has(#play-panel.is-viewing-tile) #board-side-controls .play-only {
 
 #board-minimap-canvas {
     display: block;
+    cursor: pointer;
     image-rendering: pixelated;
+}
+
+.board-minimap:focus-visible {
+    outline: 2px solid var(--puzzle-accent);
+    outline-offset: 2px;
 }
 
 #board-minimap-frame {
     position: absolute;
+    pointer-events: none;
     box-sizing: border-box;
     outline: 1px solid #12293e;
     outline-offset: -1px;
