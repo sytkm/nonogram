@@ -81,7 +81,7 @@ function setupPlayGuide() {
             sharedIntro.textContent = split
                 ? '閉じると、受け取った分割問題の全体図に進みます。'
                 : '閉じると、受け取った問題で遊べます。';
-            openGuide(document.getElementById(split ? 'mosaic-title' : 'canvas'), onClose);
+            openGuide(document.getElementById(split ? 'mosaic-panel' : 'canvas'), onClose);
             return true;
         }
         return false;

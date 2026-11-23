@@ -6,7 +6,7 @@
     flex: 1 1 auto;
     min-height: 0;
     overflow: auto;
-    padding: 0 1rem 1rem;
+    padding: 0.5rem 1rem 1rem;
 }
 
 #mosaic-instructions p {
