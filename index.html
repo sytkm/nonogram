@@ -18,8 +18,8 @@
     <script src="mosaic.js?v=clear-results"></script>
     <script src="share-controls.js?v=play-sharing"></script>
     <script src="guide-tabs.js?v=preview-tabs"></script>
-    <script src="importfile.js?v=eyedropper-cell-states"></script>
-    <link rel="stylesheet" href="style.css?v=board-pinch-zoom">
+    <script src="importfile.js?v=trace-paint-setting"></script>
+    <link rel="stylesheet" href="style.css?v=trace-paint-setting">
     <script src="dialog-dismiss.js?v=clear-results" defer></script>
     <title>画像でノノグラム</title>
 </head>
@@ -283,6 +283,7 @@
         </div>
         <fieldset>
             <legend>共通設定</legend>
+            <label><input type="checkbox" id="trace-paint" checked> なぞり塗り</label>
             <label><input type="checkbox" id="stick-clues" checked> ヒント数字を固定</label>
             <label><input type="checkbox" id="color-symbols"> 色の記号を表示（カラー問題）</label>
             <label><input type="checkbox" id="auto-slash"> 完成した行・列の空白に斜線</label>
@@ -355,7 +356,7 @@
                 <h3>必要な操作を調べる</h3>
                 <details class="guide-more">
                     <summary>マスの塗り方・盤面の動かし方</summary>
-                    <p>パレットで色や斜線を選び、マスを押します。「なぞり塗り」は最初からオンです。1本指で通ったマスを塗り、2本指で盤面を動かせます。2本目の指を置くと、指を離す前の塗りは取り消して移動に切り替わります。2本指で動かした後は、すべての指を離してから塗り始めます。2本指での移動と、指の間を広げたり狭めたりする拡大・縮小は、なぞり塗りのオン・オフに関係なく使えます。オフのときは1本指でもスクロールできます。</p>
+                    <p>パレットで色や斜線を選び、マスを押します。「なぞり塗り」は最初からオンです。「メニュー → 設定」で切り替えられます。1本指で通ったマスを塗り、2本指で盤面を動かせます。2本目の指を置くと、指を離す前の塗りは取り消して移動に切り替わります。2本指で動かした後は、すべての指を離してから塗り始めます。2本指での移動と、指の間を広げたり狭めたりする拡大・縮小は、なぞり塗りのオン・オフに関係なく使えます。オフのときは1本指でもスクロールできます。</p>
                     <p>「ヒント数字」の「チェック」「色を選ぶ」で、数字を押したときの操作を切り替えます。「0」では色は変わりません。「空白」は塗りを消し、「斜線」は空白の印を付けます。「スポイト」はマスの色・空白・斜線を選びます。</p>
                     <p>盤面の近くの「＋」「−」で拡大・縮小し、「全体」で盤面を収めます。分割問題は「全体図に戻る」で区画を選びます。</p>
                 </details>
@@ -449,7 +450,6 @@
                     <button type="button" id="palette-blank" aria-label="空白に戻す" aria-pressed="false">空白</button>
                     <button type="button" id="palette-slash" aria-label="斜線で印を付ける" aria-pressed="false">斜線</button>
                     <button type="button" id="pick-painted-color" aria-pressed="false" aria-describedby="paint-instructions" title="マスの色・空白・斜線を拾えます。">スポイト</button>
-                    <button type="button" id="paint-mode" aria-pressed="false" aria-describedby="paint-instructions" title="1本指で塗り、2本指で盤面を動かします。">なぞり塗り</button>
                     <button type="button" id="board-undo" class="history-control" aria-label="操作を取り消す" title="操作を取り消す" disabled>↶</button>
                     <button type="button" id="board-redo" class="history-control" aria-label="取り消しを戻す" title="取り消しを戻す" disabled>↷</button>
                 </div>

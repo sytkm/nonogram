@@ -7,7 +7,7 @@ let g_selectcolor = 0;
 let refreshBoard;
 let refreshBoardSettings;
 let boardForSettings;
-const boardSettingDefaults = { stickClues: true, showSymbols: false, autoSlash: false, pickClueColor: false };
+const boardSettingDefaults = { stickClues: true, showSymbols: false, autoSlash: false, pickClueColor: false, tracePaint: true };
 const boardSettings = {};
 const boardSettingsKey = 'nonogram.settings';
 let finishStroke;
@@ -431,6 +431,7 @@ function setupSettings() {
         stickClues: document.getElementById('stick-clues'),
         showSymbols: document.getElementById('color-symbols'),
         autoSlash: document.getElementById('auto-slash'),
+        tracePaint: document.getElementById('trace-paint'),
     };
     try {
         const saved = JSON.parse(localStorage.getItem(boardSettingsKey));
@@ -803,7 +804,6 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     palettePanel.classList.toggle('show-symbols', showSymbols);
     const zoomIn = document.getElementById('zoom-in');
     const zoomOut = document.getElementById('zoom-out');
-    const paintMode = document.getElementById('paint-mode');
     const pickPaintedColor = document.getElementById('pick-painted-color');
     const instructions = document.getElementById('paint-instructions');
     const pauseButton = document.getElementById('pause-play');
@@ -1303,7 +1303,6 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         stopStroke();
         touchPan.reset();
         inputMode = mode;
-        paintMode.setAttribute('aria-pressed', String(mode === 'trace'));
         pickPaintedColor.setAttribute('aria-pressed', String(mode === 'pick'));
         canvas.classList.toggle('is-painting', mode === 'trace');
 
@@ -1316,8 +1315,10 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         // 読み上げ用の説明だけを更新し、入力モードで盤面の表示領域を変えない。
     }
 
+    const configuredPaintMode = () => boardSetting('tracePaint', board) ? 'trace' : 'paint';
+
     function pickCellColor({ row, column }) {
-        if (selectColor(cells[row][column])) setInputMode('paint');
+        if (selectColor(cells[row][column])) setInputMode(configuredPaintMode());
     }
 
     function pointFor(event, painting = false) {
@@ -1390,10 +1391,9 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         },
     });
 
-    setInputMode('trace');
+    setInputMode(configuredPaintMode());
     pickPaintedColor.disabled = false;
-    paintMode.onclick = () => setInputMode(inputMode === 'trace' ? 'paint' : 'trace');
-    pickPaintedColor.onclick = () => setInputMode(inputMode === 'pick' ? 'paint' : 'pick');
+    pickPaintedColor.onclick = () => setInputMode(inputMode === 'pick' ? configuredPaintMode() : 'pick');
     function editCell(cell, color) {
         if (board.finished) return;
         stopStroke();
@@ -1509,6 +1509,8 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     viewport.onscroll = renderFixedClues;
     boardForSettings = board;
     refreshBoardSettings = () => {
+        const mode = configuredPaintMode();
+        if (inputMode !== 'pick' && inputMode !== mode) setInputMode(mode);
         showSymbols = multiColor && boardSetting('showSymbols', board);
         palettePanel.classList.toggle('show-symbols', showSymbols);
         renderBoard(true);
@@ -1522,7 +1524,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         },
         finish() {
             board.finished = true;
-            if (inputMode === 'pick') setInputMode('paint');
+            if (inputMode === 'pick') setInputMode(configuredPaintMode());
             pickPaintedColor.disabled = true;
             checkConflicts.disabled = true;
             if (clearConflicts()) renderBoard(true);
