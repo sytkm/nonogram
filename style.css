@@ -800,7 +800,6 @@ body:has(#play-panel.is-viewing-tile) #board-view-tools .play-only {
 
 #palette-blank[aria-pressed="true"],
 #palette-slash[aria-pressed="true"],
-#paint-mode[aria-pressed="true"],
 #pick-painted-color[aria-pressed="true"] {
     border-color: var(--puzzle-accent);
     background: var(--puzzle-accent);
