@@ -1,5 +1,5 @@
 const PROGRESS_KEY = 'nonogram:progress:v1';
-const DAILY_PROGRESS_KEY = 'nonogram:daily-progress:v1';
+const DAILY_PROGRESS_KEY = 'nonogram:daily-progress:v2';
 let progressSource;
 let progressId;
 let pendingProgress;

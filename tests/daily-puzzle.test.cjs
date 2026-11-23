@@ -12,27 +12,28 @@ function loadDailyPuzzle(overrides = {}) {
     return context;
 }
 
-test('端末の暦で日付を切り替え、8種類の問題を順に出す', () => {
+test('日本時間の午前0時に日付が変わり、同じ日時は端末の地域によらず同じ盤面になる', () => {
     const { dailyDay, dailyPuzzle } = loadDailyPuzzle();
-    const late = dailyDay(new Date(2026, 11, 31, 23, 59));
-    const next = dailyDay(new Date(2027, 0, 1, 0, 0));
+    const late = dailyDay(new Date('2026-12-31T14:59:59Z'));
+    const next = dailyDay(new Date('2026-12-31T15:00:00Z'));
     assert.equal(late.key, '2026-12-31');
     assert.equal(late.label, '12月31日');
     assert.equal(next.key, '2027-01-01');
     assert.equal(next.label, '1月1日');
     assert.equal(next.index, late.index + 1);
-    assert.deepEqual(dailyPuzzle(next), dailyPuzzle(dailyDay(new Date(2027, 0, 1, 23, 59))));
+    const otherContext = loadDailyPuzzle();
+    const sameDay = otherContext.dailyDay(new Date('2027-01-01T06:00:00-08:00'));
+    assert.equal(sameDay.key, next.key);
+    assert.equal(JSON.stringify(dailyPuzzle(next)), JSON.stringify(otherContext.dailyPuzzle(sameDay)));
     assert.notDeepEqual(dailyPuzzle(late), dailyPuzzle(next));
-    const spring = dailyDay(new Date(2026, 2, 8, 12));
-    const springNext = dailyDay(new Date(2026, 2, 9, 12));
-    assert.equal(springNext.index - spring.index, 1);
-    assert.deepEqual(dailyPuzzle(late), dailyPuzzle({ index: late.index + 8 }));
+    assert.notDeepEqual(dailyPuzzle(late), dailyPuzzle({ index: late.index + 8 }));
 });
 
-test('日替わりの全問題は別の絵で、行と列の推理だけで一意に解ける', () => {
-    const { dailyPuzzle, makeNumber, transpose, inspectPuzzleQuality, inspectLineSolvability } = loadDailyPuzzle();
+test('366日分の生成結果は行と列の推理だけで一意に解ける', () => {
+    const { dailyDay, dailyPuzzle, makeNumber, transpose, inspectPuzzleQuality, inspectLineSolvability } = loadDailyPuzzle();
+    const first = dailyDay(new Date('2026-11-23T00:00:00+09:00')).index;
     const catalog = new Set();
-    for (let index = 0; index < 8; index++) {
+    for (let index = first; index < first + 366; index++) {
         const { matrix, blank } = dailyPuzzle({ index });
         assert.equal(matrix.length, 7);
         assert.ok(matrix.every(row => row.length === 7 && row.every(cell => cell === 0 || cell === 1)));
@@ -42,13 +43,15 @@ test('日替わりの全問題は別の絵で、行と列の推理だけで一�
         assert.equal(inspectLineSolvability(rows, columns, blank), 'complete', String(index));
         catalog.add(JSON.stringify(matrix));
     }
-    assert.equal(catalog.size, 8);
+    assert.equal(catalog.size, 365);
+    assert.equal(dailyPuzzle({ index: first }).matrix.map(row => row.join('')).join('/'),
+        '1011110/1000010/1100010/1100010/1111010/1010100/0001000');
 });
 
 test('日替わりと通常の保存を分け、翌日や未完成のタブによる上書きを防ぐ', () => {
     const storage = new Map();
     const elements = new Map();
-    let date = new Date(2026, 10, 23, 23, 59);
+    let date = new Date('2026-11-23T23:59:00+09:00');
     class TestDate extends Date {
         constructor(...args) {
             super(...(args.length ? args : [date.valueOf()]));
@@ -87,7 +90,7 @@ test('日替わりと通常の保存を分け、翌日や未完成のタブに�
     assert.equal(c.flushProgress(), false);
     assert.equal(c.readDailyProgress(first.key).id, 'daily-complete');
 
-    date = new Date(2026, 10, 24, 0, 0);
+    date = new Date('2026-11-24T00:00:00+09:00');
     const second = c.dailyDay();
     assert.equal(c.readDailyProgress(second.key), null);
     c.setProgressSource(state(second, false), 'next-day', false, second.key);

@@ -1,4 +1,4 @@
-// 自作のドット絵。日付と絵の対応を保つため、この一覧は固定する。
+// 出題の元になる自作のドット絵。公開済みの日付の問題を再現できるよう、生成規則とともに固定する。
 const dailyImages = [
     // 傘
     ['0011100', '0111110', '1111111', '0001000', '0001000', '0001010', '0001110'],
@@ -20,23 +20,49 @@ const dailyImages = [
 const dailyDateFormat = new Intl.DateTimeFormat('ja-JP', { month: 'long', day: 'numeric', timeZone: 'UTC' });
 
 function dailyDay(date = new Date()) {
-    // 地域の暦を使い、夏時間で1日が23時間・25時間でも日番号を飛ばさない。
-    const utc = Date.UTC(date.getFullYear(), date.getMonth(), date.getDate());
-    const calendarDate = new Date(utc);
+    // 世界で同じタイミングに切り替える。日本標準時は UTC+9。
+    const index = Math.floor((date.getTime() + 9 * 3_600_000) / 86_400_000);
+    const calendarDate = new Date(index * 86_400_000);
     return {
         key: calendarDate.toISOString().slice(0, 10),
-        index: Math.floor(utc / 86_400_000),
+        index,
         label: dailyDateFormat.format(calendarDate),
     };
 }
 
 function dailyPuzzle(day) {
-    const index = ((day.index % dailyImages.length) + dailyImages.length) % dailyImages.length;
-    return {
-        matrix: dailyImages[index].map(row => Array.from(row, Number)),
-        palette: [[255, 255, 255], [48, 91, 163]],
-        blank: 0,
-    };
+    let seed = Math.imul(day.index, 0x9e3779b1) || 1;
+    function pick(limit) {
+        seed ^= seed << 13;
+        seed ^= seed >>> 17;
+        seed ^= seed << 5;
+        return (seed >>> 0) % limit;
+    }
+
+    let image = dailyImages[pick(dailyImages.length)].map(row => Array.from(row, Number));
+    if (pick(2)) image.reverse();
+    if (pick(2)) for (const row of image) row.reverse();
+    if (pick(2)) image = transpose(image);
+
+    const blank = 0;
+    let matrix = image;
+    for (let attempt = 0; attempt < 12; attempt++) {
+        const candidate = image.map(row => row.slice());
+        const side = candidate.length;
+        const first = pick(side * side);
+        const second = (first + 1 + pick(side * side - 1)) % (side * side);
+        for (const cell of [first, second]) {
+            candidate[Math.floor(cell / side)][cell % side] ^= 1;
+        }
+        const [rows] = makeNumber(candidate, blank);
+        const [columns] = makeNumber(transpose(candidate), blank);
+        if (inspectLineSolvability(rows, columns, blank, [], 196) === 'complete') {
+            matrix = candidate;
+            break;
+        }
+    }
+
+    return { matrix, palette: [[255, 255, 255], [48, 91, 163]], blank };
 }
 
 function updateDailyPuzzleButton() {
