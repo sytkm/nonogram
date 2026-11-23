@@ -18,6 +18,7 @@ function createBoardViewport({
         viewport.clientWidth / widthInCells, viewport.clientHeight / heightInCells
     ))));
     let cellSize;
+    let wheelSize;
 
     function clueGutters(scrollLeft = viewport.scrollLeft, scrollTop = viewport.scrollTop) {
         return shouldStickClues()
@@ -78,6 +79,7 @@ function createBoardViewport({
         const oldX = viewport.scrollLeft + (anchor?.from.x ?? Math.min(viewport.clientWidth, canvas.clientWidth) / 2);
         const oldY = viewport.scrollTop + (anchor?.from.y ?? Math.min(viewport.clientHeight, canvas.clientHeight) / 2);
         cellSize = nextSize;
+        wheelSize = nextSize;
         canvas.style.width = (widthInCells * cellSize) + 'px';
         canvas.style.height = (heightInCells * cellSize) + 'px';
         redraw();
@@ -114,6 +116,23 @@ function createBoardViewport({
         zoomOut.onclick = () => resizeBoard(Math.max(1, Math.floor(cellSize / 1.25)), true);
         zoomFit.onclick = fitBoard;
         zoomStandard.onclick = () => resizeBoard(standardCellSize, true);
+        canvas.onwheel = event => {
+            // 横送り・修飾キー付きの操作はブラウザ本来の動作を保つ。
+            if (event.ctrlKey || event.metaKey || event.shiftKey || !event.deltaY ||
+                Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
+            event.preventDefault();
+            const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? viewport.clientHeight : 1;
+            const delta = Math.max(-100, Math.min(100, event.deltaY * unit));
+            // トラックパッドの細かな移動も蓄積し、整数丸めで失われないようにする。
+            const target = Math.max(1, Math.min(maxCellSize, wheelSize * Math.exp(-delta * 0.002)));
+            const nextSize = Math.round(target);
+            if (nextSize !== cellSize) {
+                const rect = viewport.getBoundingClientRect();
+                const point = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+                resizeBoard(nextSize, true, { from: point, to: point });
+            }
+            wheelSize = target;
+        };
     }
 
     const pinch = {
