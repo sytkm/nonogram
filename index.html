@@ -7,16 +7,16 @@
     <script src="inflate.min.js"></script>
     <script src="js/image/image-input.js?v=preview-simplify"></script>
     <script src="js/image/indexed-png.js"></script>
-    <script src="js/image/image-preview.js?v=preview-simplify"></script>
-    <script src="js/play/play-clock.js?v=penalty-wrap"></script>
+    <script src="js/image/image-preview.js?v=play-screen-transitions"></script>
+    <script src="js/play/play-clock.js?v=play-screen-transitions"></script>
     <script src="js/board/board-tools.js?v=clue-eyedropper"></script>
     <script src="js/puzzle/line-logic.js"></script>
-    <script src="js/play/progress-store.js?v=clear-results"></script>
+    <script src="js/play/progress-store.js?v=validate-resume"></script>
     <script src="js/puzzle/puzzle-quality.js?v=line-solvability"></script>
     <script src="js/play/daily-puzzle.js?v=shared-clues"></script>
-    <script src="js/puzzle/quality-controls.js?v=clear-quality-note"></script>
+    <script src="js/puzzle/quality-controls.js?v=clue-labels"></script>
     <script src="js/puzzle/mosaic-share.js?v=normal-share"></script>
-    <script src="js/play/mosaic.js?v=clear-results"></script>
+    <script src="js/play/mosaic.js?v=play-screen-transitions"></script>
     <script src="js/ui/share-controls.js?v=play-sharing"></script>
     <script src="js/ui/guide-tabs.js?v=preview-tabs"></script>
     <script src="js/puzzle/puzzle-rules.js?v=shared-clues"></script>
@@ -25,9 +25,9 @@
     <script src="js/board/board-settings.js"></script>
     <script src="js/board/board-renderer.js"></script>
     <script src="js/board/board-viewport.js"></script>
-    <script src="js/board/board-controller.js?v=board-viewport"></script>
+    <script src="js/board/board-controller.js?v=clue-labels"></script>
     <script src="js/play/play-dialogs.js"></script>
-    <script src="js/play/puzzle-play.js?v=shared-clues"></script>
+    <script src="js/play/puzzle-play.js?v=play-screen-transitions"></script>
     <script src="js/app.js"></script>
     <link rel="stylesheet" href="styles/start.css">
     <link rel="stylesheet" href="styles/play.css">
@@ -147,7 +147,7 @@
                             <div class="preview-checks">
                                 <div>
                                     <button type="button" id="preview-quality" class="action-link" aria-describedby="preview-quality-help">答えが一つか調べる</button>
-                                    <p id="preview-quality-help">同じヒント数字で、別の塗り方ができるかを調べます。</p>
+                                    <p id="preview-quality-help">同じヒントの数字で、別の塗り方ができるかを調べます。</p>
                                     <p id="preview-quality-result" class="quality-result" role="status"></p>
                                 </div>
                                 <div>
@@ -292,7 +292,7 @@
         <fieldset>
             <legend>共通設定</legend>
             <label><input type="checkbox" id="trace-paint" checked> なぞり塗り</label>
-            <label><input type="checkbox" id="stick-clues" checked> ヒント数字を固定</label>
+            <label><input type="checkbox" id="stick-clues" checked> ヒントの数字を固定</label>
             <label>数字を押すと
                 <select id="clue-action">
                     <option value="mark">チェック</option>
@@ -335,7 +335,7 @@
                     </tbody>
                 </table>
                 <p>「3」は続けて3マス。「1 1」は1マスずつ2組です。同じ色の組の間は、1マス以上空けます。空白には斜線で印を付けられます。</p>
-                <p>行と列のヒント数字をすべて満たすとクリアです。最初からある青い斜線は、答えを一つに決めるための空白マスで、変更できません。</p>
+                <p>行と列のヒントの数字をすべて満たすとクリアです。最初からある青い斜線は、答えを一つに決めるための空白マスで、変更できません。</p>
                 <div id="play-guide-sample">
                     <h3>最初の一手を試す</h3>
                     <p>サンプルの真ん中の行は「5」。パレットで青を選び、横5マスをすべて塗ってみましょう。</p>

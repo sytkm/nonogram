@@ -169,7 +169,7 @@ function setupImagePicker() {
             : '';
         resetPreviewTabs();
         preview.hidden = false;
-        setPlaying(false);
+        leavePuzzleScreen();
         document.getElementById('preview-heading').focus();
     }
 

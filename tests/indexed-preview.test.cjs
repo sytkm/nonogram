@@ -67,7 +67,7 @@ function setup({ decodeFails = false, pngColorType } = {}) {
         }
         return { width: 2, height: 1, data: [0, 0, 0, 255, 255, 255, 255, 255] };
     };
-    context.setPlaying = () => {};
+    context.leavePuzzleScreen = () => {};
     context.startPuzzle = (puzzle, options) => starts.push({ puzzle, options });
     context.setupImagePicker();
     return { element, original, painted, starts, splitShares, normalShares, rasterizations: () => rasterizations };
