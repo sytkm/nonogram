@@ -16,7 +16,7 @@
     <script src="js/play/daily-puzzle.js?v=shared-clues"></script>
     <script src="js/puzzle/quality-controls.js?v=clue-labels"></script>
     <script src="js/puzzle/mosaic-share.js?v=normal-share"></script>
-    <script src="js/play/mosaic.js?v=play-screen-transitions"></script>
+    <script src="js/play/mosaic.js?v=mosaic-overview-ui"></script>
     <script src="js/ui/share-controls.js?v=play-sharing"></script>
     <script src="js/ui/guide-tabs.js?v=preview-tabs"></script>
     <script src="js/puzzle/puzzle-rules.js?v=shared-clues"></script>
@@ -29,12 +29,12 @@
     <script src="js/board/board-feedback.js"></script>
     <script src="js/board/board-controller.js?v=paint-feedback"></script>
     <script src="js/play/play-dialogs.js?v=start-when-ready"></script>
-    <script src="js/play/puzzle-play.js?v=board-minimap"></script>
+    <script src="js/play/puzzle-play.js?v=mosaic-overview-ui"></script>
     <script src="js/app.js?v=shared-initial-fit"></script>
     <link rel="stylesheet" href="styles/start.css">
-    <link rel="stylesheet" href="styles/play.css?v=paint-feedback-responsive-history">
+    <link rel="stylesheet" href="styles/play.css?v=mosaic-overview-ui">
     <link rel="stylesheet" href="styles/dialogs.css?v=paint-feedback">
-    <link rel="stylesheet" href="styles/mosaic.css">
+    <link rel="stylesheet" href="styles/mosaic.css?v=mosaic-overview-ui">
     <script src="js/ui/dialog-dismiss.js?v=clear-results" defer></script>
     <title>画像でノノグラム</title>
 </head>
@@ -186,7 +186,7 @@
                 <div class="play-timer">
                     <div class="play-timer-readout">
                         <span class="play-timer-caption" aria-hidden="true">プレイ時間</span>
-                        <span id="play-time" role="timer" aria-label="プレイ時間">00:00</span>
+                        <span id="play-time" class="play-timer-value" role="timer" aria-label="プレイ時間">00:00</span>
                     </div>
                     <button type="button" id="pause-play" class="play-only">
                         <span class="pause-icon" aria-hidden="true"></span>
@@ -195,7 +195,14 @@
                 </div>
                 <div class="mosaic-tile-navigation">
                     <button type="button" id="return-mosaic" hidden>全体図に戻る</button>
-                    <p id="mosaic-tile-label" class="play-instructions" hidden></p>
+                    <div id="mosaic-tile-readout">
+                        <div class="play-timer">
+                            <div class="play-timer-readout">
+                                <span id="mosaic-tile-label" class="play-timer-caption"></span>
+                                <span role="status"><span class="mosaic-progress-caption">完成</span> <span id="mosaic-tile-progress" class="play-timer-value"></span></span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <div id="play-actions">
@@ -212,13 +219,28 @@
         <h2 id="mosaic-title" tabindex="-1">分割ノノグラム</h2>
         <div id="mosaic-instructions">
             <p>区画を選んで遊びます。すべて完成すると、1枚の絵になります。</p>
-            <p>端の余ったマスは空白です。空白だけの区画は完成済みです。</p>
-            <p>進み具合はこのブラウザに自動保存します。完成済みの区画も開けます。</p>
+            <details class="mosaic-details">
+                <summary>空白マスと進み具合の保存</summary>
+                <p>端の余ったマスは空白です。空白だけの区画は完成済みです。</p>
+                <p>進み具合はこのブラウザに自動保存します。</p>
+            </details>
         </div>
-        <p id="mosaic-progress" role="status"></p>
-        <p>合計プレイ時間 <span id="mosaic-total-time">00:00</span></p>
-        <div class="toolbar-group" role="group" aria-label="全体図の表示">
-            <button type="button" id="mosaic-time-toggle" class="action-link display-toggle" aria-controls="mosaic-map" aria-pressed="false"><span class="display-toggle-box" aria-hidden="true"></span>区画のプレイ時間を表示</button>
+        <div class="toolbar-group mosaic-toolbar">
+            <div class="play-timer">
+                <div class="play-timer-readout" role="status">
+                    <span class="play-timer-caption">完成区画</span>
+                    <span id="mosaic-progress" class="play-timer-value"></span>
+                </div>
+            </div>
+            <div class="toolbar-group" role="group" aria-label="プレイ時間">
+                <div class="play-timer">
+                    <div class="play-timer-readout">
+                        <span class="play-timer-caption">合計プレイ時間</span>
+                        <span id="mosaic-total-time" class="play-timer-value">00:00</span>
+                    </div>
+                </div>
+                <button type="button" id="mosaic-time-toggle" class="action-link display-toggle" aria-controls="mosaic-map" aria-pressed="false"><span class="display-toggle-box" aria-hidden="true"></span>区画のプレイ時間を表示</button>
+            </div>
             <button type="button" id="mosaic-review-toggle" class="action-link display-toggle" aria-controls="mosaic-map" aria-pressed="false" hidden><span class="display-toggle-box" aria-hidden="true"></span>区画を見返す</button>
         </div>
         <div class="mosaic-map" id="mosaic-map" role="region" aria-label="区画の全体図" tabindex="0">

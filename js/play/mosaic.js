@@ -64,6 +64,7 @@ function openMosaic(puzzle, { saved, fromShare = saved?.fromShare === true } = {
     });
     const title = document.getElementById('mosaic-title');
     const progress = document.getElementById('mosaic-progress');
+    const tileProgress = document.getElementById('mosaic-tile-progress');
     const totalTime = document.getElementById('mosaic-total-time');
     const timeToggle = document.getElementById('mosaic-time-toggle');
     const reviewToggle = document.getElementById('mosaic-review-toggle');
@@ -91,11 +92,17 @@ function openMosaic(puzzle, { saved, fromShare = saved?.fromShare === true } = {
         link.hidden = true;
     }
 
+    function updateProgress() {
+        const count = completedCount + ' / ' + mosaic.tiles.length;
+        progress.textContent = count;
+        tileProgress.textContent = count;
+    }
+
     function updateOverview(focusTarget) {
         leavePuzzleScreen('mosaic');
         document.getElementById('board-share').onclick = () => openPlayShare(puzzle);
         document.getElementById('restart-board').hidden = true;
-        progress.textContent = completedCount + ' / ' + mosaic.tiles.length + ' 区画が完成';
+        updateProgress();
         if (completedCount === mosaic.tiles.length && finished.hidden) {
             canvas.width = mosaic.width;
             canvas.height = mosaic.height;
@@ -192,6 +199,7 @@ function openMosaic(puzzle, { saved, fromShare = saved?.fromShare === true } = {
                 onSolved: () => {
                     tile.complete = true;
                     completedCount++;
+                    updateProgress();
                     delete tile.board.past;
                     delete tile.board.future;
                     reveal(tile, button);

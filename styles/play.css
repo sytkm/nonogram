@@ -137,12 +137,6 @@ body:has(#play-panel.is-viewing-tile) #board-side-controls .play-only {
     gap: 0.5rem;
 }
 
-#play-time,
-#mosaic-total-time {
-    font-variant-numeric: tabular-nums;
-    font-weight: 600;
-}
-
 /* 時計と一時停止を一つの操作欄に収める。 */
 .play-timer {
     display: inline-flex;
@@ -166,11 +160,16 @@ body:has(#play-panel.is-viewing-tile) #board-side-controls .play-only {
     font-size: 0.6875rem;
 }
 
-.play-timer #play-time {
-    min-inline-size: 8ch;
+.play-timer-value {
     text-align: center;
     font-family: ui-monospace, "Menlo", monospace;
     font-size: 1.125rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+#play-time {
+    min-inline-size: 8ch;
 }
 
 .play-clock #pause-play {
@@ -239,7 +238,7 @@ body:has(#play-panel.is-viewing-tile) #board-side-controls .play-only {
         padding-inline: 0.375rem;
     }
 
-    .play-timer #play-time {
+    #play-time {
         min-inline-size: 5ch;
         font-size: 1rem;
     }
@@ -538,12 +537,47 @@ body:has(#play-panel.is-viewing-tile) #board-side-controls .play-only {
     display: none;
 }
 
-#mosaic-tile-label {
-    margin: 0;
-}
-
 .play-clock #open-play-menu {
     margin-inline-start: auto;
+}
+
+@media (width < 48rem) {
+    .mosaic-tile-navigation {
+        order: 1;
+    }
+}
+
+@media (width >= 48rem) {
+    .play-clock:has(#return-mosaic:not([hidden])) {
+        display: grid;
+        grid-template-columns: auto 1fr auto auto auto;
+    }
+
+    .mosaic-tile-navigation:has(#return-mosaic:not([hidden])) {
+        display: contents;
+    }
+
+    #return-mosaic { grid-column: 3; }
+    .play-clock #open-play-menu { grid-column: 4; }
+
+    #mosaic-tile-readout {
+        grid-area: 1 / 5;
+        display: grid;
+        justify-items: start;
+    }
+
+    #mosaic-tile-readout > .play-timer {
+        grid-area: 1 / 1;
+    }
+
+    /* Keep the menu aligned with its original position. The right column
+       reserves the old tile label, button width and gap. */
+    #mosaic-tile-readout::before {
+        grid-area: 1 / 1;
+        content: attr(data-tile-label);
+        padding-inline-start: calc(6 * 0.875rem + 1.3rem + 2px + 0.5rem);
+        visibility: hidden;
+    }
 }
 
 header:has(#play-panel:not([hidden])) .site-heading h1 {
