@@ -594,6 +594,7 @@ body:not(:has(#play-panel:not([hidden]), #mosaic-panel:not([hidden]))) #open-pla
 }
 
 #fix-phone-under-menu {
+    container: paint-toolbar / inline-size;
     flex: 0 0 auto;
     min-width: 0;
     border-top: 1px solid var(--puzzle-rule);
@@ -667,6 +668,11 @@ body:not(:has(#play-panel:not([hidden]), #mosaic-panel:not([hidden]))) #open-pla
 .history-controls {
     display: flex;
     gap: inherit;
+    white-space: nowrap;
+}
+
+.history-icon {
+    display: none;
 }
 
 #fix-phone-under-menu .paint-tools button {
@@ -833,7 +839,6 @@ body:not(:has(#play-panel:not([hidden]), #mosaic-panel:not([hidden]))) #open-pla
 #canvas.is-moving:active { cursor: grabbing; }
 #palette-move { display: inline-grid; place-items: center; }
 @media (max-width: 63.99rem) {
-    #fix-phone-under-menu .paint-tools { flex-wrap: wrap; }
     #fix-phone-under-menu .history-controls { margin-inline-start: auto; }
 }
 
@@ -847,4 +852,14 @@ body:not(:has(#play-panel:not([hidden]), #mosaic-panel:not([hidden]))) #open-pla
 
 @media (prefers-reduced-motion: reduce) {
     #paint-feedback-marker { display: none; }
+}
+
+/* Keep the labels in the desktop side panel, where a second row is intentional. */
+@media (width < 64rem) or (height < 37rem) or (hover: none) or (pointer: coarse) {
+    /* Three 44px targets, three text buttons, and five gaps. */
+    @container paint-toolbar (width < calc(138px + 12.8rem)) {
+        .history-label { display: none; }
+        .history-icon { display: block; }
+        .history-controls button { display: grid; place-items: center; }
+    }
 }
