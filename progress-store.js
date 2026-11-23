@@ -1,17 +1,24 @@
 const PROGRESS_KEY = 'nonogram:progress:v1';
+const DAILY_PROGRESS_KEY = 'nonogram:daily-progress:v1';
 let progressSource;
 let progressId;
 let pendingProgress;
 let progressFromShare = false;
+let progressDailyDate;
 let resumeProgressId;
 const savedTimeFormat = new Intl.DateTimeFormat('ja-JP', { dateStyle: 'medium', timeStyle: 'short' });
 
-function readProgress() {
+function readProgress(key = PROGRESS_KEY) {
     try {
-        return JSON.parse(localStorage.getItem(PROGRESS_KEY));
+        return JSON.parse(localStorage.getItem(key));
     } catch {
         return null;
     }
+}
+
+function readDailyProgress(date) {
+    const saved = readProgress(DAILY_PROGRESS_KEY);
+    return saved?.board && saved.puzzle && saved.dailyDate === date ? saved : null;
 }
 
 function describeSavedProgress(saved) {
@@ -50,27 +57,35 @@ function updateResumeButton(saved = readProgress()) {
     document.getElementById('saved-progress-timestamp').hidden = !hasTime;
 }
 
-function setProgressSource(snapshot, id, fromShare = false) {
+function setProgressSource(snapshot, id, fromShare = false, dailyDate) {
     flushProgress();
     progressSource = snapshot;
     progressId = id ?? (Date.now() + '-' + Math.random());
     progressFromShare = fromShare;
+    progressDailyDate = dailyDate;
 }
 
 function writeProgress() {
     try {
-        const record = { id: progressId, ...progressSource(), savedAt: Date.now() };
+        const record = { id: progressId, ...progressSource(), dailyDate: progressDailyDate, savedAt: Date.now() };
+        const key = progressDailyDate ? DAILY_PROGRESS_KEY : PROGRESS_KEY;
+        if (progressDailyDate) {
+            // 日付をまたいで開いたままの盤面や、別タブの未完成盤面で上書きしない。
+            if (progressDailyDate !== dailyDay().key) return false;
+            if (readDailyProgress(progressDailyDate)?.board.finished && !record.board.finished) return false;
+        }
         try {
-            localStorage.setItem(PROGRESS_KEY, JSON.stringify(record));
+            localStorage.setItem(key, JSON.stringify(record));
         } catch (error) {
             if (error.name !== 'QuotaExceededError') throw error;
             // Prioritize the current board if long undo histories exceed browser storage.
-            localStorage.setItem(PROGRESS_KEY, JSON.stringify(record, (key, value) =>
+            localStorage.setItem(key, JSON.stringify(record, (key, value) =>
                 key === 'past' || key === 'future' ? undefined : value
             ));
         }
         document.getElementById('progress-warning').textContent = '';
-        updateResumeButton(record);
+        if (progressDailyDate) updateDailyPuzzleButton();
+        else updateResumeButton(record);
         return true;
     } catch {
         document.getElementById('progress-warning').textContent =
@@ -90,7 +105,9 @@ function flushProgress(force = false) {
         pendingProgress = undefined;
         return writeProgress();
     }
-    if (progressSource && (force || readProgress()?.id === progressId)) return writeProgress();
+    if (!progressSource) return false;
+    const saved = progressDailyDate ? readDailyProgress(progressDailyDate) : readProgress();
+    if (force || saved?.id === progressId) return writeProgress();
     return false;
 }
 
