@@ -468,8 +468,7 @@ header:has(#play-panel:not([hidden])),
 
 #hint-message,
 #conflict-message,
-#board-result,
-#quality-play-note {
+#board-result {
     margin: 0.4rem 0 0;
     font-size: 0.875rem;
 }

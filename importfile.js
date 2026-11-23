@@ -620,11 +620,6 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
     const cells = board.cells ??= matrix.map((row, y) => row.map((_, x) =>
         fixedSlashes.has(y * row.length + x) ? -1 : blank));
     board.marks ??= {};
-    const qualityNote = document.getElementById('quality-play-note');
-    qualityNote.textContent = fixedSlashes.size
-        ? '青い斜線は、答えが一つに決まるための空白マスです。'
-        : '';
-    qualityNote.hidden = !qualityNote.textContent;
     const usedColors = options.generated && !options.shared
         ? new Set([...palette.slice(1).map((_, i) => i + 1), blank])
         : new Set(matrix.flat());
