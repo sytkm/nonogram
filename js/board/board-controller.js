@@ -2,7 +2,7 @@
 
 function setupBoard({
     answer, palette, blank, rowClues, columnClues, initialCellSize, clock, board,
-    multiColor, onEdit, fixedSlashes, paletteControls,
+    multiColor, onEdit, fixedSlashes, paletteControls, startWithColor = false,
 }) {
     const { selectColor, getSelectedColor } = paletteControls;
     const { cells } = board;
@@ -405,7 +405,7 @@ function setupBoard({
 
     paletteControls.onSelect(() => setInputMode(configuredPaintMode()));
     moveButton.onclick = () => setInputMode('move');
-    setInputMode('move');
+    setInputMode(startWithColor ? configuredPaintMode() : 'move');
     pickPaintedColor.disabled = false;
     pickPaintedColor.onclick = () => setInputMode(inputMode === 'pick' ? 'move' : 'pick');
     function editCell(cell, color) {
