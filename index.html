@@ -18,15 +18,15 @@
     <script src="mosaic.js?v=clear-results"></script>
     <script src="share-controls.js?v=play-sharing"></script>
     <script src="guide-tabs.js?v=preview-tabs"></script>
-    <script src="importfile.js?v=clear-results"></script>
-    <link rel="stylesheet" href="style.css?v=pause-message-center">
+    <script src="importfile.js?v=compact-play-header"></script>
+    <link rel="stylesheet" href="style.css?v=compact-play-header">
     <script src="dialog-dismiss.js?v=clear-results" defer></script>
     <title>画像でノノグラム</title>
 </head>
 
 <body>
     <header>
-        <div class="site-heading">
+        <div class="site-heading" id="site-heading">
             <h1>画像でノノグラム</h1>
             <button type="button" id="open-settings" data-open-settings aria-haspopup="dialog" aria-controls="settings-dialog">
                 <span aria-hidden="true">⚙</span> 設定
@@ -182,7 +182,6 @@
         </div>
         <div id="play-panel" hidden>
             <div class="play-clock">
-                <button type="button" id="return-mosaic" hidden>全体図に戻る</button>
                 <div class="play-timer">
                     <div class="play-timer-readout">
                         <span class="play-timer-caption" aria-hidden="true">プレイ時間</span>
@@ -193,10 +192,13 @@
                         <span id="pause-play-label">一時停止</span>
                     </button>
                 </div>
+                <div class="mosaic-tile-navigation">
+                    <button type="button" id="return-mosaic" hidden>全体図に戻る</button>
+                    <p id="mosaic-tile-label" class="play-instructions" hidden></p>
+                </div>
             </div>
             <div id="play-actions">
                 <p id="daily-play-label" class="play-instructions" hidden></p>
-                <p id="mosaic-tile-label" class="play-instructions" hidden></p>
                 <p class="play-instructions play-only" id="paint-instructions" hidden>パレットで色を選び、マスを押して塗ります。大きな盤面は上下左右にスクロールできます。</p>
                 <p id="hint-message" class="play-only" role="status"></p>
                 <p id="conflict-message" role="status"></p>

@@ -477,6 +477,9 @@ function setPlaying(playing) {
     document.getElementById('start-panel').hidden = playing;
     document.getElementById('mosaic-panel').hidden = true;
     document.getElementById('play-panel').hidden = !playing;
+    const menu = document.getElementById('open-play-menu');
+    if (playing) document.querySelector('.mosaic-tile-navigation').before(menu);
+    else document.getElementById('site-heading').append(menu);
     document.getElementById('pause-message').hidden = true;
     setPlayAreaVisible(playing);
     if (playing) updatePlayTime();

@@ -602,12 +602,6 @@ body:has(#play-panel.is-viewing-tile) #board-view-tools .play-only {
     border-inline-end: 0;
 }
 
-@media (max-width: 30rem) {
-    #play-panel:has(#return-mosaic:not([hidden])) .play-clock {
-        margin-block-start: 0.375rem;
-    }
-}
-
 @media (max-width: 360px) {
     .play-clock {
         column-gap: 0.375rem;
@@ -938,6 +932,34 @@ body:has(#play-panel.is-viewing-tile) #board-view-tools .play-only {
 
 #open-play-menu {
     flex: none;
+}
+
+.mosaic-tile-navigation:has(#return-mosaic:not([hidden])) {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.mosaic-tile-navigation:not(:has(#return-mosaic:not([hidden]))) {
+    display: none;
+}
+
+#mosaic-tile-label {
+    margin: 0;
+}
+
+.play-clock #open-play-menu {
+    margin-inline-start: auto;
+}
+
+header:has(#play-panel:not([hidden])) .site-heading h1 {
+    /* 画面上の高さは使わず、見出しは読み上げや見出し一覧に残す。 */
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
 }
 
 body:has(#play-panel:not([hidden]), #mosaic-panel:not([hidden])) #open-settings,
