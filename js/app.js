@@ -4,6 +4,7 @@
 const samplePNG = 'iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAMAAAC6sdbXAAAABlBMVEX///8wW6NnOUAjAAAAFUlEQVR4nGNgYGBkAAEQyQgCDEgiAAClAAqu0sLdAAAAAElFTkSuQmCC';
 
 window.onload = async function () {
+    setupShareActions();
     setupImagePicker();
     setupProgressRestore();
     setupDailyPuzzle();

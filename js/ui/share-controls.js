@@ -1,3 +1,14 @@
+function setupShareActions() {
+    const template = document.getElementById('share-actions-template');
+    for (const placeholder of document.querySelectorAll('[data-share-actions]')) {
+        const kind = placeholder.dataset.shareActions;
+        const actions = template.content.cloneNode(true);
+        actions.querySelector('[data-share-bluesky]').setAttribute('aria-label', 'Blueskyで共有（' + kind + '）');
+        actions.querySelector('[data-share-copy]').textContent = kind + 'の共有リンクをコピー';
+        placeholder.replaceWith(actions);
+    }
+}
+
 function legacyPuzzleShareURL(pageURL, source) {
     const url = new URL(pageURL);
     url.search = encodeURIComponent(source);

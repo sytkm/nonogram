@@ -1,0 +1,88 @@
+#mosaic-panel {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 61rem;
+    margin-inline: auto;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+    padding: 0 1rem 1rem;
+}
+
+#mosaic-instructions p {
+    margin-block: 0.5rem;
+    line-height: 1.5;
+}
+
+.mosaic-map {
+    margin-block-start: 0.4rem;
+    overflow: auto;
+    padding: 0.25rem;
+}
+
+#mosaic-grid {
+    display: grid;
+    grid-template-columns: repeat(var(--mosaic-columns), 50px);
+    width: max-content;
+}
+
+.mosaic-tile {
+    width: 50px;
+    height: 50px;
+    padding: 0;
+    border: 0;
+    box-shadow: inset 0 0 0 1px var(--puzzle-rule);
+    background: #fff;
+    color: var(--puzzle-ink);
+    font: inherit;
+    cursor: pointer;
+}
+
+.mosaic-tile.mosaic-complete {
+    background: #fff;
+    box-shadow: none;
+    opacity: 1;
+}
+
+.mosaic-tile:hover:not(.mosaic-complete),
+.mosaic-tile:active:not(.mosaic-complete) {
+    background: #e7eee5;
+}
+
+.mosaic-tile:focus-visible {
+    outline: 2px solid var(--puzzle-accent);
+    outline-offset: -3px;
+}
+
+.mosaic-tile canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+}
+
+.mosaic-tile-time,
+#mosaic-grid.show-times .mosaic-tile-number,
+#mosaic-grid.show-times .mosaic-tile canvas {
+    display: none;
+}
+
+#mosaic-grid.show-times .mosaic-tile-time {
+    display: grid;
+    place-items: center;
+    height: 100%;
+    font-size: 0.7rem;
+    font-variant-numeric: tabular-nums;
+}
+
+#mosaic-grid.show-times .mosaic-tile {
+    box-shadow: inset 0 0 0 1px var(--puzzle-rule);
+}
+
+#mosaic-image {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 0.75rem;
+    image-rendering: pixelated;
+}
