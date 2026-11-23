@@ -1060,14 +1060,23 @@ dialog button:focus-visible {
     cursor: pointer;
 }
 
+#hint-tools button {
+    max-inline-size: 100%;
+}
+
 .penalty {
     display: inline-block;
+    box-sizing: border-box;
+    max-inline-size: 100%;
     padding: 0.08rem 0.3rem;
     border-radius: 0.25rem;
     background: #f2e8d6;
     color: #593b13;
     font-size: 0.75rem;
     font-weight: 650;
+}
+
+.penalty > span {
     white-space: nowrap;
 }
 

@@ -118,3 +118,24 @@ test('80秒の行ヒントと30秒の考え方ヒントを足して保存・復�
     assert.equal(context.formatPenaltyTime(120), '2分');
     assert.equal(context.formatPenaltyTime(80 * 60), '1時間20分');
 });
+
+test('加算の表示は分・時間の境目と秒の端数を保持する', () => {
+    const cases = [
+        [0, '0秒'],
+        [59, '59秒'],
+        [60, '1分'],
+        [61, '1分1秒'],
+        [59 * 60, '59分'],
+        [60 * 60, '1時間'],
+        [60 * 60 + 10, '1時間10秒'],
+        [61 * 60 + 10, '1時間1分10秒'],
+        [72 * 60, '1時間12分'],
+        [102 * 60, '1時間42分'],
+        [120 * 60, '2時間'],
+        [199 * 197 * 10, '108時間53分50秒'],
+    ];
+
+    for (const [seconds, expected] of cases) {
+        assert.equal(context.formatPenaltyTime(seconds), expected, String(seconds));
+    }
+});

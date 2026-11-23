@@ -2,12 +2,19 @@ const secondsPerPuzzleCell = 10;
 const logicHintPenalty = 30;
 const conflictCheckPenalty = 60;
 
-function formatPenaltyTime(seconds) {
+function penaltyTimeParts(seconds) {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor(seconds / 60) % 60;
     const remaining = seconds % 60;
-    return (hours ? hours + '時間' : '') + (minutes ? minutes + '分' : '') +
-        (remaining || !seconds ? remaining + '秒' : '');
+    const parts = [];
+    if (hours) parts.push(hours + '時間');
+    if (minutes) parts.push(minutes + '分');
+    if (remaining || !seconds) parts.push(remaining + '秒');
+    return parts;
+}
+
+function formatPenaltyTime(seconds) {
+    return penaltyTimeParts(seconds).join('');
 }
 
 function createPlayClock(now = () => performance.now(), state = {}) {
