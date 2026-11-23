@@ -62,13 +62,12 @@ function openMosaic(puzzle, { saved, fromShare = saved?.fromShare === true } = {
         tile.board = state.board;
         if (state.clock) tile.clock = createPlayClock(undefined, state.clock);
     });
-    const title = document.getElementById('mosaic-title');
+    const panel = document.getElementById('mosaic-panel');
     const progress = document.getElementById('mosaic-progress');
+    const tileProgress = document.getElementById('mosaic-tile-progress');
     const totalTime = document.getElementById('mosaic-total-time');
     const timeToggle = document.getElementById('mosaic-time-toggle');
-    const reviewToggle = document.getElementById('mosaic-review-toggle');
     const grid = document.getElementById('mosaic-grid');
-    const map = document.getElementById('mosaic-map');
     const instructions = document.getElementById('mosaic-instructions');
     const finished = document.getElementById('mosaic-finished');
     const canvas = document.getElementById('mosaic-image');
@@ -79,7 +78,6 @@ function openMosaic(puzzle, { saved, fromShare = saved?.fromShare === true } = {
     const styles = palette.map(color => 'rgb(' + color.join(',') + ')');
     let completedCount = mosaic.tiles.filter(tile => tile.complete).length;
     let showTimes = saved?.showTimes ?? false;
-    let showTiles = false;
     const tileDisplays = [];
     grid.replaceChildren();
     grid.style.setProperty('--mosaic-columns', mosaic.columns);
@@ -91,11 +89,17 @@ function openMosaic(puzzle, { saved, fromShare = saved?.fromShare === true } = {
         link.hidden = true;
     }
 
+    function updateProgress() {
+        const count = completedCount + ' / ' + mosaic.tiles.length;
+        progress.textContent = count;
+        tileProgress.textContent = count;
+    }
+
     function updateOverview(focusTarget) {
         leavePuzzleScreen('mosaic');
         document.getElementById('board-share').onclick = () => openPlayShare(puzzle);
         document.getElementById('restart-board').hidden = true;
-        progress.textContent = completedCount + ' / ' + mosaic.tiles.length + ' 区画が完成';
+        updateProgress();
         if (completedCount === mosaic.tiles.length && finished.hidden) {
             canvas.width = mosaic.width;
             canvas.height = mosaic.height;
@@ -134,9 +138,6 @@ function openMosaic(puzzle, { saved, fromShare = saved?.fromShare === true } = {
         totalTime.textContent = formatPlayTime(total);
         timeToggle.setAttribute('aria-pressed', String(showTimes));
         grid.classList.toggle('show-times', showTimes);
-        reviewToggle.hidden = finished.hidden || showTimes;
-        reviewToggle.setAttribute('aria-pressed', String(showTiles));
-        map.hidden = !finished.hidden && !showTimes && !showTiles;
     }
 
     function drawPiece(context, tile, left, top) {
@@ -188,17 +189,18 @@ function openMosaic(puzzle, { saved, fromShare = saved?.fromShare === true } = {
                 board: tile.board ??= {},
                 clock: tile.clock,
                 review: tile.complete,
-                onReturn: () => updateOverview(button),
+                onReturn: () => {
+                    const showCompletion = finished.hidden && completedCount === mosaic.tiles.length;
+                    updateOverview(button);
+                    if (showCompletion) clearResult.click();
+                },
                 onSolved: () => {
                     tile.complete = true;
                     completedCount++;
+                    updateProgress();
                     delete tile.board.past;
                     delete tile.board.future;
                     reveal(tile, button);
-                    if (completedCount === mosaic.tiles.length) {
-                        updateOverview(button);
-                        clearResult.click();
-                    }
                 },
             });
         };
@@ -210,11 +212,7 @@ function openMosaic(puzzle, { saved, fromShare = saved?.fromShare === true } = {
         updateTimeView();
         queueProgressSave();
     };
-    reviewToggle.onclick = () => {
-        showTiles = !showTiles;
-        updateTimeView();
-    };
-    updateOverview(title);
+    updateOverview(panel);
     setProgressSource(() => ({
         kind: 'mosaic',
         fromShare,

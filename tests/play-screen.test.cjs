@@ -18,7 +18,7 @@ test('盤面の表示だけで時計を進めず、分割一覧へ戻ると止�
     const context = vm.createContext({
         document: {
             getElementById: id => panels[id],
-            querySelector: () => ({ before() {} }),
+            querySelector: () => ({ append() {}, setAttribute() {} }),
         },
         flushProgress() {
             assert.equal(strokeFinished, true);
@@ -73,7 +73,7 @@ test('準備と初回案内を除き、盤面が使えるようになった時�
     let closeGuide;
     const result = new Promise(resolve => { prepared = resolve; });
     const context = vm.createContext({
-        document: { getElementById, querySelector: () => ({ before() {} }) },
+        document: { getElementById, querySelector: () => ({ append() {}, setAttribute() {} }) },
         makePuzzleClues: () => ({ rows: [[], 0], columns: [[], 0] }),
         requestPuzzleQuality: () => ({ result }),
         maxPuzzleShareLength: 8_000,

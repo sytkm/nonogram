@@ -6,7 +6,7 @@
     flex: 1 1 auto;
     min-height: 0;
     overflow: auto;
-    padding: 0 1rem 1rem;
+    padding: 0.5rem 1rem 1rem;
 }
 
 #mosaic-instructions p {
@@ -14,10 +14,41 @@
     line-height: 1.5;
 }
 
+.mosaic-details summary {
+    width: fit-content;
+    padding-block: 0.35rem;
+    cursor: pointer;
+}
+
+.mosaic-toolbar:not([hidden]) {
+    margin-block: 0.75rem;
+    gap: 0.5rem 0.75rem;
+}
+
+.mosaic-progress-caption {
+    font-size: 0.6875rem;
+}
+
+@media (width <= 360px) {
+    #mosaic-time-toggle {
+        padding-inline: 0.4rem;
+    }
+}
+
 .mosaic-map {
-    margin-block-start: 0.4rem;
+    box-sizing: border-box;
+    width: fit-content;
+    max-width: 100%;
     overflow: auto;
-    padding: 0.25rem;
+    padding: 0.5rem;
+    border: 1px solid var(--puzzle-rule);
+    border-radius: 0.35rem;
+    background: #f1eee3;
+}
+
+.mosaic-map:focus-visible {
+    outline: 2px solid var(--puzzle-accent);
+    outline-offset: 2px;
 }
 
 #mosaic-grid {
@@ -81,8 +112,12 @@
 
 #mosaic-image {
     display: block;
+    box-sizing: border-box;
     max-width: 100%;
     height: auto;
-    margin-bottom: 0.75rem;
+    padding: 0.5rem;
+    border: 1px solid var(--puzzle-rule);
+    border-radius: 0.35rem;
+    background: #f1eee3;
     image-rendering: pixelated;
 }

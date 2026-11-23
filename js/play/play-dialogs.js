@@ -81,7 +81,7 @@ function setupPlayGuide() {
             sharedIntro.textContent = split
                 ? '閉じると、受け取った分割問題の全体図に進みます。'
                 : '閉じると、受け取った問題で遊べます。';
-            openGuide(document.getElementById(split ? 'mosaic-title' : 'canvas'), onClose);
+            openGuide(document.getElementById(split ? 'mosaic-panel' : 'canvas'), onClose);
             return true;
         }
         return false;
@@ -89,7 +89,7 @@ function setupPlayGuide() {
 }
 
 
-function showClearResult(opener, { title = 'クリア！', note = '', download = false, restart = false, mosaic = false } = {}) {
+function showClearResult(opener, { title = 'クリア！', note = '', download = false, restart = false, mosaic = false, onReturn } = {}) {
     const dialog = document.getElementById('clear-result-dialog');
     if (dialog.open) return;
     document.getElementById('clear-result-title').textContent = title;
@@ -101,8 +101,16 @@ function showClearResult(opener, { title = 'クリア！', note = '', download =
     const restartButton = document.getElementById('clear-result-restart');
     restartButton.hidden = !restart;
     restartButton.onclick = restart ? () => document.getElementById('restart-board').click() : null;
+    const returnButton = document.getElementById('clear-result-return-mosaic');
+    returnButton.hidden = !onReturn;
+    let returningToMosaic = false;
+    returnButton.onclick = onReturn ? () => {
+        returningToMosaic = true;
+        dialog.close();
+    } : null;
     dialog.addEventListener('close', () => {
-        if (!dialog.open && opener.getClientRects().length) opener.focus({ preventScroll: true });
+        if (returningToMosaic) onReturn();
+        else if (!dialog.open && opener.getClientRects().length) opener.focus({ preventScroll: true });
     }, { once: true });
     dialog.showModal();
 }

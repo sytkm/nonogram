@@ -229,8 +229,7 @@ header:has(#start-panel:not([hidden]) #image-preview:not([hidden])) {
     margin-block-start: 0.65rem;
 }
 
-#preview-heading,
-#mosaic-title {
+#preview-heading {
     margin-block: 1.1rem 0.85rem;
     padding-block-end: 0.6rem;
     border-bottom: 1px solid var(--puzzle-rule);
@@ -240,7 +239,6 @@ header:has(#start-panel:not([hidden]) #image-preview:not([hidden])) {
 
 #preview-heading:focus-visible,
 #image-preview [role="tabpanel"]:focus-visible,
-#mosaic-title:focus-visible,
 #mosaic-finished-title:focus-visible {
     outline: 2px solid var(--puzzle-accent);
     outline-offset: 2px;

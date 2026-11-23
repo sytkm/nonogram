@@ -47,7 +47,7 @@ function showPlayScreen(screen) {
     document.getElementById('mosaic-panel').hidden = screen !== 'mosaic';
     document.getElementById('play-panel').hidden = !playing;
     const menu = document.getElementById('open-play-menu');
-    if (playing) document.querySelector('.mosaic-tile-navigation').before(menu);
+    if (playing) document.querySelector('.play-clock').append(menu);
     else document.getElementById('site-heading').append(menu);
     document.getElementById('pause-message').hidden = true;
     setPlayAreaVisible(playing);
@@ -137,8 +137,8 @@ async function startPuzzle({ matrix, palette, blank }, options = {}, openFirstGu
     dailyLabel.textContent = options.daily ? '日替わり問題 · ' + options.daily.label : '';
     dailyLabel.hidden = !options.daily;
     const tileLabel = document.getElementById('mosaic-tile-label');
-    tileLabel.hidden = !options.tileLabel;
     tileLabel.textContent = options.tileLabel ?? '';
+    document.querySelector('.play-clock').setAttribute('data-tile-label', tileLabel.textContent);
     const returnToMosaic = document.getElementById('return-mosaic');
     returnToMosaic.hidden = !options.onReturn;
     returnToMosaic.onclick = options.onReturn ?? null;
@@ -166,17 +166,21 @@ async function startPuzzle({ matrix, palette, blank }, options = {}, openFirstGu
             document.getElementById('fix-phone-under-menu').hidden = true;
             result.textContent = options.review ? '完成済みの区画を表示しています。' : '区画クリア！' + note;
             returnToMosaic.focus({ preventScroll: true });
+            if (options.review) return;
         } else {
-            clearResult.hidden = false;
-            clearResult.onclick = () => showClearResult(clearResult, {
-                note,
-                download: options.shared !== true,
-                restart: !options.daily,
-            });
             restart.textContent = 'もう一度遊ぶ';
             restart.hidden = Boolean(options.daily);
-            if (openResult) clearResult.click();
         }
+
+        clearResult.hidden = false;
+        clearResult.onclick = () => showClearResult(clearResult, {
+            title: options.tileLabel ? '区画クリア！' : 'クリア！',
+            note,
+            download: !options.tileLabel && options.shared !== true,
+            restart: !options.tileLabel && !options.daily,
+            onReturn: options.onReturn,
+        });
+        if (openResult) clearResult.click();
     }
 
     function checkCompletion(save = true, note = '', openResult = false) {

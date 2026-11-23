@@ -130,17 +130,21 @@ body:has(#play-panel.is-viewing-tile) #board-side-controls .play-only {
     margin: 0.5rem 0;
 }
 
-.play-clock {
+.play-clock,
+.play-clock-controls {
     display: flex;
-    flex-wrap: wrap;
-    align-items: center;
     gap: 0.5rem;
 }
 
-#play-time,
-#mosaic-total-time {
-    font-variant-numeric: tabular-nums;
-    font-weight: 600;
+.play-clock {
+    align-items: flex-start;
+}
+
+.play-clock-controls {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    flex-wrap: wrap;
+    align-items: center;
 }
 
 /* 時計と一時停止を一つの操作欄に収める。 */
@@ -166,11 +170,16 @@ body:has(#play-panel.is-viewing-tile) #board-side-controls .play-only {
     font-size: 0.6875rem;
 }
 
-.play-timer #play-time {
-    min-inline-size: 8ch;
+.play-timer-value {
     text-align: center;
     font-family: ui-monospace, "Menlo", monospace;
     font-size: 1.125rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+#play-time {
+    min-inline-size: 8ch;
 }
 
 .play-clock #pause-play {
@@ -231,7 +240,8 @@ body:has(#play-panel.is-viewing-tile) #board-side-controls .play-only {
 }
 
 @media (max-width: 360px) {
-    .play-clock {
+    .play-clock,
+    .play-clock-controls {
         column-gap: 0.375rem;
     }
 
@@ -239,7 +249,7 @@ body:has(#play-panel.is-viewing-tile) #board-side-controls .play-only {
         padding-inline: 0.375rem;
     }
 
-    .play-timer #play-time {
+    #play-time {
         min-inline-size: 5ch;
         font-size: 1rem;
     }
@@ -530,6 +540,8 @@ body:has(#play-panel.is-viewing-tile) #board-side-controls .play-only {
 
 .mosaic-tile-navigation:has(#return-mosaic:not([hidden])) {
     display: flex;
+    flex-wrap: wrap;
+    max-inline-size: 100%;
     align-items: center;
     gap: 0.5rem;
 }
@@ -538,12 +550,31 @@ body:has(#play-panel.is-viewing-tile) #board-side-controls .play-only {
     display: none;
 }
 
-#mosaic-tile-label {
-    margin: 0;
-}
-
 .play-clock #open-play-menu {
     margin-inline-start: auto;
+}
+
+@media (width <= 360px) {
+    .mosaic-tile-navigation {
+        gap: 0.375rem;
+    }
+
+    #return-mosaic {
+        padding-inline: 0.4rem;
+    }
+
+    #mosaic-tile-progress {
+        font-size: 0.875rem;
+    }
+}
+
+@media (width >= 48rem) {
+    /* Reserve the previous right-side space so the menu stays in place. */
+    .play-clock:has(#return-mosaic:not([hidden]))::after {
+        content: attr(data-tile-label);
+        padding-inline-start: calc(6 * 0.875rem + 1.3rem + 2px + 0.5rem);
+        visibility: hidden;
+    }
 }
 
 header:has(#play-panel:not([hidden])) .site-heading h1 {
