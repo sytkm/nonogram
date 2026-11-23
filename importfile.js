@@ -693,7 +693,7 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
         delete board.finished;
         delete board.paused;
         clock.reset();
-        await startPuzzle({ matrix, palette, blank }, { ...options, board, clock });
+        await startPuzzle({ matrix, palette, blank }, { ...options, board, clock, fitOnStart: true });
         queueProgressSave();
         document.getElementById('canvas').focus({ preventScroll: true });
     };
@@ -711,10 +711,8 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
     }
     if (board.finished) showClear();
     else if (!board.paused) checkCompletion(hasSavedCells);
-    if (options.tileLabel) {
-        controls.fitInitially();
-        returnToMosaic.focus();
-    }
+    if (options.tileLabel || options.fitOnStart) controls.fitInitially();
+    if (options.tileLabel) returnToMosaic.focus();
 }
 
 function boardResolution(width, height, pixelRatio) {
