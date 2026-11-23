@@ -7,7 +7,7 @@
 | サンプルや共有リンクからどの画面を開くか | [`js/app.js`](../js/app.js) |
 | 画像がどのように問題やプレビューになるか | [`js/image/image-input.js`](../js/image/image-input.js)、[`js/image/indexed-png.js`](../js/image/indexed-png.js)、[`js/image/image-preview.js`](../js/image/image-preview.js) |
 | 問題を開く、再開する、クリアする | [`js/play/puzzle-play.js`](../js/play/puzzle-play.js)。保存形式は [`js/play/progress-store.js`](../js/play/progress-store.js)、分割の一覧は [`js/play/mosaic.js`](../js/play/mosaic.js) |
-| マウス・指・キーボードの操作で盤面に何が起きるか | [`js/board/board-controller.js`](../js/board/board-controller.js)。座標計算とジェスチャーは [`js/board/board-gestures.js`](../js/board/board-gestures.js)、画面への描画は [`js/board/board-renderer.js`](../js/board/board-renderer.js) |
+| マウス・指・キーボードの操作で盤面に何が起きるか | [`js/board/board-controller.js`](../js/board/board-controller.js)。座標計算とジェスチャーは [`js/board/board-gestures.js`](../js/board/board-gestures.js)、倍率とスクロールは [`js/board/board-viewport.js`](../js/board/board-viewport.js)、画面への描画は [`js/board/board-renderer.js`](../js/board/board-renderer.js) |
 | ヒントの数字やクリアの条件をどう判定するか | [`js/puzzle/puzzle-rules.js`](../js/puzzle/puzzle-rules.js)。推理と矛盾検査は [`js/puzzle/line-logic.js`](../js/puzzle/line-logic.js)、一意性の検査は [`js/puzzle/puzzle-quality.js`](../js/puzzle/puzzle-quality.js) |
 | どの色を選んでいるか、設定をどこに保存するか | [`js/board/board-palette.js`](../js/board/board-palette.js)、[`js/board/board-settings.js`](../js/board/board-settings.js) |
 

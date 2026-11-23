@@ -1,4 +1,4 @@
-// 盤面への入力、倍率、ヒント、取り消し、一時停止を扱う。
+// 盤面への入力、ヒント、取り消し、一時停止を扱う。
 
 function setupBoard({
     answer, palette, blank, rowClues, columnClues, initialCellSize, clock, board,
@@ -21,8 +21,6 @@ function setupBoard({
     let showSymbols = multiColor && boardSetting('showSymbols', board);
     const palettePanel = document.getElementById('color-palette');
     palettePanel.classList.toggle('show-symbols', showSymbols);
-    const zoomIn = document.getElementById('zoom-in');
-    const zoomOut = document.getElementById('zoom-out');
     const pickPaintedColor = document.getElementById('pick-painted-color');
     const instructions = document.getElementById('paint-instructions');
     const pauseButton = document.getElementById('pause-play');
@@ -38,14 +36,17 @@ function setupBoard({
     const rows = answer.length;
     const [rowsOfClues, leftClueCount] = rowClues;
     const [columnsOfClues, topClueCount] = columnClues;
-    const widthInCells = columns + leftClueCount;
-    const heightInCells = rows + topClueCount;
-    const standardCellSize = 44;
-    const maxCellSize = 64;
-    const fit = () => Math.max(1, Math.min(maxCellSize, Math.floor(Math.min(
-        viewport.clientWidth / widthInCells, viewport.clientHeight / heightInCells
-    ))));
-    let cellSize;
+    const boardView = createBoardViewport({
+        viewport, canvas, columns, rows, leftClueCount, topClueCount,
+        shouldStickClues: () => boardSetting('stickClues', board),
+        beforeResize: stopStroke,
+        redraw() {
+            renderBoard(true);
+            positionHintMarker();
+            positionKeyboardCell();
+        },
+        afterResize: renderFixedClues,
+    });
     let inputMode;
     let stroke;
     let pressedClue;
@@ -104,34 +105,19 @@ function setupBoard({
         onEdit();
     }
 
-    function clueGutters() {
-        return boardSetting('stickClues', board)
-            ? fixedClueGutters(viewport.scrollLeft, viewport.scrollTop, viewport.clientWidth,
-                viewport.clientHeight, leftClueCount * cellSize, topClueCount * cellSize)
-            : { left: 0, top: 0 };
-    }
-
     function renderFixedClues() {
-        renderer.renderFixedClues(cellSize, clueGutters());
+        renderer.renderFixedClues(boardView.cellSize, boardView.clueGutters());
     }
 
     function positionKeyboardCell(scroll = false) {
         if (!keyboardCell) return;
-        const x = (leftClueCount + keyboardCell.column) * cellSize;
-        const y = (topClueCount + keyboardCell.row) * cellSize;
+        const x = (leftClueCount + keyboardCell.column) * boardView.cellSize;
+        const y = (topClueCount + keyboardCell.row) * boardView.cellSize;
         Object.assign(keyboardMarker.style, {
-            left: x + 'px', top: y + 'px', width: cellSize + 'px', height: cellSize + 'px',
+            left: x + 'px', top: y + 'px', width: boardView.cellSize + 'px', height: boardView.cellSize + 'px',
         });
         keyboardMarker.hidden = false;
-        if (scroll) scrollCellIntoView(keyboardCell.row, keyboardCell.column);
-    }
-
-    function scrollCellIntoView(row, column) {
-        const x = (leftClueCount + column) * cellSize;
-        const y = (topClueCount + row) * cellSize;
-        const { left, top } = clueGutters();
-        viewport.scrollLeft = Math.min(x - left, Math.max(viewport.scrollLeft, x + cellSize - viewport.clientWidth));
-        viewport.scrollTop = Math.min(y - top, Math.max(viewport.scrollTop, y + cellSize - viewport.clientHeight));
+        if (scroll) boardView.scrollCellIntoView(keyboardCell.row, keyboardCell.column);
     }
 
     function positionHintMarker() {
@@ -140,57 +126,19 @@ function setupBoard({
         const { axis, index, cell } = highlightedHint;
         const row = axis === 'row';
         hintMarker.classList.toggle('is-logical', Boolean(cell));
-        hintMarker.style.left = ((leftClueCount + (cell?.column ?? (row ? 0 : index))) * cellSize) + 'px';
-        hintMarker.style.top = ((topClueCount + (cell?.row ?? (row ? index : 0))) * cellSize) + 'px';
-        hintMarker.style.width = ((!cell && row ? columns : 1) * cellSize) + 'px';
-        hintMarker.style.height = ((!cell && !row ? rows : 1) * cellSize) + 'px';
-        hintMarker.style.borderWidth = Math.max(1, Math.min(2, Math.floor(cellSize / 2))) + 'px';
+        hintMarker.style.left = ((leftClueCount + (cell?.column ?? (row ? 0 : index))) * boardView.cellSize) + 'px';
+        hintMarker.style.top = ((topClueCount + (cell?.row ?? (row ? index : 0))) * boardView.cellSize) + 'px';
+        hintMarker.style.width = ((!cell && row ? columns : 1) * boardView.cellSize) + 'px';
+        hintMarker.style.height = ((!cell && !row ? rows : 1) * boardView.cellSize) + 'px';
+        hintMarker.style.borderWidth = Math.max(1, Math.min(2, Math.floor(boardView.cellSize / 2))) + 'px';
     }
 
     function renderBoard(force = false) {
-        renderer.drawBoard(force, { cellSize, showSymbols, conflicts, highlightedHint });
+        renderer.drawBoard(force, { cellSize: boardView.cellSize, showSymbols, conflicts, highlightedHint });
         renderFixedClues();
     }
 
-    function resizeBoard(nextSize, center, anchor) {
-        stopStroke();
-        const previousSize = cellSize;
-        const oldX = viewport.scrollLeft + (anchor?.from.x ?? Math.min(viewport.clientWidth, canvas.clientWidth) / 2);
-        const oldY = viewport.scrollTop + (anchor?.from.y ?? Math.min(viewport.clientHeight, canvas.clientHeight) / 2);
-        cellSize = nextSize;
-        canvas.style.width = (widthInCells * cellSize) + 'px';
-        canvas.style.height = (heightInCells * cellSize) + 'px';
-        renderBoard(true);
-        positionHintMarker();
-        positionKeyboardCell();
-        if (center && previousSize) {
-            const ratio = cellSize / previousSize;
-            viewport.scrollLeft = oldX * ratio - (anchor?.to.x ?? Math.min(viewport.clientWidth, canvas.clientWidth) / 2);
-            viewport.scrollTop = oldY * ratio - (anchor?.to.y ?? Math.min(viewport.clientHeight, canvas.clientHeight) / 2);
-        } else {
-            viewport.scrollLeft = 0;
-            viewport.scrollTop = 0;
-        }
-        renderFixedClues();
-        zoomIn.disabled = cellSize >= maxCellSize;
-        zoomOut.disabled = cellSize <= 1;
-    }
-
-    function fitBoard() {
-        resizeBoard(fit(), false);
-        // Scrollbars can disappear after shrinking the board and free more space.
-        const adjustedSize = fit();
-        if (adjustedSize !== cellSize) resizeBoard(adjustedSize, false);
-    }
-
-    const onSmallScreen = window.matchMedia('(max-width: 600px), (pointer: coarse)').matches;
-    resizeBoard(onSmallScreen ? Math.max(28, Math.min(standardCellSize, fit())) : Math.min(initialCellSize, maxCellSize), false);
-    zoomIn.onclick = () => resizeBoard(Math.min(maxCellSize, Math.ceil(cellSize * 1.25)), true);
-    zoomOut.onclick = () => resizeBoard(Math.max(1, Math.floor(cellSize / 1.25)), true);
-    document.getElementById('zoom-fit').onclick = fitBoard;
-    document.getElementById('zoom-standard').onclick = () => {
-        if (cellSize !== standardCellSize) resizeBoard(standardCellSize, true);
-    };
+    boardView.initialize(initialCellSize);
     const solve = document.getElementById('solve');
     const rowPenalty = columns * secondsPerPuzzleCell;
     const columnPenalty = rows * secondsPerPuzzleCell;
@@ -265,7 +213,7 @@ function setupBoard({
         }
         positionHintMarker();
         renderBoard(true);
-        if (highlightedHint?.cell) scrollCellIntoView(highlightedHint.cell.row, highlightedHint.cell.column);
+        if (highlightedHint?.cell) boardView.scrollCellIntoView(highlightedHint.cell.row, highlightedHint.cell.column);
     };
 
     function showLogicalHint({ axis, index, row, column, color }) {
@@ -314,18 +262,7 @@ function setupBoard({
         const lineLabel = axis === 'row' ? '上から' + (index + 1) + '行目' : '左から' + (index + 1) + '列目';
         hintMessage.textContent = lineLabel + 'をヒントで埋めました。' + note;
         positionHintMarker();
-        const gutters = clueGutters();
-        if (axis === 'row') {
-            const top = (topClueCount + index) * cellSize;
-            if (top < viewport.scrollTop + gutters.top || top + cellSize > viewport.scrollTop + viewport.clientHeight) {
-                viewport.scrollTop = top - Math.max(0, (viewport.clientHeight - cellSize) / 2);
-            }
-        } else {
-            const left = (leftClueCount + index) * cellSize;
-            if (left < viewport.scrollLeft + gutters.left || left + cellSize > viewport.scrollLeft + viewport.clientWidth) {
-                viewport.scrollLeft = left - Math.max(0, (viewport.clientWidth - cellSize) / 2);
-            }
-        }
+        boardView.scrollLineIntoView(axis, index);
         onEdit(note);
     };
     solve.disabled = false;
@@ -358,7 +295,7 @@ function setupBoard({
             pausedPosition = undefined;
             if (initialFitPending) {
                 initialFitPending = false;
-                fitBoard();
+                boardView.fitBoard();
             }
             clock.resume();
         } else {
@@ -402,16 +339,6 @@ function setupBoard({
         if (selectColor(color)) setInputMode(configuredPaintMode());
     }
 
-    function pointFor(event, painting = false) {
-        const viewRect = viewport.getBoundingClientRect();
-        const { left, top } = fixedClueHit(event.clientX - viewRect.left,
-            event.clientY - viewRect.top, clueGutters());
-        if (painting && (left || top)) return null;
-        return boardPointAt(event.clientX - (left ? viewport.scrollLeft : 0),
-            event.clientY - (top ? viewport.scrollTop : 0), canvas.getBoundingClientRect(),
-            widthInCells, heightInCells, [leftClueCount, topClueCount]);
-    }
-
     function applyColor({ row, column }, color, action) {
         if (fixedSlashes.has(row * columns + column)) return;
         clock.start();
@@ -419,12 +346,12 @@ function setupBoard({
         if (before === color) return;
         action.push({ row, column, before, after: color });
         cells[row][column] = color;
-        renderer.paintCell(row, column, color, cellSize, showSymbols);
+        renderer.paintCell(row, column, color, boardView.cellSize, showSymbols);
     }
 
     function continueStroke(event) {
         if (!stroke || event.pointerId !== stroke.id) return;
-        const point = pointFor(event, true);
+        const point = boardView.pointFor(event, true);
         if (point && !stroke.point) {
             const cell = boardCellAt(point, columns, rows);
             if (cell) applyColor(cell, stroke.color, stroke.changes);
@@ -456,21 +383,7 @@ function setupBoard({
             queueProgressSave();
         }
         pressedClue = undefined;
-    }, {
-        size: () => cellSize,
-        schedule: callback => requestAnimationFrame(callback),
-        apply(size, previous, next) {
-            const nextSize = Math.max(1, Math.min(maxCellSize, Math.round(size)));
-            if (nextSize === cellSize) {
-                viewport.scrollLeft += previous.x - next.x;
-                viewport.scrollTop += previous.y - next.y;
-                return;
-            }
-            const rect = viewport.getBoundingClientRect();
-            const relative = point => ({ x: point.x - rect.left, y: point.y - rect.top });
-            resizeBoard(nextSize, true, { from: relative(previous), to: relative(next) });
-        },
-    });
+    }, boardView.pinch);
 
     setInputMode(configuredPaintMode());
     pickPaintedColor.disabled = false;
@@ -492,7 +405,7 @@ function setupBoard({
     updateHistoryButtons();
     canvas.onclick = event => {
         if (board.finished || !event.detail || touchPan.suppressesClick()) return;
-        const point = pointFor(event);
+        const point = boardView.pointFor(event);
         const clue = boardClueAt(point, rowsOfClues, columnsOfClues);
         if (clue && clue.key === pressedClue) {
             if (inputMode === 'pick') {
@@ -520,7 +433,7 @@ function setupBoard({
     };
     canvas.oncontextmenu = event => {
         if (event.pointerType === 'touch') return;
-        const cell = boardCellAt(pointFor(event), columns, rows);
+        const cell = boardCellAt(boardView.pointFor(event), columns, rows);
         if (!cell || board.finished) return;
         event.preventDefault();
         if (inputMode !== 'pick') toggleSlash(cell);
@@ -565,7 +478,7 @@ function setupBoard({
             if (touchPan.down(event, inputMode !== 'trace' || board.finished)) return;
         } else touchPan.reset();
         if (board.finished || stroke || !event.isPrimary || event.button !== 0) return;
-        const point = pointFor(event);
+        const point = boardView.pointFor(event);
         pressedClue = boardClueAt(point, rowsOfClues, columnsOfClues)?.key;
         if (inputMode !== 'trace') return;
         const cell = boardCellAt(point, columns, rows);
@@ -604,7 +517,7 @@ function setupBoard({
         },
         fitInitially() {
             if (viewport.hidden) initialFitPending = true;
-            else fitBoard();
+            else boardView.fitBoard();
         },
         finish() {
             board.finished = true;
