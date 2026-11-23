@@ -414,6 +414,8 @@ header:has(#play-panel:not([hidden])) {
 }
 
 #canvas {
+    /* 指の本数による塗り・移動の使い分けは盤面側で処理する。 */
+    touch-action: none;
     display: block;
 }
 
@@ -492,7 +494,6 @@ body:has(#play-panel.is-viewing-tile) #board-view-tools .play-only {
 }
 
 #canvas.is-painting {
-    touch-action: none;
     cursor: crosshair;
 }
 

@@ -59,3 +59,37 @@ test('モード切り替え後は古い指の移動でスクロールしない',
     assert.equal(pan.suppressesClick(), false);
     assert.deepEqual(viewport, { scrollLeft: 100, scrollTop: 200 });
 });
+
+test('なぞり塗りオフでも2本指で移動でき、指を減らしても誤操作しない', () => {
+    const { pan, viewport, event } = fixture();
+    pan.down(event(1), true); pan.down(event(2, 200, 200), true);
+    pan.move(event(1, 80, 60)); pan.move(event(2, 180, 160));
+    assert.deepEqual(viewport, { scrollLeft: 120, scrollTop: 240 });
+    pan.end(event(2)); pan.move(event(1, 10, 10));
+    assert.deepEqual(viewport, { scrollLeft: 120, scrollTop: 240 });
+    assert.equal(pan.suppressesClick(), true);
+});
+test('オフ時は短いタップで塗れるが、1本指のドラッグ後はクリックを抑止する', () => {
+    const { pan, viewport, event } = fixture();
+    pan.down(event(1), true);
+    assert.equal(pan.move(event(1, 102, 102)), false);
+    assert.equal(pan.end(event(1)), false);
+    assert.equal(pan.suppressesClick(), false);
+    assert.deepEqual(viewport, { scrollLeft: 100, scrollTop: 200 });
+    pan.down(event(2), true);
+    assert.equal(pan.move(event(2, 80, 70)), true);
+    assert.deepEqual(viewport, { scrollLeft: 120, scrollTop: 230 });
+    pan.move(event(2, 70, 60));
+    assert.deepEqual(viewport, { scrollLeft: 130, scrollTop: 240 });
+    pan.end(event(2)); assert.equal(pan.suppressesClick(), true);
+});
+test('オフ時の1本指移動から2本指へ切り替えても位置が飛ばない', () => {
+    const { pan, viewport, event } = fixture();
+    pan.down(event(1), true); pan.move(event(1, 80, 80));
+    pan.down(event(2, 300, 300), true);
+    assert.deepEqual(viewport, { scrollLeft: 120, scrollTop: 220 });
+    pan.move(event(1, 60, 60)); pan.move(event(2, 280, 280));
+    assert.deepEqual(viewport, { scrollLeft: 140, scrollTop: 240 });
+    pan.end(event(1)); pan.move(event(2, 200, 200));
+    assert.deepEqual(viewport, { scrollLeft: 140, scrollTop: 240 });
+});

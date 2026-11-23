@@ -1271,7 +1271,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         canvas.classList.toggle('is-painting', mode === 'trace');
 
         const messages = {
-            paint: 'パレットで色を選び、マスを押して塗ります。大きな盤面は上下左右にスクロールできます。',
+            paint: 'マスを押して塗り、1本指または2本指で盤面を動かせます。',
             trace: '1本指でなぞると塗れます。2本指で盤面を動かせます。マウスでもなぞって塗れます。',
             pick: '塗ったマスを押すと色を拾えます。キーボードでは Space または Enter を押します。',
         };
@@ -1428,12 +1428,11 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         }
     };
     canvas.onpointerdown = event => {
-        if (board.finished) return;
-        if (inputMode === 'trace' && event.pointerType === 'touch') {
+        if (event.pointerType === 'touch') {
             canvas.setPointerCapture(event.pointerId);
-            if (touchPan.down(event)) return;
+            if (touchPan.down(event, inputMode !== 'trace' || board.finished)) return;
         } else touchPan.reset();
-        if (stroke || !event.isPrimary || event.button !== 0) return;
+        if (board.finished || stroke || !event.isPrimary || event.button !== 0) return;
         const point = pointFor(event);
         pressedClue = boardClueAt(point, rowsOfClues, columnsOfClues)?.key;
         if (inputMode !== 'trace') return;
@@ -1894,12 +1893,15 @@ function hex(s) {
 }
 
 /**
- * なぞり塗り中のタッチを追跡し、2本以上なら重心の移動量でスクロールする。
+ * タッチを追跡し、2本以上なら重心の移動量でスクロールする。
+ * singleFingerPan のときは1本指のドラッグも移動に使い、短いタップとは区別する。
  * 移動後は全ての指が離れるまで塗りを抑止する。cancelStroke は未確定の塗りを戻す。
  */
 function createTouchPan(viewport, cancelStroke) {
     const pointers = new Map();
     let panning = false;
+    let singleFingerPan = false;
+    let startPoint;
     function center() {
         const points = [...pointers.values()];
         return {
@@ -1908,21 +1910,34 @@ function createTouchPan(viewport, cancelStroke) {
         };
     }
     return {
-        down(event) {
-            if (!pointers.size) panning = false;
+        down(event, allowSingleFingerPan = false) {
+            if (!pointers.size) {
+                panning = false;
+                singleFingerPan = allowSingleFingerPan;
+                startPoint = { x: event.clientX, y: event.clientY };
+            }
             pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
-            if (pointers.size > 1 && !panning) {
-                panning = true;
-                cancelStroke();
+            if (pointers.size > 1) {
+                singleFingerPan = false;
+                if (!panning) {
+                    panning = true;
+                    cancelStroke();
+                }
             }
             return panning;
         },
         move(event) {
             if (!pointers.has(event.pointerId)) return false;
-            const previous = center();
+            let previous = center();
             pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
-            if (panning && pointers.size > 1) {
-                const next = center();
+            const next = center();
+            if (!panning && singleFingerPan &&
+                Math.hypot(next.x - startPoint.x, next.y - startPoint.y) >= 6) {
+                panning = true;
+                previous = startPoint;
+                cancelStroke();
+            }
+            if (panning && (pointers.size > 1 || singleFingerPan)) {
                 viewport.scrollLeft += previous.x - next.x;
                 viewport.scrollTop += previous.y - next.y;
             }
