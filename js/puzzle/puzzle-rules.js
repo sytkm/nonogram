@@ -47,19 +47,6 @@ function pickLineHint(answer, board, blank, random = Math.random) {
     return { axis, index, changes };
 }
 
-function calcNumber(arr) {
-    const calculated = [[arr[0], 1]];
-    for (let i = 1; i < arr.length; i++) {
-        const last = calculated[calculated.length - 1];
-        if (last[0] === arr[i]) {
-            last[1]++;
-        } else {
-            calculated.push([arr[i], 1]);
-        }
-    }
-    return calculated;
-}
-
 /**
  * 全行のヒントが一致するか調べる。斜線も空白として判定する。
  * @param {ClueSummary} clueSummary - makeNumber が返したヒントと最大組数
@@ -74,7 +61,9 @@ function checkNumber(clueSummary, matrix, blank) {
 }
 
 function lineMatchesClues(line, clues, blank) {
-    return String(clues) === String(lineClues(line, blank));
+    const actual = lineClues(line, blank);
+    return actual.length === clues.length && clues.every(([color, count], index) =>
+        color === actual[index][0] && count === actual[index][1]);
 }
 
 function findCompletedLineBlanks(cells, rowsOfClues, columnsOfClues, blank, changes) {
@@ -107,7 +96,18 @@ function findCompletedLineBlanks(cells, rowsOfClues, columnsOfClues, blank, chan
 }
 
 function lineClues(line, blank) {
-    const clues = calcNumber(line).filter(([color]) => color !== blank && color !== -1);
+    const clues = [];
+    let run;
+    for (const color of line) {
+        if (color === blank || color === -1) {
+            run = undefined;
+        } else if (run?.[0] === color) {
+            run[1]++;
+        } else {
+            run = [color, 1];
+            clues.push(run);
+        }
+    }
     return clues.length ? clues : [[-1, 0]];
 }
 
@@ -118,8 +118,24 @@ function lineClues(line, blank) {
  * @returns {ClueSummary}
  */
 function makeNumber(matrix, blank) {
-    const clues = matrix.map(line => lineClues(line, blank));
-    return [clues, clues.reduce((max, line) => Math.max(max, line.length), 0)];
+    const clues = [];
+    let maxClues = 0;
+    for (const line of matrix) {
+        const lineHints = lineClues(line, blank);
+        clues.push(lineHints);
+        maxClues = Math.max(maxClues, lineHints.length);
+    }
+    return [clues, maxClues];
+}
+
+/**
+ * 作成プレビュー、プレイ開始、日替わりの検査で共通の行・列ヒントを作る。
+ * @param {number[][]} matrix - 1行1列以上の盤面
+ * @param {number} blank - その問題の空白番号
+ * @returns {{rows: ClueSummary, columns: ClueSummary}}
+ */
+function makePuzzleClues(matrix, blank) {
+    return { rows: makeNumber(matrix, blank), columns: makeNumber(transpose(matrix), blank) };
 }
 
 /**

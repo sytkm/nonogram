@@ -53,8 +53,7 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
     playClock?.suspend();
     const board = options.board ?? {};
     const hasSavedCells = Boolean(board.cells);
-    const rowClues = makeNumber(matrix, blank);
-    const columnClues = makeNumber(transpose(matrix), blank);
+    const { rows: rowClues, columns: columnClues } = makePuzzleClues(matrix, blank);
     if (options.initialCheck) {
         board.quality = options.initialCheck.preparation.quality;
         board.fixedSlashes = options.initialCheck.preparation.fixedSlashes;

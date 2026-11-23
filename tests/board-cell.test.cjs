@@ -111,3 +111,18 @@ test('元画像に合わせたクリア判定は別解を除外し、空白と�
     assert.equal(context.matchesIntendedImage(answer, [[0, 1], [1, 0]], 0), false);
     assert.equal(context.matchesIntendedImage(answer, [[2, -1], [0, 1]], 0), false);
 });
+
+test('行・列のヒントは色番号0を残し、空白と斜線で同じ色の組を区切る', () => {
+    const { rows, columns } = context.makePuzzleClues([
+        [0, 2, 0, 1, -1, 1],
+        [2, 2, 2, 2, 2, 2],
+    ], 2);
+    const plain = value => JSON.parse(JSON.stringify(value));
+    assert.deepEqual(plain(rows), [[[[0, 1], [0, 1], [1, 1], [1, 1]], [[-1, 0]]], 4]);
+    assert.deepEqual(plain(columns), [
+        [[[0, 1]], [[-1, 0]], [[0, 1]], [[1, 1]], [[-1, 0]], [[1, 1]]],
+        1,
+    ]);
+    assert.equal(context.checkNumber(rows, [[0, -1, 0, 1, 2, 1], [2, 2, 2, 2, 2, 2]], 2), true);
+    assert.equal(context.checkNumber(rows, [[0, 0, 2, 1, 2, 1], [2, 2, 2, 2, 2, 2]], 2), false);
+});

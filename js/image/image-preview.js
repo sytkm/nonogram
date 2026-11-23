@@ -21,7 +21,8 @@ function setupImagePicker() {
     let previewLogicResult;
     function readPreviewClues() {
         const { matrix, blank } = currentImage.puzzle;
-        return { rows: makeNumber(matrix, blank)[0], columns: makeNumber(transpose(matrix), blank)[0], blank };
+        const { rows: [rows], columns: [columns] } = makePuzzleClues(matrix, blank);
+        return { rows, columns, blank };
     }
     const resetPreviewQuality = setupQualityCheck(previewQuality,
         document.getElementById('preview-quality-result'), readPreviewClues);
