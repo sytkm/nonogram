@@ -16,8 +16,8 @@
     <script src="mosaic.js?v=play-menu"></script>
     <script src="share-controls.js?v=play-sharing"></script>
     <script src="guide-tabs.js?v=preview-tabs"></script>
-    <script src="importfile.js?v=play-clock-display"></script>
-    <link rel="stylesheet" href="style.css?v=play-clock-display">
+    <script src="importfile.js?v=board-view-controls"></script>
+    <link rel="stylesheet" href="style.css?v=board-view-controls">
     <script src="dialog-dismiss.js?v=play-menu" defer></script>
     <title>画像でノノグラム</title>
 </head>
@@ -187,36 +187,6 @@
             <div id="play-actions">
                 <p id="mosaic-tile-label" class="play-instructions" hidden></p>
                 <p class="play-instructions play-only" id="paint-instructions" hidden>パレットで色を選び、マスを押して塗ります。大きな盤面は上下左右にスクロールできます。</p>
-                <div class="board-tools" role="group" aria-label="盤面の操作">
-                    <div class="toolbar-group" role="group" aria-label="盤面の大きさ">
-                        <button type="button" id="zoom-out" aria-label="盤面を縮小">−</button>
-                        <button type="button" id="zoom-in" aria-label="盤面を拡大">＋</button>
-                        <button type="button" id="zoom-fit">全体を表示</button>
-                    </div>
-                    <div class="toolbar-group" role="group" aria-label="操作メニュー">
-                        <button type="button" class="board-menu-button play-only" aria-controls="hint-tools" aria-expanded="false">ヒント・確認</button>
-                    </div>
-                    <div class="toolbar-group play-only" role="group" aria-labelledby="clue-mode-label">
-                        <span id="clue-mode-label">ヒント数字</span>
-                        <button type="button" class="clue-mode" id="clue-mark-mode" aria-pressed="true" aria-describedby="clue-help-mark">チェック</button>
-                        <button type="button" class="clue-mode" id="clue-color-mode" aria-pressed="false" aria-describedby="clue-help-color">色を選ぶ</button>
-                        <button type="button" class="board-menu-button" id="clue-help-toggle" aria-label="ヒント数字の操作説明" aria-controls="clue-help" aria-expanded="false">説明</button>
-                    </div>
-                </div>
-                <div id="clue-help" class="board-menu play-only" role="region" aria-labelledby="clue-help-toggle" hidden>
-                    <dl>
-                        <dt>チェック</dt>
-                        <dd id="clue-help-mark">押した数字に目印を付けます。もう一度押すと外れます。</dd>
-                        <dt>色を選ぶ</dt>
-                        <dd id="clue-help-color">押した数字と同じ色をパレットで選びます。0では色は変わりません。</dd>
-                    </dl>
-                </div>
-                <div id="hint-tools" class="board-menu play-only" role="group" aria-label="ヒント・確認" hidden>
-                    <button type="button" id="logic-hint" data-close-board-menu>考え方ヒント <small class="penalty"></small></button>
-                    <button type="button" id="line-hint" data-close-board-menu>行・列ヒント <small class="penalty"></small></button>
-                    <button type="button" id="check-conflicts" data-close-board-menu>矛盾チェック <small class="penalty"></small></button>
-                    <button type="button" id="solve" data-close-board-menu>答えを見る <small class="penalty"></small></button>
-                </div>
                 <p id="hint-message" class="play-only" role="status"></p>
                 <p id="conflict-message" role="status"></p>
                 <p id="board-result" role="status"></p>
@@ -349,7 +319,7 @@
                     <summary>マスの塗り方・盤面の動かし方</summary>
                     <p>パレットで色や斜線を選び、マスを押します。「なぞり塗り」は通ったマスを塗ります。指でスクロールするときはオフにします。</p>
                     <p>「ヒント数字」の「チェック」「色を選ぶ」で、数字を押したときの操作を切り替えます。「0」では色は変わりません。「空白」は塗りを消し、「斜線」は空白の印を付けます。「スポイト」は塗ったマスの色を選びます。</p>
-                    <p>「＋」「−」で拡大・縮小。「全体を表示」で盤面を収めます。分割問題は「全体図に戻る」で区画を選びます。</p>
+                    <p>盤面の近くの「＋」「−」で拡大・縮小し、「全体」で盤面を収めます。分割問題は「全体図に戻る」で区画を選びます。</p>
                 </details>
                 <details class="guide-more">
                     <summary>取り消し・保存・最初からやり直す</summary>
@@ -395,23 +365,56 @@
             <div id="keyboard-cell-marker" aria-hidden="true" hidden></div>
             <div id="hint-line-marker" aria-hidden="true" hidden></div>
         </div>
-        <div id="fix-phone-under-menu" hidden>
-            <div id="palette-panel">
-                <p class="palette-label" id="palette-label">塗る色</p>
-                <div id="palette-strip">
-                    <button type="button" id="palette-prev" class="palette-step action-link" aria-label="前の色を表示" aria-controls="color-palette" hidden>‹</button>
-                    <div id="color-palette" role="group" aria-labelledby="palette-label"></div>
-                    <button type="button" id="palette-next" class="palette-step action-link" aria-label="次の色を表示" aria-controls="color-palette" hidden>›</button>
+        <div id="board-side-controls" hidden>
+            <div id="board-view-tools" aria-label="盤面の操作" role="group">
+                <div class="board-tools">
+                    <div class="toolbar-group board-zoom" role="group" aria-label="盤面の大きさ">
+                        <button type="button" id="zoom-out" aria-label="盤面を縮小">−</button>
+                        <button type="button" id="zoom-in" aria-label="盤面を拡大">＋</button>
+                        <button type="button" id="zoom-fit" aria-label="全体を表示">全体</button>
+                    </div>
+                    <div class="toolbar-group play-only">
+                        <button type="button" class="board-menu-button" aria-controls="hint-tools" aria-expanded="false">ヒント・確認</button>
+                        <button type="button" class="board-menu-button" id="clue-tools-toggle" aria-controls="clue-tools" aria-expanded="false">ヒント数字</button>
+                    </div>
                 </div>
-                <p id="palette-scroll-note" hidden>スクロールすると他の色を選べます。</p>
+                <div id="clue-tools" class="board-menu play-only" role="region" aria-labelledby="clue-tools-toggle" hidden>
+                    <div class="toolbar-group" role="group" aria-label="数字を押したときの操作">
+                        <button type="button" class="clue-mode" id="clue-mark-mode" aria-pressed="true" aria-describedby="clue-help-mark" data-close-board-menu>チェック</button>
+                        <button type="button" class="clue-mode" id="clue-color-mode" aria-pressed="false" aria-describedby="clue-help-color" data-close-board-menu>色を選ぶ</button>
+                    </div>
+                    <dl>
+                        <dt>チェック</dt>
+                        <dd id="clue-help-mark">押した数字に目印を付けます。もう一度押すと外れます。</dd>
+                        <dt>色を選ぶ</dt>
+                        <dd id="clue-help-color">押した数字と同じ色をパレットで選びます。0では色は変わりません。</dd>
+                    </dl>
+                </div>
+                <div id="hint-tools" class="board-menu play-only" role="group" aria-label="ヒント・確認" hidden>
+                    <button type="button" id="logic-hint" data-close-board-menu>考え方ヒント <small class="penalty"></small></button>
+                    <button type="button" id="line-hint" data-close-board-menu>行・列ヒント <small class="penalty"></small></button>
+                    <button type="button" id="check-conflicts" data-close-board-menu>矛盾チェック <small class="penalty"></small></button>
+                    <button type="button" id="solve" data-close-board-menu>答えを見る <small class="penalty"></small></button>
+                </div>
             </div>
-            <div class="toolbar-group paint-tools" role="group" aria-label="塗りと編集">
-                <button type="button" id="palette-blank" aria-label="空白に戻す" aria-pressed="false">空白</button>
-                <button type="button" id="palette-slash" aria-label="斜線で印を付ける" aria-pressed="false">斜線</button>
-                <button type="button" id="pick-painted-color" aria-pressed="false" aria-describedby="paint-instructions">スポイト</button>
-                <button type="button" id="paint-mode" aria-pressed="false" aria-describedby="paint-instructions">なぞり塗り</button>
-                <button type="button" id="board-undo" class="history-control" aria-label="操作を取り消す" title="操作を取り消す" disabled>↶</button>
-                <button type="button" id="board-redo" class="history-control" aria-label="取り消しを戻す" title="取り消しを戻す" disabled>↷</button>
+            <div id="fix-phone-under-menu" hidden>
+                <div id="palette-panel">
+                    <p class="palette-label" id="palette-label">塗る色</p>
+                    <div id="palette-strip">
+                        <button type="button" id="palette-prev" class="palette-step action-link" aria-label="前の色を表示" aria-controls="color-palette" hidden>‹</button>
+                        <div id="color-palette" role="group" aria-labelledby="palette-label"></div>
+                        <button type="button" id="palette-next" class="palette-step action-link" aria-label="次の色を表示" aria-controls="color-palette" hidden>›</button>
+                    </div>
+                    <p id="palette-scroll-note" hidden>スクロールすると他の色を選べます。</p>
+                </div>
+                <div class="toolbar-group paint-tools" role="group" aria-label="塗りと編集">
+                    <button type="button" id="palette-blank" aria-label="空白に戻す" aria-pressed="false">空白</button>
+                    <button type="button" id="palette-slash" aria-label="斜線で印を付ける" aria-pressed="false">斜線</button>
+                    <button type="button" id="pick-painted-color" aria-pressed="false" aria-describedby="paint-instructions">スポイト</button>
+                    <button type="button" id="paint-mode" aria-pressed="false" aria-describedby="paint-instructions">なぞり塗り</button>
+                    <button type="button" id="board-undo" class="history-control" aria-label="操作を取り消す" title="操作を取り消す" disabled>↶</button>
+                    <button type="button" id="board-redo" class="history-control" aria-label="取り消しを戻す" title="取り消しを戻す" disabled>↷</button>
+                </div>
             </div>
         </div>
     </div>
