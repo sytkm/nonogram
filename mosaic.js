@@ -129,11 +129,9 @@ function openMosaic(puzzle, { saved, fromShare = saved?.fromShare === true } = {
         }
         totalTime.textContent = formatPlayTime(total);
         timeToggle.setAttribute('aria-pressed', String(showTimes));
-        timeToggle.textContent = showTimes ? '区画のプレイ時間を隠す' : '区画のプレイ時間を表示';
         grid.classList.toggle('show-times', showTimes);
         reviewToggle.hidden = finished.hidden || showTimes;
         reviewToggle.setAttribute('aria-pressed', String(showTiles));
-        reviewToggle.textContent = showTiles ? '区画を隠す' : '区画を見返す';
         map.hidden = !finished.hidden && !showTimes && !showTiles;
     }
 

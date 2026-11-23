@@ -13,11 +13,11 @@
     <script src="progress-store.js?v=saved-puzzle-summary"></script>
     <script src="quality-controls.js?v=check-result-wording"></script>
     <script src="mosaic-share.js?v=normal-share"></script>
-    <script src="mosaic.js?v=keep-shared-game"></script>
+    <script src="mosaic.js?v=operation-styles"></script>
     <script src="share-controls.js?v=play-sharing"></script>
     <script src="guide-tabs.js?v=preview-tabs"></script>
     <script src="importfile.js?v=restart-fit-board"></script>
-    <link rel="stylesheet" href="style.css?v=saved-puzzle-summary">
+    <link rel="stylesheet" href="style.css?v=operation-styles">
     <script src="dialog-dismiss.js?v=keep-shared-game" defer></script>
     <title>画像でノノグラム</title>
 </head>
@@ -94,10 +94,10 @@
                         <p id="preview-message" class="quality-result" role="status"></p>
                     </figure>
                     <div class="preview-options">
-                        <div class="preview-tabs" role="tablist" aria-label="作成プレビューの項目">
-                            <button type="button" class="action-link" id="preview-tab-settings" role="tab" aria-selected="true" aria-controls="preview-settings-panel">色とマス数</button>
-                            <button type="button" class="action-link" id="preview-tab-check" role="tab" aria-selected="false" aria-controls="preview-check-panel" tabindex="-1">問題を調べる</button>
-                            <button type="button" class="action-link" id="preview-tab-share" role="tab" aria-selected="false" aria-controls="preview-share-panel" tabindex="-1">共有</button>
+                        <div class="panel-tabs preview-tabs" role="tablist" aria-label="作成プレビューの項目">
+                            <button type="button" id="preview-tab-settings" role="tab" aria-selected="true" aria-controls="preview-settings-panel">色とマス数</button>
+                            <button type="button" id="preview-tab-check" role="tab" aria-selected="false" aria-controls="preview-check-panel" tabindex="-1">問題を調べる</button>
+                            <button type="button" id="preview-tab-share" role="tab" aria-selected="false" aria-controls="preview-share-panel" tabindex="-1">共有</button>
                         </div>
                         <section id="preview-settings-panel" class="preview-settings preview-tab-panel" role="tabpanel" aria-labelledby="preview-tab-settings" tabindex="0">
                             <p id="preview-original-color" hidden>元画像の色と空白を使います。マス数を減らすと細かい模様が省かれることがあります。</p>
@@ -208,8 +208,8 @@
         <p id="mosaic-progress" role="status"></p>
         <p>合計プレイ時間 <span id="mosaic-total-time">00:00</span></p>
         <div class="toolbar-group" role="group" aria-label="全体図の表示">
-            <button type="button" id="mosaic-time-toggle" class="action-link" aria-controls="mosaic-map" aria-pressed="false">区画のプレイ時間を表示</button>
-            <button type="button" id="mosaic-review-toggle" class="action-link" aria-controls="mosaic-map" aria-pressed="false" hidden>区画を見返す</button>
+            <button type="button" id="mosaic-time-toggle" class="action-link display-toggle" aria-controls="mosaic-map" aria-pressed="false"><span class="display-toggle-box" aria-hidden="true"></span>区画のプレイ時間を表示</button>
+            <button type="button" id="mosaic-review-toggle" class="action-link display-toggle" aria-controls="mosaic-map" aria-pressed="false" hidden><span class="display-toggle-box" aria-hidden="true"></span>区画を見返す</button>
         </div>
         <div class="mosaic-map" id="mosaic-map" role="region" aria-label="区画の全体図" tabindex="0">
             <div id="mosaic-grid"></div>
@@ -271,10 +271,10 @@
             <h2 id="play-guide-title">遊び方</h2>
             <form method="dialog"><button type="submit" autofocus>閉じる</button></form>
         </div>
-        <div class="guide-tabs" role="tablist" aria-label="遊び方の項目">
-            <button type="button" class="action-link" role="tab" id="guide-tab-basic" aria-controls="guide-basic" aria-selected="true">基本</button>
-            <button type="button" class="action-link" role="tab" id="guide-tab-color" aria-controls="guide-color" aria-selected="false" tabindex="-1">カラー</button>
-            <button type="button" class="action-link" role="tab" id="guide-tab-controls" aria-controls="guide-controls" aria-selected="false" tabindex="-1">操作</button>
+        <div class="panel-tabs guide-tabs" role="tablist" aria-label="遊び方の項目">
+            <button type="button" role="tab" id="guide-tab-basic" aria-controls="guide-basic" aria-selected="true">基本</button>
+            <button type="button" role="tab" id="guide-tab-color" aria-controls="guide-color" aria-selected="false" tabindex="-1">カラー</button>
+            <button type="button" role="tab" id="guide-tab-controls" aria-controls="guide-controls" aria-selected="false" tabindex="-1">操作</button>
         </div>
         <div class="guide-content">
             <section id="guide-basic" role="tabpanel" aria-labelledby="guide-tab-basic" tabindex="0">
@@ -393,7 +393,7 @@
                     </div>
                 </div>
                 <div id="clue-tools" class="board-menu play-only" role="region" aria-labelledby="clue-tools-toggle" hidden>
-                    <div class="toolbar-group" role="group" aria-label="数字を押したときの操作">
+                    <div class="toolbar-group clue-modes" role="group" aria-label="数字を押したときの操作">
                         <button type="button" class="clue-mode" id="clue-mark-mode" aria-pressed="true" aria-describedby="clue-help-mark" data-close-board-menu>チェック</button>
                         <button type="button" class="clue-mode" id="clue-color-mode" aria-pressed="false" aria-describedby="clue-help-color" data-close-board-menu>色を選ぶ</button>
                     </div>
