@@ -29,13 +29,24 @@ let resumeProgressId;
 const savedTimeFormat = new Intl.DateTimeFormat('ja-JP', { dateStyle: 'medium', timeStyle: 'short' });
 
 /**
- * 過去の保存を読む。保存がない、読み出せない、またはJSONが壊れている場合は null。
+ * 過去の保存を読む。保存がない、読み出せない、または再開に必要な構造がない場合は null。
  * @param {string} [key] - 通常または日替わりの保存キー
  * @returns {ProgressRecord|null}
  */
 function readProgress(key = PROGRESS_KEY) {
     try {
-        return JSON.parse(localStorage.getItem(key));
+        const saved = JSON.parse(localStorage.getItem(key));
+        if (!saved || typeof saved.id !== 'string' || !saved.id) return null;
+        if (saved.kind !== 'board' && saved.kind !== 'mosaic') return null;
+        if (saved.kind === 'mosaic' && !Array.isArray(saved.tiles)) return null;
+
+        const { matrix, palette, blank } = saved.puzzle ?? {};
+        const width = matrix?.[0]?.length;
+        if (!Array.isArray(matrix) || !width ||
+            !matrix.every(row => Array.isArray(row) && row.length === width)) return null;
+        if (!Array.isArray(palette) || !palette.length ||
+            !Number.isInteger(blank) || blank < 0 || blank > palette.length) return null;
+        return saved;
     } catch {
         return null;
     }
