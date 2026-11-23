@@ -18,8 +18,8 @@
     <script src="mosaic.js?v=clear-results"></script>
     <script src="share-controls.js?v=play-sharing"></script>
     <script src="guide-tabs.js?v=preview-tabs"></script>
-    <script src="importfile.js?v=board-standard-size"></script>
-    <link rel="stylesheet" href="style.css?v=board-menu-overlays">
+    <script src="importfile.js?v=clue-eyedropper-settings"></script>
+    <link rel="stylesheet" href="style.css?v=clue-eyedropper-settings">
     <script src="dialog-dismiss.js?v=clear-results" defer></script>
     <title>画像でノノグラム</title>
 </head>
@@ -284,6 +284,12 @@
             <legend>共通設定</legend>
             <label><input type="checkbox" id="trace-paint" checked> なぞり塗り</label>
             <label><input type="checkbox" id="stick-clues" checked> ヒント数字を固定</label>
+            <label>数字を押すと
+                <select id="clue-action">
+                    <option value="mark">チェック</option>
+                    <option value="color">色を選ぶ</option>
+                </select>
+            </label>
             <label><input type="checkbox" id="color-symbols"> 色の記号を表示（カラー問題）</label>
             <label><input type="checkbox" id="auto-slash"> 完成した行・列の空白に斜線</label>
         </fieldset>
@@ -353,7 +359,7 @@
             <section id="guide-controls" role="tabpanel" aria-labelledby="guide-tab-controls" tabindex="0" hidden>
                 <h3>マスを塗る</h3>
                 <p>パレットで色や斜線を選び、マスを押します。指やマウスでなぞって塗れます。「メニュー → 設定」で「なぞり塗り」を切り替えられます。</p>
-                <p>初期設定では、ヒントの数字を押すとチェックが付きます。パレットの「数字を押すと」で「チェック」と「色を選ぶ」を切り替えられます。</p>
+                <p>初期設定では、ヒントの数字を押すとチェックが付きます。「メニュー → 設定」の「数字を押すと」で「色を選ぶ」に変更できます。スポイトでもヒントの数字から色を拾えます。</p>
                 <h3>盤面を動かす・拡大する</h3>
                 <p>スマホでは2本指で盤面を動かし、指の間を広げたり狭めたりして拡大・縮小します。なぞり塗りをオフにすると、1本指でも盤面を動かせます。</p>
                 <p>「全体」で盤面を見渡し、「標準」で塗りやすい大きさ（1マス44ピクセル）に戻せます。</p>
@@ -433,26 +439,13 @@
                     </div>
                     <p id="palette-scroll-note" hidden>スクロールすると他の色を選べます。</p>
                 </div>
-                <div class="paint-controls">
-                    <div class="toolbar-group paint-tools" role="group" aria-label="塗りと編集">
-                        <button type="button" id="palette-blank" aria-label="空白に戻す" aria-pressed="false">空白</button>
-                        <button type="button" id="palette-slash" aria-label="斜線で印を付ける" aria-pressed="false">斜線</button>
-                        <button type="button" id="pick-painted-color" aria-pressed="false" aria-describedby="paint-instructions" title="マスの色・空白・斜線を拾えます。">スポイト</button>
-                        <button type="button" id="board-undo" class="history-control" aria-label="操作を取り消す" title="操作を取り消す" disabled>↶</button>
-                        <button type="button" id="board-redo" class="history-control" aria-label="取り消しを戻す" title="取り消しを戻す" disabled>↷</button>
-                        <button type="button" class="board-menu-button play-only" id="clue-tools-toggle" aria-controls="clue-tools" aria-expanded="false"><span>数字を押すと</span><strong id="clue-mode-label">チェック</strong></button>
-                    </div>
-                    <div id="clue-tools" class="board-menu play-only" role="region" aria-labelledby="clue-tools-toggle" hidden>
-                        <div class="toolbar-group clue-modes" role="group" aria-label="数字を押したときの操作">
-                            <button type="button" class="clue-mode" id="clue-mark-mode" aria-pressed="true" aria-describedby="clue-help-mark" data-close-board-menu>チェック</button>
-                            <button type="button" class="clue-mode" id="clue-color-mode" aria-pressed="false" aria-describedby="clue-help-color" data-close-board-menu>色を選ぶ</button>
-                        </div>
-                        <dl>
-                            <dt>チェック</dt>
-                            <dd id="clue-help-mark">押した数字に目印を付けます。もう一度押すと外れます。</dd>
-                            <dt>色を選ぶ</dt>
-                            <dd id="clue-help-color">押した数字と同じ色をパレットで選びます。0では色は変わりません。</dd>
-                        </dl>
+                <div class="toolbar-group paint-tools" role="group" aria-label="塗りと編集">
+                    <button type="button" id="palette-blank" aria-label="空白に戻す" aria-pressed="false">空白</button>
+                    <button type="button" id="palette-slash" aria-label="斜線で印を付ける" aria-pressed="false">斜線</button>
+                    <button type="button" id="pick-painted-color" aria-pressed="false" aria-describedby="paint-instructions" title="マスの色・空白・斜線や、ヒントの数字の色を拾えます。">スポイト</button>
+                    <div class="history-controls" role="group" aria-label="操作履歴">
+                        <button type="button" id="board-undo" disabled>元に戻す</button>
+                        <button type="button" id="board-redo" disabled>やり直す</button>
                     </div>
                 </div>
             </div>

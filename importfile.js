@@ -431,6 +431,7 @@ function setupPlayGuide() {
 function setupSettings() {
     const dialog = document.getElementById('settings-dialog');
     const playPanel = document.getElementById('play-panel');
+    const clueAction = document.getElementById('clue-action');
     const settingsInputs = {
         stickClues: document.getElementById('stick-clues'),
         showSymbols: document.getElementById('color-symbols'),
@@ -451,12 +452,14 @@ function setupSettings() {
             if (!playPanel.hidden) refreshBoardSettings?.();
         };
     }
+    clueAction.onchange = () => saveBoardSetting('pickClueColor', clueAction.value === 'color');
     for (const button of document.querySelectorAll('[data-open-settings]')) {
         button.onclick = () => {
             showBoardMenu();
             for (const [name, input] of Object.entries(settingsInputs)) {
                 input.checked = boardSetting(name, playPanel.hidden ? undefined : boardForSettings);
             }
+            clueAction.value = boardSetting('pickClueColor', playPanel.hidden ? undefined : boardForSettings) ? 'color' : 'mark';
             dialog.showModal();
         };
     }
@@ -785,24 +788,6 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     keyboardMarker.hidden = true;
     let showSymbols = multiColor && boardSetting('showSymbols', board);
     const palettePanel = document.getElementById('color-palette');
-    const clueMarkMode = document.getElementById('clue-mark-mode');
-    const clueColorMode = document.getElementById('clue-color-mode');
-    const clueModeLabel = document.getElementById('clue-mode-label');
-    function updateClueMode() {
-        const pickColor = boardSetting('pickClueColor', board);
-        clueMarkMode.setAttribute('aria-pressed', String(!pickColor));
-        clueColorMode.setAttribute('aria-pressed', String(pickColor));
-        clueModeLabel.textContent = (pickColor ? clueColorMode : clueMarkMode).textContent;
-    }
-    clueMarkMode.onclick = () => {
-        saveBoardSetting('pickClueColor', false);
-        updateClueMode();
-    };
-    clueColorMode.onclick = () => {
-        saveBoardSetting('pickClueColor', true);
-        updateClueMode();
-    };
-    updateClueMode();
     palettePanel.classList.toggle('show-symbols', showSymbols);
     const zoomIn = document.getElementById('zoom-in');
     const zoomOut = document.getElementById('zoom-out');
@@ -1315,7 +1300,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         const messages = {
             paint: 'マスを押して塗り、1本指または2本指で盤面を動かせます。',
             trace: '1本指でなぞると塗れます。2本指で盤面を動かせます。マウスでもなぞって塗れます。',
-            pick: 'マスを押すと色・空白・斜線を拾えます。キーボードでは Space または Enter を押します。',
+            pick: 'マスの色・空白・斜線や、ヒントの数字の色を拾えます。キーボードでマスから拾うには Space または Enter を押します。',
         };
         instructions.textContent = messages[mode];
         // 読み上げ用の説明だけを更新し、入力モードで盤面の表示領域を変えない。
@@ -1323,8 +1308,8 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
 
     const configuredPaintMode = () => boardSetting('tracePaint', board) ? 'trace' : 'paint';
 
-    function pickCellColor({ row, column }) {
-        if (selectColor(cells[row][column])) setInputMode(configuredPaintMode());
+    function pickColor(color) {
+        if (selectColor(color)) setInputMode(configuredPaintMode());
     }
 
     function pointFor(event, painting = false) {
@@ -1420,7 +1405,10 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         const point = pointFor(event);
         const clue = boardClueAt(point, rowsOfClues, columnsOfClues);
         if (clue && clue.key === pressedClue) {
-            if (inputMode === 'pick') return;
+            if (inputMode === 'pick') {
+                if (clue.color >= 0) pickColor(clue.color);
+                return;
+            }
             if (boardSetting('pickClueColor', board)) {
                 if (clue.color >= 0) selectColor(clue.color);
                 return;
@@ -1437,7 +1425,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         if (!cell) return;
         keyboardCell = cell;
         positionKeyboardCell();
-        if (inputMode === 'pick') pickCellColor(cell);
+        if (inputMode === 'pick') pickColor(cells[cell.row][cell.column]);
         else if (inputMode === 'paint') editCell(cell, g_selectcolor);
     };
     canvas.oncontextmenu = event => {
@@ -1472,7 +1460,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         } else if ([' ', 'enter', 'x', 'delete', 'backspace'].includes(key)) {
             event.preventDefault();
             if (inputMode === 'pick') {
-                if (!event.repeat && (key === ' ' || key === 'enter')) pickCellColor(keyboardCell);
+                if (!event.repeat && (key === ' ' || key === 'enter')) pickColor(cells[keyboardCell.row][keyboardCell.column]);
             } else if (key === 'x') {
                 if (!event.repeat) toggleSlash(keyboardCell);
             } else {
