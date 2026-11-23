@@ -127,6 +127,20 @@ header:has(#start-panel:not([hidden]) #image-preview[hidden]) .site-heading {
     margin-block-start: 0.65rem;
 }
 
+#saved-progress-details {
+    min-width: 0;
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+#saved-progress-details p {
+    margin: 0;
+}
+
+#saved-progress-timestamp {
+    font-size: 0.8125rem;
+}
+
 #start-panel:has(#image-preview[hidden]) .home-art {
     display: grid;
     justify-items: start;

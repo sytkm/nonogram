@@ -10,14 +10,14 @@
     <script src="play-clock.js?v=hint-penalties"></script>
     <script src="board-tools.js?v=clue-eyedropper"></script>
     <script src="line-logic.js"></script>
-    <script src="progress-store.js?v=keep-shared-game"></script>
+    <script src="progress-store.js?v=saved-puzzle-summary"></script>
     <script src="quality-controls.js?v=check-result-wording"></script>
     <script src="mosaic-share.js?v=normal-share"></script>
     <script src="mosaic.js?v=keep-shared-game"></script>
     <script src="share-controls.js?v=play-sharing"></script>
     <script src="guide-tabs.js?v=preview-tabs"></script>
     <script src="importfile.js?v=keep-shared-game"></script>
-    <link rel="stylesheet" href="style.css?v=board-view-controls">
+    <link rel="stylesheet" href="style.css?v=saved-puzzle-summary">
     <script src="dialog-dismiss.js?v=keep-shared-game" defer></script>
     <title>画像でノノグラム</title>
 </head>
@@ -47,8 +47,11 @@
                     <div class="home-recovery">
                         <p id="shared-link-status" role="status"></p>
                         <div id="saved-progress" class="toolbar-group" hidden>
-                            <button type="button" id="resume-progress" class="action-link">前回の続きから</button>
-                            <small>このブラウザに自動保存した問題を再開します。</small>
+                            <button type="button" id="resume-progress" class="action-link" aria-describedby="saved-progress-details">前回の続きから</button>
+                            <div id="saved-progress-details">
+                                <p id="saved-progress-summary"></p>
+                                <p id="saved-progress-timestamp" hidden>最終保存 <time id="saved-progress-time"></time></p>
+                            </div>
                         </div>
                     </div>
                 </div>
