@@ -47,6 +47,7 @@ function setupBoard({
         },
         afterResize: renderFixedClues,
     });
+    const minimap = createBoardMinimap({ cells, palette, blank, viewport, leftClueCount, topClueCount, boardView });
     let inputMode;
     let stroke;
     let pressedClue;
@@ -100,6 +101,7 @@ function setupBoard({
         clearConflicts();
         positionHintMarker();
         renderBoard(true);
+        minimap.repaint();
         updateHistoryButtons();
         queueProgressSave();
         onEdit();
@@ -107,6 +109,7 @@ function setupBoard({
 
     function renderFixedClues() {
         renderer.renderFixedClues(boardView.cellSize, boardView.clueGutters());
+        minimap.updateViewport();
     }
 
     function positionKeyboardCell(scroll = false) {
@@ -303,6 +306,7 @@ function setupBoard({
             pausedPosition = { left: viewport.scrollLeft, top: viewport.scrollTop };
             clock.suspend();
             showBoardMenu();
+            minimap.close();
             setPlayAreaVisible(false);
         }
         board.paused = Boolean(pausedPosition);
@@ -346,6 +350,7 @@ function setupBoard({
         action.push({ row, column, before, after: color });
         cells[row][column] = color;
         renderer.paintCell(row, column, color, boardView.cellSize, showSymbols);
+        minimap.repaint();
     }
 
     function continueStroke(event) {
@@ -379,6 +384,7 @@ function setupBoard({
                 cells[change.row][change.column] = change.before;
             }
             renderBoard(true);
+            minimap.repaint();
             queueProgressSave();
         }
         pressedClue = undefined;
@@ -506,6 +512,7 @@ function setupBoard({
     return {
         state: board,
         stopStroke,
+        closeMinimap: minimap.close,
         redraw() {
             renderBoard();
             boardView.updateZoomButtons();

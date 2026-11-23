@@ -35,6 +35,7 @@ function showPuzzleScreen(clock) {
  */
 function leavePuzzleScreen(destination = 'home') {
     suspendCurrentPuzzle();
+    activeBoard?.closeMinimap();
     flushProgress();
     showPlayScreen(destination);
 }
