@@ -1342,7 +1342,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         pressedClue = undefined;
     });
 
-    setInputMode('paint');
+    setInputMode('trace');
     pickPaintedColor.disabled = false;
     paintMode.onclick = () => setInputMode(inputMode === 'trace' ? 'paint' : 'trace');
     pickPaintedColor.onclick = () => setInputMode(inputMode === 'pick' ? 'paint' : 'pick');
