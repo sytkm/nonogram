@@ -22,6 +22,14 @@ window.onload = async function () {
     setupProgressRestore();
     setupDailyPuzzle();
     setupBoardMenus();
+    // Safari のネイティブなピンチも、プレイ面で始まった場合だけ抑える。
+    for (const type of ['gesturestart', 'gesturechange']) {
+        document.addEventListener(type, event => {
+            if (!document.querySelector('dialog[open]') &&
+                !document.getElementById('play-panel').hidden &&
+                event.target.closest?.('header, .play-workspace, #pause-message')) event.preventDefault();
+        }, { passive: false });
+    }
     setupSettings();
     document.getElementById('open-play-menu').onclick = () => {
         showBoardMenu();
@@ -1066,11 +1074,11 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         }
     }
 
-    function resizeBoard(nextSize, center) {
+    function resizeBoard(nextSize, center, anchor) {
         stopStroke();
         const previousSize = cellSize;
-        const oldX = viewport.scrollLeft + Math.min(viewport.clientWidth, canvas.clientWidth) / 2;
-        const oldY = viewport.scrollTop + Math.min(viewport.clientHeight, canvas.clientHeight) / 2;
+        const oldX = viewport.scrollLeft + (anchor?.from.x ?? Math.min(viewport.clientWidth, canvas.clientWidth) / 2);
+        const oldY = viewport.scrollTop + (anchor?.from.y ?? Math.min(viewport.clientHeight, canvas.clientHeight) / 2);
         cellSize = nextSize;
         canvas.style.width = (widthInCells * cellSize) + 'px';
         canvas.style.height = (heightInCells * cellSize) + 'px';
@@ -1079,8 +1087,8 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         positionKeyboardCell();
         if (center && previousSize) {
             const ratio = cellSize / previousSize;
-            viewport.scrollLeft = oldX * ratio - Math.min(viewport.clientWidth, canvas.clientWidth) / 2;
-            viewport.scrollTop = oldY * ratio - Math.min(viewport.clientHeight, canvas.clientHeight) / 2;
+            viewport.scrollLeft = oldX * ratio - (anchor?.to.x ?? Math.min(viewport.clientWidth, canvas.clientWidth) / 2);
+            viewport.scrollTop = oldY * ratio - (anchor?.to.y ?? Math.min(viewport.clientHeight, canvas.clientHeight) / 2);
         } else {
             viewport.scrollLeft = 0;
             viewport.scrollTop = 0;
@@ -1369,6 +1377,20 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
             queueProgressSave();
         }
         pressedClue = undefined;
+    }, {
+        size: () => cellSize,
+        schedule: callback => requestAnimationFrame(callback),
+        apply(size, previous, next) {
+            const nextSize = Math.max(1, Math.min(maxCellSize, Math.round(size)));
+            if (nextSize === cellSize) {
+                viewport.scrollLeft += previous.x - next.x;
+                viewport.scrollTop += previous.y - next.y;
+                return;
+            }
+            const rect = viewport.getBoundingClientRect();
+            const relative = point => ({ x: point.x - rect.left, y: point.y - rect.top });
+            resizeBoard(nextSize, true, { from: relative(previous), to: relative(next) });
+        },
     });
 
     setInputMode('trace');
@@ -1926,11 +1948,12 @@ function hex(s) {
  * singleFingerPan のときは1本指のドラッグも移動に使い、短いタップとは区別する。
  * 移動後は全ての指が離れるまで塗りを抑止する。cancelStroke は未確定の塗りを戻す。
  */
-function createTouchPan(viewport, cancelStroke) {
+function createTouchPan(viewport, cancelStroke, zoom) {
     const pointers = new Map();
     let panning = false;
     let singleFingerPan = false;
     let startPoint;
+    let pinch;
     function center() {
         const points = [...pointers.values()];
         return {
@@ -1938,8 +1961,36 @@ function createTouchPan(viewport, cancelStroke) {
             y: points.reduce((sum, p) => sum + p.y, 0) / points.length,
         };
     }
+    function distance() {
+        const [a, b] = pointers.values();
+        return Math.hypot(a.x - b.x, a.y - b.y);
+    }
+
+    function startPinch() {
+        pinch = zoom && pointers.size === 2 ? {
+            center: center(),
+            distance: Math.max(12, distance()),
+            size: zoom.size(),
+            scaling: false,
+            pending: false,
+        } : undefined;
+    }
+
+    function updatePinch(gesture) {
+        if (!gesture?.pending) return;
+        gesture.pending = false;
+        const next = center();
+        const span = Math.max(12, distance());
+        // 位置だけを動かすとき、指の間隔の小さなぶれは倍率に反映しない。
+        gesture.scaling ||= Math.abs(span - gesture.distance) >= Math.max(6, gesture.distance * 0.08);
+        const size = gesture.scaling ? gesture.size * span / gesture.distance : gesture.size;
+        zoom.apply(size, gesture.center, next);
+        gesture.center = next;
+    }
+
     return {
         down(event, allowSingleFingerPan = false) {
+            updatePinch(pinch);
             if (!pointers.size) {
                 panning = false;
                 singleFingerPan = allowSingleFingerPan;
@@ -1953,12 +2004,23 @@ function createTouchPan(viewport, cancelStroke) {
                     cancelStroke();
                 }
             }
+            startPinch();
             return panning;
         },
         move(event) {
             if (!pointers.has(event.pointerId)) return false;
             let previous = center();
             pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+            if (pinch) {
+                const gesture = pinch;
+                if (!gesture.pending) {
+                    gesture.pending = true;
+                    zoom.schedule(() => {
+                        if (pinch === gesture) updatePinch(gesture);
+                    });
+                }
+                return true;
+            }
             const next = center();
             if (!panning && singleFingerPan &&
                 Math.hypot(next.x - startPoint.x, next.y - startPoint.y) >= 6) {
@@ -1973,12 +2035,16 @@ function createTouchPan(viewport, cancelStroke) {
             return panning;
         },
         end(event) {
-            if (!pointers.delete(event.pointerId)) return false;
+            if (!pointers.has(event.pointerId)) return false;
+            updatePinch(pinch);
+            pointers.delete(event.pointerId);
+            startPinch();
             return panning;
         },
         suppressesClick() { return panning; },
         reset() {
             pointers.clear();
+            pinch = undefined;
             panning = false;
         },
     };

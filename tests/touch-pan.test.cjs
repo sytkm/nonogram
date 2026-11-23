@@ -93,3 +93,50 @@ test('オフ時の1本指移動から2本指へ切り替えても位置が飛ば
     pan.end(event(1)); pan.move(event(2, 200, 200));
     assert.deepEqual(viewport, { scrollLeft: 140, scrollTop: 240 });
 });
+
+function pinchFixture() {
+    const frames = [];
+    const updates = [];
+    const pan = context.createTouchPan({}, () => {}, {
+        size: () => 40,
+        schedule: callback => frames.push(callback),
+        apply: (size, from, to) => updates.push({ size, from: { ...from }, to: { ...to } }),
+    });
+    const event = (pointerId, clientX, clientY = 100) => ({ pointerId, clientX, clientY });
+    pan.down(event(1, 100));
+    pan.down(event(2, 200));
+    return { pan, event, frames, updates };
+}
+
+test('同じフレームでの平行移動は指の間隔が一時的に変わっても拡大しない', () => {
+    const { pan, event, frames, updates } = pinchFixture();
+    pan.move(event(1, 120, 130));
+    pan.move(event(2, 220, 130));
+    assert.equal(frames.length, 1);
+    frames.shift()();
+    assert.deepEqual(updates, [{ size: 40, from: { x: 150, y: 100 }, to: { x: 170, y: 130 } }]);
+});
+
+test('ピンチは指の間隔から拡大・縮小し、重心の移動も渡す', () => {
+    const { pan, event, frames, updates } = pinchFixture();
+    pan.move(event(1, 80, 110));
+    pan.move(event(2, 230, 110));
+    frames.shift()();
+    assert.deepEqual(updates[0], { size: 60, from: { x: 150, y: 100 }, to: { x: 155, y: 110 } });
+    pan.move(event(1, 125, 110));
+    pan.move(event(2, 185, 110));
+    pan.end(event(2, 185));
+    frames.shift()();
+    assert.equal(updates.length, 2);
+    assert.equal(updates[1].size, 24);
+    assert.equal(pan.move(event(1, 145)), true);
+    assert.equal(pan.suppressesClick(), true);
+});
+
+test('モード変更で破棄したピンチは次の描画で反映しない', () => {
+    const { pan, event, frames, updates } = pinchFixture();
+    pan.move(event(1, 50));
+    pan.reset();
+    frames.shift()();
+    assert.deepEqual(updates, []);
+});
