@@ -45,7 +45,7 @@ function detectImageFormat(header) {
 /**
  * 画像のヘッダーを判別してブラウザで読み込む。一時URLは成功・失敗を問わず破棄する。
  * @param {File} file
- * @returns {Promise<{image: HTMLImageElement, format: 'png'|'jpeg'|'webp', canMakeConvertedColor: boolean, canPlayLegacyColor: boolean}>}
+ * @returns {Promise<{image: HTMLImageElement, canMakeConvertedColor: boolean, canPlayLegacyColor: boolean}>}
  * @throws {Error} 対応外の形式、またはブラウザが復号できない画像
  */
 async function readPuzzleImage(file) {
@@ -66,7 +66,6 @@ async function readPuzzleImage(file) {
         }
         return {
             image,
-            format,
             // PNGの色タイプ2はRGB、6はRGBA。どちらも変換して遊べる。
             canMakeConvertedColor: format !== 'png' || [2, 6].includes(header[25]),
             canPlayLegacyColor: format === 'png' && header[25] === 3 && header[28] === 0,
