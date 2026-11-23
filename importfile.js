@@ -359,6 +359,10 @@ function setupBoardMenus() {
     tools.addEventListener('click', event => {
         if (event.target.closest('button[data-close-board-menu]')) closeActiveMenu();
     }, { capture: true });
+    document.addEventListener('click', event => {
+        if (!event.target.closest('.board-menu, .board-menu-button') &&
+            tools.querySelector('.board-menu-button[aria-expanded="true"]')) showBoardMenu();
+    });
     tools.addEventListener('keydown', event => {
         if (event.key === 'Escape' && closeActiveMenu()) event.preventDefault();
     });
@@ -663,6 +667,7 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
     clearResult.hidden = true;
     clearResult.onclick = null;
     document.getElementById('answer-tool').hidden = options.shared === true;
+    document.getElementById('hint-tools-toggle').textContent = options.shared ? '矛盾チェック' : 'ヒント・答え';
     download.onclick = () => {
         const link = document.createElement('a');
         link.href = document.getElementById('canvas').toDataURL('image/png');
@@ -782,10 +787,12 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     const palettePanel = document.getElementById('color-palette');
     const clueMarkMode = document.getElementById('clue-mark-mode');
     const clueColorMode = document.getElementById('clue-color-mode');
+    const clueModeLabel = document.getElementById('clue-mode-label');
     function updateClueMode() {
         const pickColor = boardSetting('pickClueColor', board);
         clueMarkMode.setAttribute('aria-pressed', String(!pickColor));
         clueColorMode.setAttribute('aria-pressed', String(pickColor));
+        clueModeLabel.textContent = (pickColor ? clueColorMode : clueMarkMode).textContent;
     }
     clueMarkMode.onclick = () => {
         saveBoardSetting('pickClueColor', false);
