@@ -757,6 +757,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     const pickPaintedColor = document.getElementById('pick-painted-color');
     const instructions = document.getElementById('paint-instructions');
     const pauseButton = document.getElementById('pause-play');
+    const pauseLabel = document.getElementById('pause-play-label');
     const pauseMessage = document.getElementById('pause-message');
     const hint = document.getElementById('line-hint');
     const logicHint = document.getElementById('logic-hint');
@@ -1199,7 +1200,13 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         onEdit(note);
     };
     pauseButton.disabled = false;
-    pauseButton.textContent = '一時停止';
+    setPauseControl(false);
+
+    function setPauseControl(paused) {
+        pauseButton.toggleAttribute('data-paused', paused);
+        pauseLabel.textContent = paused ? '再開' : '一時停止';
+    }
+
     function togglePause() {
         if (pausedPosition) {
             setPlayAreaVisible(true);
@@ -1217,9 +1224,9 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
             clock.suspend();
             setPlayAreaVisible(false);
         }
-        pauseMessage.hidden = !pausedPosition;
-        pauseButton.textContent = pausedPosition ? '再開' : '一時停止';
         board.paused = Boolean(pausedPosition);
+        pauseMessage.hidden = !board.paused;
+        setPauseControl(board.paused);
         updatePlayTime();
     }
     pauseButton.onclick = () => {
