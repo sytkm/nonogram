@@ -19,7 +19,7 @@
     <script src="share-controls.js?v=play-sharing"></script>
     <script src="guide-tabs.js?v=preview-tabs"></script>
     <script src="importfile.js?v=board-standard-size"></script>
-    <link rel="stylesheet" href="style.css?v=board-menu-overlays">
+    <link rel="stylesheet" href="style.css?v=history-button-labels">
     <script src="dialog-dismiss.js?v=clear-results" defer></script>
     <title>画像でノノグラム</title>
 </head>
@@ -438,8 +438,10 @@
                         <button type="button" id="palette-blank" aria-label="空白に戻す" aria-pressed="false">空白</button>
                         <button type="button" id="palette-slash" aria-label="斜線で印を付ける" aria-pressed="false">斜線</button>
                         <button type="button" id="pick-painted-color" aria-pressed="false" aria-describedby="paint-instructions" title="マスの色・空白・斜線を拾えます。">スポイト</button>
-                        <button type="button" id="board-undo" class="history-control" aria-label="操作を取り消す" title="操作を取り消す" disabled>↶</button>
-                        <button type="button" id="board-redo" class="history-control" aria-label="取り消しを戻す" title="取り消しを戻す" disabled>↷</button>
+                        <div class="history-controls" role="group" aria-label="操作履歴">
+                            <button type="button" id="board-undo" disabled>元に戻す</button>
+                            <button type="button" id="board-redo" disabled>やり直す</button>
+                        </div>
                         <button type="button" class="board-menu-button play-only" id="clue-tools-toggle" aria-controls="clue-tools" aria-expanded="false"><span>数字を押すと</span><strong id="clue-mode-label">チェック</strong></button>
                     </div>
                     <div id="clue-tools" class="board-menu play-only" role="region" aria-labelledby="clue-tools-toggle" hidden>

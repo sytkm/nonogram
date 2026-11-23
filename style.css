@@ -1227,6 +1227,11 @@ dialog button:focus-visible {
     gap: 0.25rem;
 }
 
+.history-controls {
+    display: flex;
+    gap: inherit;
+}
+
 #fix-phone-under-menu .paint-tools button {
     min-width: 44px;
     padding-inline: 0.3rem;
@@ -1240,10 +1245,6 @@ dialog button:focus-visible {
 
 #clue-tools-toggle strong {
     display: block;
-}
-
-#fix-phone-under-menu .paint-tools .history-control {
-    font-size: 1.125rem;
 }
 
 @media (min-width: 44rem) and (orientation: landscape) {
