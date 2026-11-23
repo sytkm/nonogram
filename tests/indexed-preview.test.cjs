@@ -34,7 +34,7 @@ function setup({ decodeFails = false, pngColorType } = {}) {
         mosaicShareURL: (_, puzzle) => new Promise(resolve => splitShares.push({ puzzle, resolve })),
         setupQualityCheck: () => () => {},
     });
-    for (const name of ['image-input.js', 'mosaic.js', 'share-controls.js', 'importfile.js']) {
+    for (const name of ['image-input.js', 'mosaic.js', 'share-controls.js', 'image-preview.js']) {
         vm.runInContext(fs.readFileSync(path.join(__dirname, '..', name), 'utf8'), context);
     }
     context.setupPuzzleShare = (group, url) => { group.url = url; };
