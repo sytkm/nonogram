@@ -823,6 +823,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     const [columnsOfClues, topClueCount] = columnClues;
     const widthInCells = columns + leftClueCount;
     const heightInCells = rows + topClueCount;
+    const standardCellSize = 44;
     const maxCellSize = 64;
     const fit = () => Math.max(1, Math.min(maxCellSize, Math.floor(Math.min(
         viewport.clientWidth / widthInCells, viewport.clientHeight / heightInCells
@@ -1108,10 +1109,13 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     }
 
     const onSmallScreen = window.matchMedia('(max-width: 600px), (pointer: coarse)').matches;
-    resizeBoard(onSmallScreen ? Math.max(28, Math.min(44, fit())) : Math.min(initialCellSize, maxCellSize), false);
+    resizeBoard(onSmallScreen ? Math.max(28, Math.min(standardCellSize, fit())) : Math.min(initialCellSize, maxCellSize), false);
     zoomIn.onclick = () => resizeBoard(Math.min(maxCellSize, Math.ceil(cellSize * 1.25)), true);
     zoomOut.onclick = () => resizeBoard(Math.max(1, Math.floor(cellSize / 1.25)), true);
     document.getElementById('zoom-fit').onclick = fitBoard;
+    document.getElementById('zoom-standard').onclick = () => {
+        if (cellSize !== standardCellSize) resizeBoard(standardCellSize, true);
+    };
     const solve = document.getElementById('solve');
     const rowPenalty = columns * secondsPerPuzzleCell;
     const columnPenalty = rows * secondsPerPuzzleCell;
