@@ -215,3 +215,12 @@ function describeColorGroup(entries) {
     const spread = Math.max(...ranges);
     return { entries, count, channel: ranges.indexOf(spread), priority: spread ** 2 * count };
 }
+
+function readBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+    });
+}

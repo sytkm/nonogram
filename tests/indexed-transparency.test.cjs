@@ -5,7 +5,7 @@ const vm = require('node:vm');
 const test = require('node:test');
 
 const context = vm.createContext({ window: {}, atob });
-for (const file of ['inflate.min.js', 'image-input.js', 'importfile.js']) {
+for (const file of ['inflate.min.js', 'image-input.js', 'indexed-png.js', 'importfile.js']) {
     vm.runInContext(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), context);
 }
 const plain = value => JSON.parse(JSON.stringify(value));
