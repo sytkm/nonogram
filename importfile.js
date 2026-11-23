@@ -1275,7 +1275,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
             pick: '塗ったマスを押すと色を拾えます。キーボードでは Space または Enter を押します。',
         };
         instructions.textContent = messages[mode];
-        instructions.hidden = mode === 'paint';
+        // 読み上げ用の説明だけを更新し、入力モードで盤面の表示領域を変えない。
     }
 
     function pickCellColor({ row, column }) {
