@@ -67,9 +67,7 @@ function openMosaic(puzzle, { saved, fromShare = saved?.fromShare === true } = {
     const tileProgress = document.getElementById('mosaic-tile-progress');
     const totalTime = document.getElementById('mosaic-total-time');
     const timeToggle = document.getElementById('mosaic-time-toggle');
-    const review = document.getElementById('mosaic-review');
     const grid = document.getElementById('mosaic-grid');
-    const map = document.getElementById('mosaic-map');
     const instructions = document.getElementById('mosaic-instructions');
     const finished = document.getElementById('mosaic-finished');
     const canvas = document.getElementById('mosaic-image');
@@ -80,7 +78,6 @@ function openMosaic(puzzle, { saved, fromShare = saved?.fromShare === true } = {
     const styles = palette.map(color => 'rgb(' + color.join(',') + ')');
     let completedCount = mosaic.tiles.filter(tile => tile.complete).length;
     let showTimes = saved?.showTimes ?? false;
-    let showTiles = false;
     const tileDisplays = [];
     grid.replaceChildren();
     grid.style.setProperty('--mosaic-columns', mosaic.columns);
@@ -141,8 +138,6 @@ function openMosaic(puzzle, { saved, fromShare = saved?.fromShare === true } = {
         totalTime.textContent = formatPlayTime(total);
         timeToggle.setAttribute('aria-pressed', String(showTimes));
         grid.classList.toggle('show-times', showTimes);
-        review.hidden = finished.hidden || showTimes || showTiles;
-        map.hidden = !finished.hidden && !showTimes && !showTiles;
     }
 
     function drawPiece(context, tile, left, top) {
@@ -216,11 +211,6 @@ function openMosaic(puzzle, { saved, fromShare = saved?.fromShare === true } = {
         showTimes = !showTimes;
         updateTimeView();
         queueProgressSave();
-    };
-    review.onclick = () => {
-        showTiles = true;
-        updateTimeView();
-        map.focus();
     };
     updateOverview(panel);
     setProgressSource(() => ({
