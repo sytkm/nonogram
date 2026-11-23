@@ -5,7 +5,9 @@ const vm = require('node:vm');
 const test = require('node:test');
 
 function setup(maxLength = Infinity) {
-    const elements = { 'saved-progress': {}, 'progress-warning': {} };
+    const elements = Object.fromEntries([
+        'saved-progress', 'progress-warning', 'saved-progress-summary', 'saved-progress-time', 'saved-progress-timestamp',
+    ].map(id => [id, {}]));
     let stored = null;
     const context = vm.createContext({
         document: { getElementById: id => elements[id] },
@@ -80,4 +82,27 @@ test('共有問題を保存できないときはホームへ移動できる結�
     assert.equal(context.saveProgressForHome(), 'failed');
     assert.equal(context.readProgress(), null);
     assert.match(elements['progress-warning'].textContent, /保存できません/);
+});
+
+test('新しい保存は盤面の概要と日時を表示し、日時のない旧保存も再開欄に出す', () => {
+    const { context, elements } = setup();
+    const puzzle = { matrix: [[0, 1], [1, 0], [0, 1]] };
+    context.updateResumeButton({
+        id: 'legacy', kind: 'board', puzzle, options: { sample: true }, board: { finished: true },
+    });
+    assert.equal(elements['saved-progress'].hidden, false);
+    assert.match(elements['saved-progress-summary'].textContent, /通常問題.*2×3マス.*サンプル.*クリア済み/);
+    assert.equal(elements['saved-progress-timestamp'].hidden, true);
+
+    context.setProgressSource(() => ({
+        kind: 'mosaic', puzzle, fromShare: true, tiles: [{ complete: true }, {}],
+    }), 'shared');
+    context.queueProgressSave();
+    context.flushProgress();
+    const saved = context.readProgress();
+    assert.equal(typeof saved.savedAt, 'number');
+    assert.match(elements['saved-progress-summary'].textContent, /分割問題.*2×3マス.*共有リンク.*1\/2区画完成/);
+    assert.equal(elements['saved-progress-time'].dateTime, new Date(saved.savedAt).toISOString());
+    assert.ok(elements['saved-progress-time'].textContent);
+    assert.equal(elements['saved-progress-timestamp'].hidden, false);
 });

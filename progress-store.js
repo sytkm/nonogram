@@ -3,6 +3,8 @@ let progressSource;
 let progressId;
 let pendingProgress;
 let progressFromShare = false;
+let resumeProgressId;
+const savedTimeFormat = new Intl.DateTimeFormat('ja-JP', { dateStyle: 'medium', timeStyle: 'short' });
 
 function readProgress() {
     try {
@@ -12,8 +14,40 @@ function readProgress() {
     }
 }
 
-function updateResumeButton() {
-    document.getElementById('saved-progress').hidden = !readProgress();
+function describeSavedProgress(saved) {
+    const mosaic = saved.kind === 'mosaic';
+    const details = [mosaic ? '分割問題' : '通常問題'];
+    const matrix = saved.puzzle?.matrix;
+    if (Array.isArray(matrix) && Array.isArray(matrix[0]) && matrix[0].length) {
+        details.push(matrix[0].length + '×' + matrix.length + 'マス');
+    }
+    if (saved.options?.sample) details.push('サンプル');
+    else if (saved.options?.shared || saved.fromShare) details.push('共有リンク');
+
+    if (mosaic && Array.isArray(saved.tiles) && saved.tiles.length) {
+        const total = saved.tiles.length;
+        const complete = saved.tiles.filter(tile => tile?.complete).length;
+        details.push(complete + '/' + total + '区画完成');
+        if (complete === total) details.push('クリア済み');
+    } else if (!mosaic) {
+        details.push(saved.board?.finished || saved.clock?.finished ? 'クリア済み' : '未クリア');
+    }
+    return details.join(' · ');
+}
+
+function updateResumeButton(saved = readProgress()) {
+    const group = document.getElementById('saved-progress');
+    group.hidden = !saved;
+    resumeProgressId = saved?.id;
+    if (!saved) return;
+
+    document.getElementById('saved-progress-summary').textContent = describeSavedProgress(saved);
+    const date = new Date(Number.isFinite(saved.savedAt) ? saved.savedAt : NaN);
+    const hasTime = Number.isFinite(date.getTime());
+    const time = document.getElementById('saved-progress-time');
+    time.dateTime = hasTime ? date.toISOString() : '';
+    time.textContent = hasTime ? savedTimeFormat.format(date) : '';
+    document.getElementById('saved-progress-timestamp').hidden = !hasTime;
 }
 
 function setProgressSource(snapshot, id, fromShare = false) {
@@ -25,7 +59,7 @@ function setProgressSource(snapshot, id, fromShare = false) {
 
 function writeProgress() {
     try {
-        const record = { id: progressId, ...progressSource() };
+        const record = { id: progressId, ...progressSource(), savedAt: Date.now() };
         try {
             localStorage.setItem(PROGRESS_KEY, JSON.stringify(record));
         } catch (error) {
@@ -36,7 +70,7 @@ function writeProgress() {
             ));
         }
         document.getElementById('progress-warning').textContent = '';
-        document.getElementById('saved-progress').hidden = false;
+        updateResumeButton(record);
         return true;
     } catch {
         document.getElementById('progress-warning').textContent =
@@ -109,6 +143,9 @@ function setupProgressRestore() {
     window.addEventListener('storage', event => {
         if (!event.key || event.key === PROGRESS_KEY) updateResumeButton();
     });
+    window.addEventListener('pageshow', event => {
+        if (event.persisted) updateResumeButton();
+    });
     window.addEventListener('pagehide', () => {
         finishStroke?.();
         flushProgress();
@@ -121,8 +158,8 @@ function setupProgressRestore() {
     });
     button.onclick = async () => {
         const saved = readProgress();
-        if (!saved) {
-            updateResumeButton();
+        if (!saved || saved.id !== resumeProgressId) {
+            updateResumeButton(saved);
             return;
         }
         try {
