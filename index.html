@@ -18,7 +18,7 @@
     <script src="mosaic.js?v=clear-results"></script>
     <script src="share-controls.js?v=play-sharing"></script>
     <script src="guide-tabs.js?v=preview-tabs"></script>
-    <script src="importfile.js?v=board-menu-overlays"></script>
+    <script src="importfile.js?v=board-standard-size"></script>
     <link rel="stylesheet" href="style.css?v=board-menu-overlays">
     <script src="dialog-dismiss.js?v=clear-results" defer></script>
     <title>画像でノノグラム</title>
@@ -357,7 +357,7 @@
                     <summary>マスの塗り方・盤面の動かし方</summary>
                     <p>パレットで色や斜線を選び、マスを押します。「なぞり塗り」は最初からオンです。「メニュー → 設定」で切り替えられます。1本指で通ったマスを塗り、2本指で盤面を動かせます。2本目の指を置くと、指を離す前の塗りは取り消して移動に切り替わります。2本指で動かした後は、すべての指を離してから塗り始めます。2本指での移動と、指の間を広げたり狭めたりする拡大・縮小は、なぞり塗りのオン・オフに関係なく使えます。オフのときは1本指でもスクロールできます。</p>
                     <p>パレットの近くにある「数字を押すと」のボタンで、数字を押したときの操作を切り替えます。「0」では色は変わりません。「空白」は塗りを消し、「斜線」は空白の印を付けます。「スポイト」はマスの色・空白・斜線を選びます。</p>
-                    <p>盤面の近くの「＋」「−」で拡大・縮小し、「全体」で盤面を収めます。分割問題は「全体図に戻る」で区画を選びます。</p>
+                    <p>盤面の近くの「＋」「−」で拡大・縮小し、「全体」で盤面を収め、「標準」で1マス44ピクセルに戻します。分割問題は「全体図に戻る」で区画を選びます。</p>
                 </details>
                 <details class="guide-more">
                     <summary>取り消し・保存・最初からやり直す</summary>
@@ -410,6 +410,7 @@
                         <button type="button" id="zoom-out" aria-label="盤面を縮小">−</button>
                         <button type="button" id="zoom-in" aria-label="盤面を拡大">＋</button>
                         <button type="button" id="zoom-fit" aria-label="全体を表示">全体</button>
+                        <button type="button" id="zoom-standard" aria-label="標準サイズ（1マス44ピクセル）" title="1マス44ピクセル">標準</button>
                     </div>
                     <div class="toolbar-group play-only">
                         <button type="button" class="board-menu-button" id="hint-tools-toggle" aria-controls="hint-tools" aria-expanded="false">ヒント・答え</button>
