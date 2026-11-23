@@ -64,7 +64,7 @@ function describeUniqueness(result) {
     const messages = {
         unique: '答えは一つです。',
         multiple: 'ヒント数字に合う答えが複数あります。',
-        inconclusive: '答えが一つか、確認しきれませんでした。複数あると決まったわけではありません。',
+        inconclusive: '答えが一つか、確認しきれませんでした。複数あると決まったわけではありません。マス数を減らしてもう一度調べられます。',
         none: 'ヒント数字に合う答えが見つかりませんでした。',
     };
     return messages[result] ?? '検査を実行できませんでした。';
