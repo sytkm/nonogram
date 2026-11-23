@@ -18,8 +18,8 @@
     <script src="mosaic.js?v=clear-results"></script>
     <script src="share-controls.js?v=play-sharing"></script>
     <script src="guide-tabs.js?v=preview-tabs"></script>
-    <script src="importfile.js?v=trace-paint-setting"></script>
-    <link rel="stylesheet" href="style.css?v=trace-paint-setting">
+    <script src="importfile.js?v=separate-clue-and-assist"></script>
+    <link rel="stylesheet" href="style.css?v=separate-clue-and-assist">
     <script src="dialog-dismiss.js?v=clear-results" defer></script>
     <title>画像でノノグラム</title>
 </head>
@@ -356,7 +356,7 @@
                 <details class="guide-more">
                     <summary>マスの塗り方・盤面の動かし方</summary>
                     <p>パレットで色や斜線を選び、マスを押します。「なぞり塗り」は最初からオンです。「メニュー → 設定」で切り替えられます。1本指で通ったマスを塗り、2本指で盤面を動かせます。2本目の指を置くと、指を離す前の塗りは取り消して移動に切り替わります。2本指で動かした後は、すべての指を離してから塗り始めます。2本指での移動と、指の間を広げたり狭めたりする拡大・縮小は、なぞり塗りのオン・オフに関係なく使えます。オフのときは1本指でもスクロールできます。</p>
-                    <p>「ヒント数字」の「チェック」「色を選ぶ」で、数字を押したときの操作を切り替えます。「0」では色は変わりません。「空白」は塗りを消し、「斜線」は空白の印を付けます。「スポイト」はマスの色・空白・斜線を選びます。</p>
+                    <p>パレットの近くにある「数字の入力」の「チェック」「色を選ぶ」で、数字を押したときの操作を切り替えます。「0」では色は変わりません。「空白」は塗りを消し、「斜線」は空白の印を付けます。「スポイト」はマスの色・空白・斜線を選びます。</p>
                     <p>盤面の近くの「＋」「−」で拡大・縮小し、「全体」で盤面を収めます。分割問題は「全体図に戻る」で区画を選びます。</p>
                 </details>
                 <details class="guide-more">
@@ -367,7 +367,7 @@
                 </details>
                 <details class="guide-more">
                     <summary>ヒントとプレイ時間</summary>
-                    <p>「ヒント・確認」でヒントや答えを見られます。「行・列ヒント」は選ばれた行または列の全マス数、「答えを見る」は盤面の全マス数に、1マスあたり10秒を加えます。「考え方ヒント」はヒントが出たときに30秒、「矛盾チェック」は矛盾がなくても1分を加えます。同じ盤面で続けて同じ考え方ヒントやチェック結果を見ても、追加では加算しません。</p>
+                    <p>「解く補助」でヒントや答えを見られます。「行・列ヒント」は選ばれた行または列の全マス数、「答えを見る」は盤面の全マス数に、1マスあたり10秒を加えます。「考え方ヒント」はヒントが出たときに30秒、「矛盾チェック」は矛盾がなくても1分を加えます。同じ盤面で続けて同じ考え方ヒントやチェック結果を見ても、追加では加算しません。</p>
                 </details>
                 <details class="guide-more">
                     <summary>マウス・キーボード操作</summary>
@@ -412,27 +412,14 @@
                         <button type="button" id="zoom-fit" aria-label="全体を表示">全体</button>
                     </div>
                     <div class="toolbar-group play-only">
-                        <button type="button" class="board-menu-button" aria-controls="hint-tools" aria-expanded="false">ヒント・確認</button>
-                        <button type="button" class="board-menu-button" id="clue-tools-toggle" aria-controls="clue-tools" aria-expanded="false">ヒント数字</button>
+                        <button type="button" class="board-menu-button" id="hint-tools-toggle" aria-controls="hint-tools" aria-expanded="false">解く補助</button>
                     </div>
                 </div>
-                <div id="clue-tools" class="board-menu play-only" role="region" aria-labelledby="clue-tools-toggle" hidden>
-                    <div class="toolbar-group clue-modes" role="group" aria-label="数字を押したときの操作">
-                        <button type="button" class="clue-mode" id="clue-mark-mode" aria-pressed="true" aria-describedby="clue-help-mark" data-close-board-menu>チェック</button>
-                        <button type="button" class="clue-mode" id="clue-color-mode" aria-pressed="false" aria-describedby="clue-help-color" data-close-board-menu>色を選ぶ</button>
-                    </div>
-                    <dl>
-                        <dt>チェック</dt>
-                        <dd id="clue-help-mark">押した数字に目印を付けます。もう一度押すと外れます。</dd>
-                        <dt>色を選ぶ</dt>
-                        <dd id="clue-help-color">押した数字と同じ色をパレットで選びます。0では色は変わりません。</dd>
-                    </dl>
-                </div>
-                <div id="hint-tools" class="board-menu play-only" role="group" aria-label="ヒント・確認" hidden>
+                <div id="hint-tools" class="board-menu play-only" role="group" aria-labelledby="hint-tools-toggle" hidden>
                     <button type="button" id="logic-hint" data-close-board-menu>考え方ヒント <small class="penalty"></small></button>
                     <button type="button" id="line-hint" data-close-board-menu>行・列ヒント <small class="penalty"></small></button>
                     <button type="button" id="check-conflicts" data-close-board-menu>矛盾チェック <small class="penalty"></small></button>
-                    <button type="button" id="solve" data-close-board-menu>答えを見る <small class="penalty"></small></button>
+                    <div id="answer-tool"><button type="button" id="solve" data-close-board-menu>答えを見る <small class="penalty"></small></button></div>
                 </div>
             </div>
             <div id="fix-phone-under-menu" hidden>
@@ -451,6 +438,19 @@
                     <button type="button" id="pick-painted-color" aria-pressed="false" aria-describedby="paint-instructions" title="マスの色・空白・斜線を拾えます。">スポイト</button>
                     <button type="button" id="board-undo" class="history-control" aria-label="操作を取り消す" title="操作を取り消す" disabled>↶</button>
                     <button type="button" id="board-redo" class="history-control" aria-label="取り消しを戻す" title="取り消しを戻す" disabled>↷</button>
+                    <button type="button" class="board-menu-button play-only" id="clue-tools-toggle" aria-controls="clue-tools" aria-expanded="false">数字の入力</button>
+                </div>
+                <div id="clue-tools" class="board-menu play-only" role="region" aria-labelledby="clue-tools-toggle" hidden>
+                    <div class="toolbar-group clue-modes" role="group" aria-label="数字を押したときの操作">
+                        <button type="button" class="clue-mode" id="clue-mark-mode" aria-pressed="true" aria-describedby="clue-help-mark" data-close-board-menu>チェック</button>
+                        <button type="button" class="clue-mode" id="clue-color-mode" aria-pressed="false" aria-describedby="clue-help-color" data-close-board-menu>色を選ぶ</button>
+                    </div>
+                    <dl>
+                        <dt>チェック</dt>
+                        <dd id="clue-help-mark">押した数字に目印を付けます。もう一度押すと外れます。</dd>
+                        <dt>色を選ぶ</dt>
+                        <dd id="clue-help-color">押した数字と同じ色をパレットで選びます。0では色は変わりません。</dd>
+                    </dl>
                 </div>
             </div>
         </div>

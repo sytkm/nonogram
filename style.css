@@ -481,7 +481,7 @@ header:has(#play-panel:not([hidden])),
 }
 
 #play-panel.is-viewing-tile .play-only,
-body:has(#play-panel.is-viewing-tile) #board-view-tools .play-only {
+body:has(#play-panel.is-viewing-tile) #board-side-controls .play-only {
     display: none;
 }
 
@@ -681,7 +681,6 @@ body:has(#play-panel.is-viewing-tile) #board-view-tools .play-only {
 }
 
 #board-view-tools {
-    container-type: inline-size;
     padding: 0.25rem max(0.5rem, env(safe-area-inset-right)) 0.375rem max(0.5rem, env(safe-area-inset-left));
 }
 
@@ -1116,6 +1115,12 @@ dialog button:focus-visible {
     max-inline-size: 100%;
 }
 
+#answer-tool {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--puzzle-rule);
+}
+
 .penalty {
     display: inline-block;
     box-sizing: border-box;
@@ -1139,6 +1144,7 @@ dialog button:focus-visible {
 }
 
 #fix-phone-under-menu {
+    container-type: inline-size;
     flex: 0 0 auto;
     min-width: 0;
     border-top: 1px solid var(--puzzle-rule);
@@ -1239,10 +1245,15 @@ dialog button:focus-visible {
     }
 
     #fix-phone-under-menu:not([hidden]) {
+        flex-wrap: wrap;
         grid-column: 1 / -1;
         grid-row: 2;
         flex-direction: row;
         align-items: center;
+    }
+
+    #clue-tools {
+        flex-basis: 100%;
     }
 
     #palette-panel {

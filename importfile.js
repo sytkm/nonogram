@@ -340,7 +340,7 @@ function showBoardMenu(selected) {
 }
 
 function setupBoardMenus() {
-    const tools = document.getElementById('board-view-tools');
+    const tools = document.getElementById('board-side-controls');
     for (const button of tools.querySelectorAll('.board-menu-button')) {
         button.onclick = () => {
             const open = button.getAttribute('aria-expanded') === 'false';
@@ -662,7 +662,7 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
     const clearResult = document.getElementById('board-clear-result');
     clearResult.hidden = true;
     clearResult.onclick = null;
-    document.getElementById('solve').hidden = options.shared === true;
+    document.getElementById('answer-tool').hidden = options.shared === true;
     download.onclick = () => {
         const link = document.createElement('a');
         link.href = document.getElementById('canvas').toDataURL('image/png');
