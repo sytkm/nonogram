@@ -29,6 +29,10 @@ window.onload = async function () {
     const showFirstSharedGuide = setupPlayGuide();
     updatePaletteNavigation = setupPaletteNavigation();
     window.addEventListener('resize', () => refreshBoard?.());
+    const viewport = document.getElementById('pixelcanvas');
+    new ResizeObserver(() => {
+        if (!viewport.hidden) refreshBoard?.();
+    }).observe(viewport);
     window.setInterval(() => {
         if (!document.getElementById('play-panel').hidden) updatePlayTime();
     }, 250);
@@ -327,20 +331,28 @@ function showBoardMenu(selected) {
 }
 
 function setupBoardMenus() {
-    for (const button of document.querySelectorAll('.board-menu-button')) {
+    const tools = document.getElementById('board-view-tools');
+    for (const button of tools.querySelectorAll('.board-menu-button')) {
         button.onclick = () => {
             const open = button.getAttribute('aria-expanded') === 'false';
             showBoardMenu(open ? button : undefined);
-            if (open && button.id === 'clue-help-toggle') {
-                document.getElementById('clue-help').scrollIntoView({ block: 'nearest' });
-            }
         };
     }
-    document.getElementById('hint-tools').addEventListener('click', event => {
-        if (!event.target.closest('button[data-close-board-menu]')) return;
+
+    function closeActiveMenu() {
+        const trigger = tools.querySelector('.board-menu-button[aria-expanded="true"]');
+        if (!trigger) return false;
         showBoardMenu();
-        document.querySelector('[aria-controls="hint-tools"]').focus({ preventScroll: true });
+        trigger.focus({ preventScroll: true });
+        return true;
+    }
+
+    tools.addEventListener('click', event => {
+        if (event.target.closest('button[data-close-board-menu]')) closeActiveMenu();
     }, { capture: true });
+    tools.addEventListener('keydown', event => {
+        if (event.key === 'Escape' && closeActiveMenu()) event.preventDefault();
+    });
 }
 
 function boardSetting(name, board) {
@@ -452,7 +464,7 @@ function setPlaying(playing) {
 }
 
 function setPlayAreaVisible(visible) {
-    for (const id of ['play-actions', 'pixelcanvas', 'fix-phone-under-menu']) {
+    for (const id of ['play-actions', 'pixelcanvas', 'board-side-controls', 'fix-phone-under-menu']) {
         document.getElementById(id).hidden = !visible;
     }
 }
@@ -1222,6 +1234,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
             stopStroke();
             pausedPosition = { left: viewport.scrollLeft, top: viewport.scrollTop };
             clock.suspend();
+            showBoardMenu();
             setPlayAreaVisible(false);
         }
         board.paused = Boolean(pausedPosition);
