@@ -134,14 +134,15 @@ function setupPlayHome() {
         dialog.showModal();
     }
 
-    home.onclick = event => {
+    function goHome(event) {
         if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
         finishStroke?.();
         const result = saveProgressForHome();
         if (result === 'ready') return;
         event.preventDefault();
         confirmLeave(result);
-    };
+    }
+    for (const link of document.querySelectorAll('[data-play-home]')) link.onclick = goHome;
     dialog.onclose = () => {
         if (dialog.returnValue === 'without-save') {
             window.location.assign(home.href);

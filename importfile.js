@@ -449,6 +449,24 @@ function setupSettings() {
     }
 }
 
+function showClearResult(opener, { title = 'クリア！', note = '', download = false, restart = false, mosaic = false } = {}) {
+    const dialog = document.getElementById('clear-result-dialog');
+    if (dialog.open) return;
+    document.getElementById('clear-result-title').textContent = title;
+    const message = document.getElementById('clear-result-note');
+    message.textContent = note.trim();
+    message.hidden = !message.textContent;
+    document.getElementById('downl').hidden = !download;
+    document.getElementById('clear-mosaic-downloads').hidden = !mosaic;
+    const restartButton = document.getElementById('clear-result-restart');
+    restartButton.hidden = !restart;
+    restartButton.onclick = restart ? () => document.getElementById('restart-board').click() : null;
+    dialog.addEventListener('close', () => {
+        if (!dialog.open && opener.getClientRects().length) opener.focus({ preventScroll: true });
+    }, { once: true });
+    dialog.showModal();
+}
+
 function setPlaying(playing) {
     if (playing) playClock?.resume();
     else {
@@ -634,7 +652,9 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
         openPlayShare(options.sharePuzzle ?? { matrix, palette, blank }, options.shareSource);
 
     const download = document.getElementById('downl');
-    download.hidden = true;
+    const clearResult = document.getElementById('board-clear-result');
+    clearResult.hidden = true;
+    clearResult.onclick = null;
     document.getElementById('solve').hidden = options.shared === true;
     download.onclick = () => {
         const link = document.createElement('a');
@@ -642,7 +662,7 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
         link.download = 'nonogram.png';
         link.click();
     };
-    function showClear(note = '') {
+    function showClear(note = '', openResult = false) {
         controls.finish();
         result.classList.add('is-complete');
         if (options.tileLabel) {
@@ -652,14 +672,19 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
             result.textContent = options.review ? '完成済みの区画を表示しています。' : '区画クリア！' + note;
             returnToMosaic.focus({ preventScroll: true });
         } else {
-            result.textContent = 'クリア！' + note;
-            download.hidden = options.shared === true;
+            clearResult.hidden = false;
+            clearResult.onclick = () => showClearResult(clearResult, {
+                note,
+                download: options.shared !== true,
+                restart: !options.daily,
+            });
             restart.textContent = 'もう一度遊ぶ';
             restart.hidden = Boolean(options.daily);
+            if (openResult) clearResult.click();
         }
     }
 
-    function checkCompletion(save = true, note = '') {
+    function checkCompletion(save = true, note = '', openResult = false) {
         if (board.finished) return;
         const solved = board.quality === 'unique'
             ? matchesIntendedImage(matrix, cells, blank)
@@ -667,14 +692,14 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
         if (!solved) return;
         clock.finish();
         updatePlayTime();
-        showClear(note);
+        showClear(note, openResult);
         if (save) queueProgressSave();
         options.onSolved?.();
     }
 
     function onEdit(note = '') {
         result.textContent = '';
-        checkCompletion(true, note);
+        checkCompletion(true, note, true);
     }
 
     restart.onclick = () => {
@@ -687,6 +712,7 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
     restartDialog.onclose = async () => {
         if (restartDialog.returnValue !== 'restart') return;
         document.getElementById('play-menu-dialog').close();
+        document.getElementById('clear-result-dialog').close();
         finishStroke();
         // Keep the same board object so a mosaic retains the fresh state for this tile.
         delete board.cells;

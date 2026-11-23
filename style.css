@@ -489,7 +489,8 @@ body:has(#play-panel.is-viewing-tile) #board-view-tools .play-only {
     font-weight: 700;
 }
 
-#downl {
+#board-clear-result,
+#mosaic-clear-result {
     margin-block-start: 0.65rem;
 }
 
@@ -937,7 +938,8 @@ body:not(:has(#play-panel:not([hidden]), #mosaic-panel:not([hidden]))) #open-pla
     display: none;
 }
 
-#play-menu-dialog {
+#play-menu-dialog,
+#clear-result-dialog {
     width: min(24rem, calc(100% - 2rem));
 }
 
@@ -945,6 +947,10 @@ body:not(:has(#play-panel:not([hidden]), #mosaic-panel:not([hidden]))) #open-pla
     display: grid;
     gap: 0.5rem;
     margin-block-start: 0.75rem;
+}
+
+#clear-mosaic-downloads {
+    margin-block-start: 0;
 }
 
 .play-menu-actions .action-link:not([hidden]) {
