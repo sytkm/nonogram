@@ -18,22 +18,39 @@ function setupPlayDisplay() {
     }, 250);
 }
 
-function setPlaying(playing) {
-    if (playing) playClock?.resume();
-    else {
-        finishStroke();
-        playClock?.suspend();
-        flushProgress();
-    }
-    document.getElementById('start-panel').hidden = playing;
-    document.getElementById('mosaic-panel').hidden = true;
+function suspendCurrentPuzzle() {
+    finishStroke();
+    playClock?.suspend();
+}
+
+function showPuzzleScreen(clock) {
+    playClock = clock;
+    clock.resume();
+    showPlayScreen('board');
+    updatePlayTime();
+}
+
+/**
+ * 入力を確定してから時計を止め、その時点の進行を保存する。
+ * @param {'home'|'mosaic'} [destination] - プレイを離れた後に表示する画面
+ */
+function leavePuzzleScreen(destination = 'home') {
+    suspendCurrentPuzzle();
+    flushProgress();
+    showPlayScreen(destination);
+}
+
+/** @param {'home'|'mosaic'|'board'} screen */
+function showPlayScreen(screen) {
+    const playing = screen === 'board';
+    document.getElementById('start-panel').hidden = screen !== 'home';
+    document.getElementById('mosaic-panel').hidden = screen !== 'mosaic';
     document.getElementById('play-panel').hidden = !playing;
     const menu = document.getElementById('open-play-menu');
     if (playing) document.querySelector('.mosaic-tile-navigation').before(menu);
     else document.getElementById('site-heading').append(menu);
     document.getElementById('pause-message').hidden = true;
     setPlayAreaVisible(playing);
-    if (playing) updatePlayTime();
 }
 
 function setPlayAreaVisible(visible) {
@@ -49,8 +66,7 @@ function updatePlayTime() {
 }
 
 async function startPuzzle({ matrix, palette, blank }, options = {}) {
-    finishStroke();
-    playClock?.suspend();
+    suspendCurrentPuzzle();
     const board = options.board ?? {};
     const hasSavedCells = Boolean(board.cells);
     const { rows: rowClues, columns: columnClues } = makePuzzleClues(matrix, blank);
@@ -75,7 +91,6 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
     }
 
     const clock = options.clock ?? createPlayClock();
-    playClock = clock;
     const playPanel = document.getElementById('play-panel');
     playPanel.classList.remove('is-viewing-tile');
     const result = document.getElementById('board-result');
@@ -104,7 +119,7 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
     for (const id of ['line-hint', 'logic-hint']) {
         document.getElementById(id).hidden = options.shared === true;
     }
-    setPlaying(true);
+    showPuzzleScreen(clock);
     let controls;
     try {
         const paletteControls = drawUnderPalette(palette, usedColors, blank, paintColors[0] ?? blank);
@@ -114,7 +129,7 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
         });
         activeBoard = controls;
     } catch (error) {
-        setPlaying(false);
+        leavePuzzleScreen();
         throw error;
     }
     const dailyLabel = document.getElementById('daily-play-label');
