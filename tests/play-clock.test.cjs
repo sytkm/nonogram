@@ -7,11 +7,10 @@ const test = require('node:test');
 const context = vm.createContext({});
 vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/play/play-clock.js'), 'utf8'), context);
 
-test('最初の操作で計測し、一時停止と再開を繰り返しても停止時間を数えない', () => {
+test('開始された時点で計測し、一時停止と再開を繰り返しても停止時間を数えない', () => {
     let now = 0;
     const clock = context.createPlayClock(() => now);
     clock.suspend();
-    clock.resume();
     now = 5000;
     assert.equal(clock.elapsed(), 0);
     clock.start();
@@ -20,7 +19,7 @@ test('最初の操作で計測し、一時停止と再開を繰り返しても�
     clock.suspend();
     now = 20_000;
     assert.equal(clock.elapsed(), 2250);
-    clock.resume();
+    clock.start();
     now = 21_000;
     clock.suspend();
     assert.equal(clock.elapsed(), 3250);
@@ -34,7 +33,6 @@ test('秒単位で加算し、クリア後の時刻は変わらない', () => {
     clock.addPenalty(10 * 60);
     clock.finish();
     now = 80_000;
-    clock.resume();
     clock.start();
     clock.addPenalty(10 * 60);
     assert.equal(clock.elapsed(), 1_202_000);
@@ -58,7 +56,7 @@ test('別の区画を遊んでいる時間は元の区画の時計に加算し�
     second.start();
     now = 11_000;
     second.finish();
-    first.resume();
+    first.start();
     now = 13_000;
     first.finish();
     assert.equal(first.elapsed(), 5000);
@@ -82,16 +80,16 @@ test('プレイ時間の保存から復元し、ページを閉じていた時�
     now += 10_000;
     const restored = context.createPlayClock(() => now, saved);
     assert.equal(restored.elapsed(), 62_000);
-    restored.resume();
+    restored.start();
     now += 2000;
     restored.finish();
     const finished = context.createPlayClock(() => now, restored.snapshot());
-    finished.resume();
+    finished.start();
     now += 4000;
     assert.equal(finished.elapsed(), 64_000);
 });
 
-test('クリア後に再スタートすると経過時間と加算を消し、初回操作から計測できる', () => {
+test('クリア後に再スタートすると経過時間と加算を消し、次の開始指示から計測できる', () => {
     let now = 1000;
     const clock = context.createPlayClock(() => now);
     clock.addPenalty(300);
@@ -100,7 +98,6 @@ test('クリア後に再スタートすると経過時間と加算を消し、�
     assert.equal(clock.elapsed(), 302_000);
 
     clock.reset();
-    clock.resume();
     now += 3000;
     assert.deepEqual({ ...clock.snapshot() }, { elapsed: 0, started: false, finished: false });
     clock.start();

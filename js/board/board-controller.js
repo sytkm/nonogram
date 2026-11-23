@@ -297,7 +297,7 @@ function setupBoard({
                 initialFitPending = false;
                 boardView.fitBoard();
             }
-            clock.resume();
+            clock.start();
         } else {
             stopStroke();
             pausedPosition = { left: viewport.scrollLeft, top: viewport.scrollTop };
@@ -341,7 +341,6 @@ function setupBoard({
 
     function applyColor({ row, column }, color, action) {
         if (fixedSlashes.has(row * columns + column)) return;
-        clock.start();
         const before = cells[row][column];
         if (before === color) return;
         action.push({ row, column, before, after: color });

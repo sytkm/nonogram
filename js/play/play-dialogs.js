@@ -44,7 +44,7 @@ function setupPlayGuide() {
     const sharedIntro = document.getElementById('play-guide-shared-intro');
     const playPanel = document.getElementById('play-panel');
 
-    function openGuide(returnTarget) {
+    function openGuide(returnTarget, onClose) {
         sample.hidden = Boolean(returnTarget);
         sharedIntro.hidden = !returnTarget;
         const visible = boardSetting('showSymbols', playPanel.hidden ? undefined : activeBoard?.state);
@@ -54,7 +54,10 @@ function setupPlayGuide() {
         resetGuideTabs();
         playGuide.showModal();
         if (returnTarget) {
-            playGuide.addEventListener('close', () => returnTarget.focus({ preventScroll: true }), { once: true });
+            playGuide.addEventListener('close', () => {
+                returnTarget.focus({ preventScroll: true });
+                onClose?.();
+            }, { once: true });
         }
     }
 
@@ -62,15 +65,15 @@ function setupPlayGuide() {
         button.onclick = () => openGuide();
     }
 
-    return split => {
-        if (document.querySelector('dialog[open]')) return;
+    return (split, onClose) => {
+        if (document.querySelector('dialog[open]')) return false;
         const key = 'nonogram:shared-play-guide:v1';
         // Use tab storage when browser-wide storage is blocked. If neither is
         // available, leave the guide available through the play menu.
         for (const storageName of ['localStorage', 'sessionStorage']) {
             try {
                 const storage = window[storageName];
-                if (storage.getItem(key)) return;
+                if (storage.getItem(key)) return false;
                 storage.setItem(key, '1');
             } catch {
                 continue;
@@ -78,9 +81,10 @@ function setupPlayGuide() {
             sharedIntro.textContent = split
                 ? '閉じると、受け取った分割問題の全体図に進みます。'
                 : '閉じると、受け取った問題で遊べます。';
-            openGuide(document.getElementById(split ? 'mosaic-title' : 'canvas'));
-            return;
+            openGuide(document.getElementById(split ? 'mosaic-title' : 'canvas'), onClose);
+            return true;
         }
+        return false;
     };
 }
 

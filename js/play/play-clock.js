@@ -52,9 +52,6 @@ function createPlayClock(now = () => performance.now(), state = {}) {
     return {
         start,
         suspend,
-        resume() {
-            if (started) start();
-        },
         elapsed,
         snapshot() {
             return { elapsed: elapsed(), started, finished };
