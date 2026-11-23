@@ -680,8 +680,7 @@ body:has(#play-panel.is-viewing-tile) #board-side-controls .play-only {
     min-width: 0;
 }
 
-#board-view-tools,
-.palette-controls {
+#board-view-tools {
     position: relative;
 }
 
@@ -727,23 +726,6 @@ body:has(#play-panel.is-viewing-tile) #board-side-controls .play-only {
 
 #hint-tools:not([hidden]) {
     inset-inline: max(0.5rem, env(safe-area-inset-left)) max(0.5rem, env(safe-area-inset-right));
-}
-
-#clue-tools dl {
-    display: grid;
-    grid-template-columns: auto 1fr;
-    gap: 0.35rem 0.65rem;
-    margin: 0;
-    font-size: 0.875rem;
-    line-height: 1.5;
-}
-
-#clue-tools dt {
-    font-weight: 600;
-}
-
-#clue-tools dd {
-    margin: 0;
 }
 
 .play-clock button,
@@ -817,79 +799,12 @@ body:has(#play-panel.is-viewing-tile) #board-side-controls .play-only {
     color: #fff;
 }
 
-.clue-modes.toolbar-group:not([hidden]) {
-    flex-wrap: nowrap;
-    align-items: stretch;
-    gap: 0;
-}
-
-.board-menu .clue-mode {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.375rem;
-    border-color: var(--puzzle-major-rule);
-    border-radius: 0;
-    color: var(--puzzle-ink);
-}
-
-.board-menu .clue-mode:first-child {
-    border-start-start-radius: 0.35rem;
-    border-end-start-radius: 0.35rem;
-    border-inline-end-width: 0;
-}
-
-.board-menu .clue-mode:last-child {
-    border-start-end-radius: 0.35rem;
-    border-end-end-radius: 0.35rem;
-}
-
-@container (max-width: 12.75rem) {
-    .clue-modes.toolbar-group:not([hidden]) {
-        flex-direction: column;
-    }
-
-    .board-menu .clue-mode:first-child {
-        border-inline-end-width: 1px;
-        border-bottom-width: 0;
-        border-start-end-radius: 0.35rem;
-        border-end-start-radius: 0;
-    }
-
-    .board-menu .clue-mode:last-child {
-        border-start-end-radius: 0;
-        border-end-start-radius: 0.35rem;
-    }
-}
-
-.board-menu .clue-mode[aria-pressed="true"]:not(:disabled) {
-    background: var(--puzzle-accent);
-    color: #fff;
-}
-
-.board-menu .clue-mode::before,
 .display-toggle-box {
     box-sizing: border-box;
     flex: none;
     width: 0.875rem;
     height: 0.875rem;
     border: 1px solid currentColor;
-}
-
-.board-menu .clue-mode::before {
-    content: "";
-    border-radius: 50%;
-}
-
-.board-menu .clue-mode[aria-pressed="true"]::before {
-    border-width: 4px;
-}
-
-.board-menu .clue-mode:focus-visible {
-    outline-offset: -3px;
-}
-
-.board-menu .clue-mode[aria-pressed="true"]:focus-visible {
-    outline-color: #fff;
 }
 
 .display-toggle:not([hidden]) {
@@ -1085,11 +1000,17 @@ dialog button:focus-visible {
     gap: 0.5rem;
 }
 
+#clue-action {
+    min-height: 44px;
+    padding-inline: 0.375rem;
+    font: inherit;
+    color: inherit;
+}
+
 #play-guide-dialog p {
     margin: 0.5rem 0;
 }
 
-#settings-dialog [data-open-play-guide],
 .guide-more {
     margin-top: 0.75rem;
 }
@@ -1157,7 +1078,6 @@ dialog button:focus-visible {
 }
 
 #fix-phone-under-menu {
-    container-type: inline-size;
     flex: 0 0 auto;
     min-width: 0;
     border-top: 1px solid var(--puzzle-rule);
@@ -1169,13 +1089,6 @@ dialog button:focus-visible {
     display: flex;
     flex-direction: column;
     gap: 0.375rem;
-}
-
-.palette-controls {
-    display: flex;
-    align-items: end;
-    gap: 0.375rem;
-    min-width: 0;
 }
 
 #palette-panel {
@@ -1246,20 +1159,6 @@ dialog button:focus-visible {
     font-size: 0.8125rem;
 }
 
-#clue-tools-toggle {
-    flex: 0 0 auto;
-    flex-direction: column;
-    inline-size: 7.25em;
-    margin-bottom: 0.25rem;
-    padding-inline: 0.3rem;
-    font-size: 0.8125rem;
-    line-height: 1.2;
-}
-
-#clue-tools-toggle strong {
-    display: block;
-}
-
 @media (min-width: 44rem) and (orientation: landscape) {
     .play-workspace:has(#pixelcanvas:not([hidden])) {
         display: grid;
@@ -1289,10 +1188,6 @@ dialog button:focus-visible {
     #hint-tools:not([hidden]) {
         inset: 0 calc(100% + 0.25rem) auto auto;
         width: min(22rem, 50vw);
-    }
-
-    .palette-controls {
-        flex: 1 1 auto;
     }
 
     #fix-phone-under-menu .paint-tools {
@@ -1329,23 +1224,6 @@ dialog button:focus-visible {
         align-items: stretch;
         border-top: 0;
         padding: 0.375rem 0.75rem 0.75rem;
-    }
-
-    .palette-controls {
-        flex: 0 1 auto;
-        flex-direction: column;
-        align-items: stretch;
-        min-height: 0;
-    }
-
-    #clue-tools:not([hidden]) {
-        inset: 0 calc(100% + 0.25rem) auto auto;
-        width: min(22rem, 50vw);
-    }
-
-    #clue-tools-toggle {
-        align-self: start;
-        margin-bottom: 0;
     }
 
     #palette-panel {
