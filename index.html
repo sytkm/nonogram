@@ -19,7 +19,7 @@
     <script src="share-controls.js?v=play-sharing"></script>
     <script src="guide-tabs.js?v=preview-tabs"></script>
     <script src="importfile.js?v=board-standard-size"></script>
-    <link rel="stylesheet" href="style.css?v=history-button-labels">
+    <link rel="stylesheet" href="style.css?v=palette-two-rows">
     <script src="dialog-dismiss.js?v=clear-results" defer></script>
     <title>画像でノノグラム</title>
 </head>
@@ -424,26 +424,17 @@
                 </div>
             </div>
             <div id="fix-phone-under-menu" hidden>
-                <div id="palette-panel">
-                    <p class="palette-label" id="palette-label">塗る色</p>
-                    <div id="palette-strip">
-                        <button type="button" id="palette-prev" class="palette-step action-link" aria-label="前の色を表示" aria-controls="color-palette" hidden>‹</button>
-                        <div id="color-palette" role="group" aria-labelledby="palette-label"></div>
-                        <button type="button" id="palette-next" class="palette-step action-link" aria-label="次の色を表示" aria-controls="color-palette" hidden>›</button>
-                    </div>
-                    <p id="palette-scroll-note" hidden>スクロールすると他の色を選べます。</p>
-                </div>
-                <div class="paint-controls">
-                    <div class="toolbar-group paint-tools" role="group" aria-label="塗りと編集">
-                        <button type="button" id="palette-blank" aria-label="空白に戻す" aria-pressed="false">空白</button>
-                        <button type="button" id="palette-slash" aria-label="斜線で印を付ける" aria-pressed="false">斜線</button>
-                        <button type="button" id="pick-painted-color" aria-pressed="false" aria-describedby="paint-instructions" title="マスの色・空白・斜線を拾えます。">スポイト</button>
-                        <div class="history-controls" role="group" aria-label="操作履歴">
-                            <button type="button" id="board-undo" disabled>元に戻す</button>
-                            <button type="button" id="board-redo" disabled>やり直す</button>
+                <div class="palette-controls">
+                    <div id="palette-panel">
+                        <p class="palette-label" id="palette-label">塗る色</p>
+                        <div id="palette-strip">
+                            <button type="button" id="palette-prev" class="palette-step action-link" aria-label="前の色を表示" aria-controls="color-palette" hidden>‹</button>
+                            <div id="color-palette" role="group" aria-labelledby="palette-label"></div>
+                            <button type="button" id="palette-next" class="palette-step action-link" aria-label="次の色を表示" aria-controls="color-palette" hidden>›</button>
                         </div>
-                        <button type="button" class="board-menu-button play-only" id="clue-tools-toggle" aria-controls="clue-tools" aria-expanded="false"><span>数字を押すと</span><strong id="clue-mode-label">チェック</strong></button>
+                        <p id="palette-scroll-note" hidden>スクロールすると他の色を選べます。</p>
                     </div>
+                    <button type="button" class="action-link board-menu-button play-only" id="clue-tools-toggle" aria-controls="clue-tools" aria-expanded="false"><span>数字を押すと</span><strong id="clue-mode-label">チェック</strong></button>
                     <div id="clue-tools" class="board-menu play-only" role="region" aria-labelledby="clue-tools-toggle" hidden>
                         <div class="toolbar-group clue-modes" role="group" aria-label="数字を押したときの操作">
                             <button type="button" class="clue-mode" id="clue-mark-mode" aria-pressed="true" aria-describedby="clue-help-mark" data-close-board-menu>チェック</button>
@@ -455,6 +446,15 @@
                             <dt>色を選ぶ</dt>
                             <dd id="clue-help-color">押した数字と同じ色をパレットで選びます。0では色は変わりません。</dd>
                         </dl>
+                    </div>
+                </div>
+                <div class="toolbar-group paint-tools" role="group" aria-label="塗りと編集">
+                    <button type="button" id="palette-blank" aria-label="空白に戻す" aria-pressed="false">空白</button>
+                    <button type="button" id="palette-slash" aria-label="斜線で印を付ける" aria-pressed="false">斜線</button>
+                    <button type="button" id="pick-painted-color" aria-pressed="false" aria-describedby="paint-instructions" title="マスの色・空白・斜線を拾えます。">スポイト</button>
+                    <div class="history-controls" role="group" aria-label="操作履歴">
+                        <button type="button" id="board-undo" disabled>元に戻す</button>
+                        <button type="button" id="board-redo" disabled>やり直す</button>
                     </div>
                 </div>
             </div>

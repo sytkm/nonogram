@@ -681,7 +681,7 @@ body:has(#play-panel.is-viewing-tile) #board-side-controls .play-only {
 }
 
 #board-view-tools,
-.paint-controls {
+.palette-controls {
     position: relative;
 }
 
@@ -1171,7 +1171,15 @@ dialog button:focus-visible {
     gap: 0.375rem;
 }
 
+.palette-controls {
+    display: flex;
+    align-items: end;
+    gap: 0.375rem;
+    min-width: 0;
+}
+
 #palette-panel {
+    flex: 1 1 auto;
     min-width: 0;
     display: flex;
     flex-direction: column;
@@ -1239,7 +1247,12 @@ dialog button:focus-visible {
 }
 
 #clue-tools-toggle {
+    flex: 0 0 auto;
+    flex-direction: column;
     inline-size: 7.25em;
+    margin-bottom: 0.25rem;
+    padding-inline: 0.3rem;
+    font-size: 0.8125rem;
     line-height: 1.2;
 }
 
@@ -1278,11 +1291,11 @@ dialog button:focus-visible {
         width: min(22rem, 50vw);
     }
 
-    #palette-panel {
+    .palette-controls {
         flex: 1 1 auto;
     }
 
-    .paint-controls {
+    #fix-phone-under-menu .paint-tools {
         flex: 0 0 auto;
     }
 }
@@ -1316,6 +1329,23 @@ dialog button:focus-visible {
         align-items: stretch;
         border-top: 0;
         padding: 0.375rem 0.75rem 0.75rem;
+    }
+
+    .palette-controls {
+        flex: 0 1 auto;
+        flex-direction: column;
+        align-items: stretch;
+        min-height: 0;
+    }
+
+    #clue-tools:not([hidden]) {
+        inset: 0 calc(100% + 0.25rem) auto auto;
+        width: min(22rem, 50vw);
+    }
+
+    #clue-tools-toggle {
+        align-self: start;
+        margin-bottom: 0;
     }
 
     #palette-panel {
