@@ -5,7 +5,9 @@ const vm = require('node:vm');
 const test = require('node:test');
 
 const context = vm.createContext({ window: {} });
-vm.runInContext(fs.readFileSync(path.join(__dirname, '../importfile.js'), 'utf8'), context);
+for (const file of ['board-renderer.js', 'board-gestures.js', 'puzzle-rules.js']) {
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), context);
+}
 
 test('拡大やスクロール後も、同じマスを指定できる', () => {
     // 幅6マス、高さ5マス。左に2列、上に2行のヒントがある。

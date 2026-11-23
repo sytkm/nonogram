@@ -1,0 +1,126 @@
+// ヒントの生成、クリア判定、行・列ヒント、完成行の自動斜線。
+
+/** @typedef {[color: number, count: number]} Clue */
+/** @typedef {[clues: Clue[][], maxClues: number]} ClueSummary */
+
+function matchesIntendedImage(answer, board, blank) {
+    return answer.every((line, row) => line.every((color, column) => {
+        const painted = board[row][column];
+        return painted === color || (color === blank && painted === -1);
+    }));
+}
+
+function pickLineHint(answer, board, blank, random = Math.random) {
+    const unfinishedRows = Array(answer.length).fill(false);
+    const unfinishedColumns = Array(answer[0].length).fill(false);
+    answer.forEach((colors, row) => colors.forEach((color, column) => {
+        const current = board[row][column];
+        // Unmarked blanks already count as correct when selecting a line.
+        if (current === color || (current === -1 && color === blank)) return;
+        unfinishedRows[row] = true;
+        unfinishedColumns[column] = true;
+    }));
+    const candidates = [];
+    for (const [axis, lines] of [['row', unfinishedRows], ['column', unfinishedColumns]]) {
+        lines.forEach((unfinished, index) => {
+            if (unfinished) candidates.push({ axis, index });
+        });
+    }
+    if (!candidates.length) return null;
+
+    const { axis, index } = candidates[Math.floor(random() * candidates.length)];
+    const line = axis === 'row' ? answer[index] : answer.map(row => row[index]);
+    const changes = [];
+    line.forEach((value, offset) => {
+        const row = axis === 'row' ? index : offset;
+        const column = axis === 'row' ? offset : index;
+        const color = value === blank ? -1 : value;
+        if (board[row][column] !== color) changes.push({ row, column, color });
+    });
+    return { axis, index, changes };
+}
+
+function calcNumber(arr) {
+    const calculated = [[arr[0], 1]];
+    for (let i = 1; i < arr.length; i++) {
+        const last = calculated[calculated.length - 1];
+        if (last[0] === arr[i]) {
+            last[1]++;
+        } else {
+            calculated.push([arr[i], 1]);
+        }
+    }
+    return calculated;
+}
+
+/**
+ * 全行のヒントが一致するか調べる。斜線も空白として判定する。
+ * @param {ClueSummary} clueSummary - makeNumber が返したヒントと最大組数
+ * @param {number[][]} matrix - プレイ中の行列
+ * @param {number} blank - その問題の空白番号
+ * @returns {boolean}
+ */
+function checkNumber(clueSummary, matrix, blank) {
+    const [lines] = clueSummary;
+    return lines.length === matrix.length && lines.every((expected, index) =>
+        lineMatchesClues(matrix[index], expected, blank));
+}
+
+function lineMatchesClues(line, clues, blank) {
+    return String(clues) === String(lineClues(line, blank));
+}
+
+function findCompletedLineBlanks(cells, rowsOfClues, columnsOfClues, blank, changes) {
+    const rows = new Set();
+    const columns = new Set();
+    for (const { row, column, after } of changes) {
+        if (after !== blank && after >= 0) {
+            rows.add(row);
+            columns.add(column);
+        }
+    }
+
+    const remaining = new Map();
+    const width = cells[0].length;
+    for (const row of rows) {
+        const line = cells[row];
+        if (!line.includes(blank) || !lineMatchesClues(line, rowsOfClues[row], blank)) continue;
+        line.forEach((color, column) => {
+            if (color === blank) remaining.set(row * width + column, { row, column });
+        });
+    }
+    for (const column of columns) {
+        const line = cells.map(row => row[column]);
+        if (!line.includes(blank) || !lineMatchesClues(line, columnsOfClues[column], blank)) continue;
+        line.forEach((color, row) => {
+            if (color === blank) remaining.set(row * width + column, { row, column });
+        });
+    }
+    return remaining.values();
+}
+
+function lineClues(line, blank) {
+    const clues = calcNumber(line).filter(([color]) => color !== blank && color !== -1);
+    return clues.length ? clues : [[-1, 0]];
+}
+
+/**
+ * 入力行列からヒントと、1行に並ぶヒントの最大組数を求める。
+ * @param {number[][]} matrix - 色番号の行列。-1 は斜線
+ * @param {number} blank - その問題の空白番号
+ * @returns {ClueSummary}
+ */
+function makeNumber(matrix, blank) {
+    const clues = matrix.map(line => lineClues(line, blank));
+    return [clues, clues.reduce((max, line) => Math.max(max, line.length), 0)];
+}
+
+/**
+ * 行列転置関数
+ * https://qiita.com/kznr_luk/items/790f1b154d1b6d4de398
+ * @param  {Number[][]} arr - 入力マトリクス
+ * @return {Number[][]} - 転置したマトリクス
+ */
+function transpose(arr) {
+    return arr[0].map((_, c) => arr.map(r => r[c]))
+}

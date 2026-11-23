@@ -4,7 +4,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const test = require('node:test');
 const context = vm.createContext({ window: {} });
-vm.runInContext(fs.readFileSync(path.join(__dirname, '../importfile.js'), 'utf8'), context);
+vm.runInContext(fs.readFileSync(path.join(__dirname, '../board-gestures.js'), 'utf8'), context);
 function fixture() {
     const viewport = { scrollLeft: 100, scrollTop: 200 };
     let cancelled = 0;
