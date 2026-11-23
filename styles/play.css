@@ -839,3 +839,15 @@ body:not(:has(#play-panel:not([hidden]), #mosaic-panel:not([hidden]))) #open-pla
     #board-undo::before { content: "↶"; font-size: 1.25rem; }
     #board-redo::before { content: "↷"; font-size: 1.25rem; }
 }
+
+#paint-feedback-marker {
+    position: absolute;
+    box-sizing: border-box;
+    border: 2px solid white;
+    box-shadow: inset 0 0 0 1px #203751, 0 0 0 1px #203751;
+    pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    #paint-feedback-marker { display: none; }
+}
