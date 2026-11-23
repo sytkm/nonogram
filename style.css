@@ -413,6 +413,16 @@ header:has(#play-panel:not([hidden])) {
     border-bottom: 1px solid var(--puzzle-rule);
 }
 
+/* プレイ面の操作欄ではスクロールを許し、ブラウザの拡大だけを抑える。 */
+header:has(#play-panel:not([hidden])),
+.play-workspace,
+#pixelcanvas,
+#board-side-controls,
+#color-palette,
+#pause-message {
+    touch-action: pan-x pan-y;
+}
+
 #canvas {
     /* 指の本数による塗り・移動の使い分けは盤面側で処理する。 */
     touch-action: none;
