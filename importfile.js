@@ -1310,17 +1310,14 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         const messages = {
             paint: 'マスを押して塗り、1本指または2本指で盤面を動かせます。',
             trace: '1本指でなぞると塗れます。2本指で盤面を動かせます。マウスでもなぞって塗れます。',
-            pick: '塗ったマスを押すと色を拾えます。キーボードでは Space または Enter を押します。',
+            pick: 'マスを押すと色・空白・斜線を拾えます。キーボードでは Space または Enter を押します。',
         };
         instructions.textContent = messages[mode];
         // 読み上げ用の説明だけを更新し、入力モードで盤面の表示領域を変えない。
     }
 
     function pickCellColor({ row, column }) {
-        const color = cells[row][column];
-        if (color === blank || color < 0) return;
-        selectColor(color);
-        setInputMode('paint');
+        if (selectColor(cells[row][column])) setInputMode('paint');
     }
 
     function pointFor(event, painting = false) {
