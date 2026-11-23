@@ -13,6 +13,7 @@ test('盤面の表示だけで時計を進めず、分割一覧へ戻ると止�
     let now = 0;
     let clock;
     let strokeFinished = false;
+    let minimapClosed = false;
     let saved;
     const context = vm.createContext({
         document: {
@@ -21,15 +22,17 @@ test('盤面の表示だけで時計を進めず、分割一覧へ戻ると止�
         },
         flushProgress() {
             assert.equal(strokeFinished, true);
+            assert.equal(minimapClosed, true);
             now += 1_000;
             saved = clock.snapshot();
         },
         stopStroke() { strokeFinished = true; },
+        closeMinimap() { minimapClosed = true; },
     });
     for (const name of ['play-clock.js', 'puzzle-play.js']) {
         vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/play', name), 'utf8'), context);
     }
-    vm.runInContext('activeBoard = { stopStroke }', context);
+    vm.runInContext('activeBoard = { stopStroke, closeMinimap }', context);
     clock = context.createPlayClock(() => now);
     context.showPuzzleScreen(clock);
     now = 2_000;

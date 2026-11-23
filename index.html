@@ -25,12 +25,13 @@
     <script src="js/board/board-settings.js"></script>
     <script src="js/board/board-renderer.js"></script>
     <script src="js/board/board-viewport.js?v=zoom-target-buttons"></script>
-    <script src="js/board/board-controller.js?v=timed-zoom-controls"></script>
+    <script src="js/board/board-minimap.js"></script>
+    <script src="js/board/board-controller.js?v=board-minimap"></script>
     <script src="js/play/play-dialogs.js?v=start-when-ready"></script>
-    <script src="js/play/puzzle-play.js?v=start-when-ready"></script>
+    <script src="js/play/puzzle-play.js?v=board-minimap"></script>
     <script src="js/app.js?v=start-when-ready"></script>
     <link rel="stylesheet" href="styles/start.css">
-    <link rel="stylesheet" href="styles/play.css">
+    <link rel="stylesheet" href="styles/play.css?v=board-minimap">
     <link rel="stylesheet" href="styles/dialogs.css">
     <link rel="stylesheet" href="styles/mosaic.css">
     <script src="js/ui/dialog-dismiss.js?v=clear-results" defer></script>
@@ -418,6 +419,12 @@
             <div id="keyboard-cell-marker" aria-hidden="true" hidden></div>
             <div id="hint-line-marker" aria-hidden="true" hidden></div>
         </div>
+        <div id="board-minimap" class="board-minimap" role="img" aria-label="ミニマップ" hidden>
+            <div class="board-minimap-image">
+                <canvas id="board-minimap-canvas" aria-hidden="true"></canvas>
+                <span id="board-minimap-frame" aria-hidden="true"></span>
+            </div>
+        </div>
         <div id="board-side-controls" hidden>
             <div id="board-view-tools" aria-label="盤面の操作" role="group">
                 <div class="board-tools">
@@ -427,6 +434,7 @@
                         <button type="button" id="zoom-fit" aria-label="全体を表示">全体</button>
                         <button type="button" id="zoom-standard" aria-label="標準サイズ（1マス44ピクセル）" title="1マス44ピクセル">標準</button>
                     </div>
+                    <button type="button" id="toggle-board-minimap" aria-controls="board-minimap" aria-expanded="false">ミニマップ</button>
                     <div class="toolbar-group play-only">
                         <button type="button" class="board-menu-button" id="hint-tools-toggle" aria-controls="hint-tools" aria-expanded="false">ヒント・答え</button>
                     </div>
