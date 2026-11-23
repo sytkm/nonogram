@@ -36,12 +36,28 @@ function propagatePuzzleLines(cells, rowsOfClues, columnsOfClues, blank, budget)
     return unfilled ? 'partial' : 'complete';
 }
 
+/**
+ * @param {number} height
+ * @param {number} width
+ * @param {number} blank - 未確定マスの値
+ * @param {number[]} fixed - 左上から行優先で数えた固定斜線の位置（0始まり）
+ * @returns {number[][]} 検査用の行列。固定斜線は -1
+ */
 function initialPuzzleCells(height, width, blank, fixed) {
     const cells = Array.from({ length: height }, () => Array(width).fill(blank));
     for (const index of fixed) cells[Math.floor(index / width)][index % width] = -1;
     return cells;
 }
 
+/**
+ * 行・列だけの推理で解けるか調べる。答えの候補を仮置きする探索は行わない。
+ * @param {Clue[][]} rows
+ * @param {Clue[][]} columns
+ * @param {number} blank
+ * @param {number[]} [fixed] - 固定斜線の位置（行優先、0始まり）
+ * @param {number} [maxLineChecks] - 行・列を調べる回数の上限
+ * @returns {'complete'|'partial'|'contradiction'|'inconclusive'}
+ */
 function inspectLineSolvability(rows, columns, blank, fixed = [], maxLineChecks = 20_000) {
     const height = rows.length;
     const width = columns.length;
@@ -92,6 +108,15 @@ function inspectPuzzleQuality(rows, columns, blank, maxLineChecks = 20_000, fixe
     return solutions.length === 1 ? 'unique' : 'none';
 }
 
+/**
+ * 元画像を保ったまま答えを一つに絞れるよう、必要な固定斜線を探す。
+ * @param {Clue[][]} rows
+ * @param {Clue[][]} columns
+ * @param {number} blank
+ * @param {number[][]} answer - 元の答えの行列
+ * @param {number} [maxLineChecks] - 全候補を通した共通の検査上限
+ * @returns {{quality: 'unique'|'inconclusive', fixedSlashes: number[]}} 未確定時は途中の斜線を返さない
+ */
 function preparePuzzleQuality(rows, columns, blank, answer, maxLineChecks = 20_000) {
     const fixed = [];
     const budget = { remaining: maxLineChecks };

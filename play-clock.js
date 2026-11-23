@@ -17,6 +17,16 @@ function formatPenaltyTime(seconds) {
     return penaltyTimeParts(seconds).join('');
 }
 
+/**
+ * @typedef {object} PlayClockSnapshot
+ * @property {number} [elapsed] - 保存時点までのミリ秒
+ * @property {boolean} [started] - 計測を一度でも開始したか
+ * @property {boolean} [finished] - 完成済みで計測を再開しないか
+ */
+/**
+ * @param {() => number} [now] - 現在時刻をミリ秒で返す関数
+ * @param {PlayClockSnapshot} [state] - 以前の保存から復元する場合の値
+ */
 function createPlayClock(now = () => performance.now(), state = {}) {
     let saved = state.elapsed ?? 0;
     let startedAt = null;

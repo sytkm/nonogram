@@ -42,6 +42,12 @@ function detectImageFormat(header) {
     return null;
 }
 
+/**
+ * 画像のヘッダーを判別してブラウザで読み込む。一時URLは成功・失敗を問わず破棄する。
+ * @param {File} file
+ * @returns {Promise<{image: HTMLImageElement, format: 'png'|'jpeg'|'webp', canMakeConvertedColor: boolean, canPlayLegacyColor: boolean}>}
+ * @throws {Error} 対応外の形式、またはブラウザが復号できない画像
+ */
 async function readPuzzleImage(file) {
     const header = new Uint8Array(await file.slice(0, 29).arrayBuffer());
     const format = detectImageFormat(header);
@@ -70,6 +76,11 @@ async function readPuzzleImage(file) {
     }
 }
 
+/**
+ * @param {HTMLImageElement} image - 復号済みの画像
+ * @param {number} longestSide - 変換する盤面の長辺のマス数
+ * @returns {ImageData} 変換用キャンバスのRGBAピクセル
+ */
 function rasterizePuzzleImage(image, longestSide) {
     const { width, height } = fitPuzzleSize(image.naturalWidth, image.naturalHeight, longestSide);
     const canvas = document.createElement('canvas');
@@ -130,6 +141,10 @@ function makeMonochromeMatrix({ data, width, height }, threshold) {
     );
 }
 
+/**
+ * @param {ImageData} pixels - RGBAの画像データ
+ * @returns {PuzzleData} 空白と塗る色に分類した盤面
+ */
 function makeColorPuzzle({ data, width, height }) {
     // 透明な部分を白に合成し、白に近い画素は空白にまとめる。
     const colors = new Map();

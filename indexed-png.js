@@ -1,7 +1,7 @@
 /**
- * パレット形式PNGを読み込む。透過がなければパレット0番を空白として扱う。
+ * 従来の共有リンクとファイル読み込みで使うパレット形式PNGを復号する。透過がなければパレット0番を空白として扱う。
  * @param {string} src - PNGのBase64文字列
- * @returns {{ matrix: number[][], palette: number[][], blank: number }}
+ * @returns {PuzzleData}
  * @throws {Error} PNGが壊れているか、対応外の形式の場合
  */
 function decodeLegacyPng(src) {

@@ -1,5 +1,12 @@
 // ヒントの生成、クリア判定、行・列ヒント、完成行の自動斜線。
 
+/**
+ * 問題を作成・共有・保存するときに渡すデータ。プレイ中の斜線や入力は含まない。
+ * @typedef {object} PuzzleData
+ * @property {number[][]} matrix - 答えの行列。各値はパレット番号か blank
+ * @property {number[][]} palette - RGBの配列
+ * @property {number} blank - 空白を表す値。palette.length の場合もある
+ */
 /** @typedef {[color: number, count: number]} Clue */
 /** @typedef {[clues: Clue[][], maxClues: number]} ClueSummary */
 
