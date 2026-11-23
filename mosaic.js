@@ -68,6 +68,8 @@ function openMosaic(puzzle, { saved, fromShare = saved?.fromShare === true } = {
     const instructions = document.getElementById('mosaic-instructions');
     const finished = document.getElementById('mosaic-finished');
     const canvas = document.getElementById('mosaic-image');
+    const clearResult = document.getElementById('mosaic-clear-result');
+    clearResult.onclick = () => showClearResult(clearResult, { title: '絵が完成しました！', mosaic: true });
     const save = document.getElementById('mosaic-save');
     const saveLarge = document.getElementById('mosaic-save-large');
     const styles = palette.map(color => 'rgb(' + color.join(',') + ')');
@@ -191,6 +193,10 @@ function openMosaic(puzzle, { saved, fromShare = saved?.fromShare === true } = {
                     delete tile.board.past;
                     delete tile.board.future;
                     reveal(tile, button);
+                    if (completedCount === mosaic.tiles.length) {
+                        updateOverview(button);
+                        clearResult.click();
+                    }
                 },
             });
         };
