@@ -31,7 +31,7 @@
     <script src="js/play/puzzle-play.js?v=board-minimap"></script>
     <script src="js/app.js?v=shared-initial-fit"></script>
     <link rel="stylesheet" href="styles/start.css">
-    <link rel="stylesheet" href="styles/play.css?v=history-text-labels">
+    <link rel="stylesheet" href="styles/play.css?v=history-responsive-labels">
     <link rel="stylesheet" href="styles/dialogs.css">
     <link rel="stylesheet" href="styles/mosaic.css">
     <script src="js/ui/dialog-dismiss.js?v=clear-results" defer></script>
@@ -462,8 +462,8 @@
                     <button type="button" id="palette-slash" aria-label="斜線で印を付ける" aria-pressed="false">斜線</button>
                     <button type="button" id="pick-painted-color" aria-pressed="false" aria-describedby="paint-instructions" title="マスの色・空白・斜線や、ヒントの数字の色を拾えます。">スポイト</button>
                     <div class="history-controls" role="group" aria-label="操作履歴">
-                        <button type="button" id="board-undo" aria-label="元に戻す" title="元に戻す" disabled>元に戻す</button>
-                        <button type="button" id="board-redo" aria-label="やり直す" title="やり直す" disabled>やり直す</button>
+                        <button type="button" id="board-undo" aria-label="元に戻す" title="元に戻す" disabled><span class="history-label">元に戻す</span><svg class="history-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l-5 5 5 5 M4 10h10a5 5 0 0 1 0 10h-3"/></svg></button>
+                        <button type="button" id="board-redo" aria-label="やり直す" title="やり直す" disabled><span class="history-label">やり直す</span><svg class="history-icon" width="20" height="20" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l5 5-5 5 M20 10H10a5 5 0 0 0 0 10h3"/></svg></button>
                     </div>
                 </div>
             </div>
