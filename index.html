@@ -303,8 +303,8 @@
             </label>
             <label><input type="checkbox" id="color-symbols"> 色の記号を表示（カラー問題）</label>
             <label><input type="checkbox" id="auto-slash"> 完成した行・列の空白に斜線</label>
-            <label><input type="checkbox" id="paint-feedback" aria-describedby="paint-feedback-note"> 塗ったマスに短い演出</label>
-            <p id="paint-feedback-note">初期設定はオフです。端末で動きを減らす設定を使っているときは表示しません。</p>
+            <label><input type="checkbox" id="paint-feedback" checked aria-describedby="paint-feedback-note"> 塗ったマスに短い演出</label>
+            <p id="paint-feedback-note">端末で動きを減らす設定を使っているときは表示しません。</p>
         </fieldset>
     </dialog>
     <dialog id="play-guide-dialog" aria-labelledby="play-guide-title">
@@ -419,9 +419,9 @@
         <div id="pixelcanvas" hidden>
             <div class="fixed-clues" aria-hidden="true"><canvas id="fixed-clues" hidden></canvas></div>
             <canvas id="canvas" tabindex="0" aria-label="ノノグラムの盤面" aria-describedby="keyboard-instructions"></canvas>
-            <div id="paint-feedback-marker" aria-hidden="true" hidden></div>
             <div id="keyboard-cell-marker" aria-hidden="true" hidden></div>
             <div id="hint-line-marker" aria-hidden="true" hidden></div>
+            <div id="paint-feedback-marker" aria-hidden="true" hidden></div>
         </div>
         <div id="board-minimap" class="board-minimap" role="group" tabindex="0" aria-label="ミニマップ" aria-description="矢印キーで表示範囲を移動できます。" hidden>
             <div class="board-minimap-image">

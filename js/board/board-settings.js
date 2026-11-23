@@ -1,6 +1,6 @@
 // 共通設定の読み書き。保存済みの盤面にある旧設定も読み取る。
 
-const boardSettingDefaults = { stickClues: true, showSymbols: false, autoSlash: false, pickClueColor: false, tracePaint: true, paintFeedback: false };
+const boardSettingDefaults = { stickClues: true, showSymbols: false, autoSlash: false, pickClueColor: false, tracePaint: true, paintFeedback: true };
 const boardSettings = {};
 const boardSettingsKey = 'nonogram.settings';
 
