@@ -54,8 +54,7 @@ function dailyPuzzle(day) {
         for (const cell of [first, second]) {
             candidate[Math.floor(cell / side)][cell % side] ^= 1;
         }
-        const [rows] = makeNumber(candidate, blank);
-        const [columns] = makeNumber(transpose(candidate), blank);
+        const { rows: [rows], columns: [columns] } = makePuzzleClues(candidate, blank);
         if (inspectLineSolvability(rows, columns, blank, [], 196) === 'complete') {
             matrix = candidate;
             break;
