@@ -1,13 +1,38 @@
+/**
+ * プレイ中の状態。空白は問題の blank、斜線は -1。開いた直後は盤面が未初期化の場合がある。
+ * @typedef {object} BoardProgress
+ * @property {number[][]} [cells]
+ * @property {Record<string, boolean>} [marks] - 行・列のヒントへのチェック
+ * @property {boolean} [finished]
+ * @property {boolean} [paused]
+ */
+
+/**
+ * @typedef {object} ProgressSnapshot
+ * @property {'board'|'mosaic'} kind
+ * @property {PuzzleData} puzzle
+ * @property {BoardProgress} [board] - 通常盤面
+ * @property {PlayClockSnapshot} [clock]
+ * @property {{sample?: boolean, shared?: boolean, generated?: boolean, shareSource?: string}} [options]
+ * @property {{complete: boolean, board?: BoardProgress, clock?: PlayClockSnapshot}[]} [tiles] - 分割区画の順序で並ぶ
+ * @property {boolean} [fromShare]
+ * @property {boolean} [showTimes]
+ */
+
+/** @typedef {ProgressSnapshot & {id: string, savedAt?: number, dailyDate?: string}} ProgressRecord */
+
 const PROGRESS_KEY = 'nonogram:progress:v1';
 const DAILY_PROGRESS_KEY = 'nonogram:daily-progress:v2';
-let progressSource;
-let progressId;
+let progressSession;
 let pendingProgress;
-let progressFromShare = false;
-let progressDailyDate;
 let resumeProgressId;
 const savedTimeFormat = new Intl.DateTimeFormat('ja-JP', { dateStyle: 'medium', timeStyle: 'short' });
 
+/**
+ * 過去の保存を読む。保存がない、読み出せない、またはJSONが壊れている場合は null。
+ * @param {string} [key] - 通常または日替わりの保存キー
+ * @returns {ProgressRecord|null}
+ */
 function readProgress(key = PROGRESS_KEY) {
     try {
         return JSON.parse(localStorage.getItem(key));
@@ -57,22 +82,27 @@ function updateResumeButton(saved = readProgress()) {
     document.getElementById('saved-progress-timestamp').hidden = !hasTime;
 }
 
+/**
+ * 直前の保存を確定し、次に保存する盤面を登録する。盤面のコピーは書き込み時に取得する。
+ * @param {() => ProgressSnapshot} snapshot
+ * @param {string} [id] - 保存から再開した場合は同じIDを使う
+ * @param {boolean} [fromShare] - 保存の入れ替えを確認する共有問題か
+ * @param {string} [dailyDate] - 日替わりの保存先を選ぶ日付キー
+ */
 function setProgressSource(snapshot, id, fromShare = false, dailyDate) {
     flushProgress();
-    progressSource = snapshot;
-    progressId = id ?? (Date.now() + '-' + Math.random());
-    progressFromShare = fromShare;
-    progressDailyDate = dailyDate;
+    progressSession = { snapshot, id: id ?? (Date.now() + '-' + Math.random()), fromShare, dailyDate };
 }
 
 function writeProgress() {
     try {
-        const record = { id: progressId, ...progressSource(), dailyDate: progressDailyDate, savedAt: Date.now() };
-        const key = progressDailyDate ? DAILY_PROGRESS_KEY : PROGRESS_KEY;
-        if (progressDailyDate) {
+        const { snapshot, id, dailyDate } = progressSession;
+        const record = { id, ...snapshot(), dailyDate, savedAt: Date.now() };
+        const key = dailyDate ? DAILY_PROGRESS_KEY : PROGRESS_KEY;
+        if (dailyDate) {
             // 日付をまたいで開いたままの盤面や、別タブの未完成盤面で上書きしない。
-            if (progressDailyDate !== dailyDay().key) return false;
-            if (readDailyProgress(progressDailyDate)?.board.finished && !record.board.finished) return false;
+            if (dailyDate !== dailyDay().key) return false;
+            if (readDailyProgress(dailyDate)?.board.finished && !record.board.finished) return false;
         }
         try {
             localStorage.setItem(key, JSON.stringify(record));
@@ -84,7 +114,7 @@ function writeProgress() {
             ));
         }
         document.getElementById('progress-warning').textContent = '';
-        if (progressDailyDate) updateDailyPuzzleButton();
+        if (dailyDate) updateDailyPuzzleButton();
         else updateResumeButton(record);
         return true;
     } catch {
@@ -95,7 +125,7 @@ function writeProgress() {
 }
 
 function queueProgressSave() {
-    if (!progressSource || pendingProgress !== undefined) return;
+    if (!progressSession || pendingProgress !== undefined) return;
     pendingProgress = window.setTimeout(flushProgress, 250);
 }
 
@@ -105,16 +135,17 @@ function flushProgress(force = false) {
         pendingProgress = undefined;
         return writeProgress();
     }
-    if (!progressSource) return false;
-    const saved = progressDailyDate ? readDailyProgress(progressDailyDate) : readProgress();
-    if (force || saved?.id === progressId) return writeProgress();
+    if (!progressSession) return false;
+    const { id, dailyDate } = progressSession;
+    const saved = dailyDate ? readDailyProgress(dailyDate) : readProgress();
+    if (force || saved?.id === id) return writeProgress();
     return false;
 }
 
 function saveProgressForHome(replace = false) {
-    if (!progressFromShare) return 'ready';
+    if (!progressSession?.fromShare) return 'ready';
     const saved = readProgress();
-    if (!replace && pendingProgress === undefined && saved && saved.id !== progressId) return 'conflict';
+    if (!replace && pendingProgress === undefined && saved && saved.id !== progressSession.id) return 'conflict';
     return flushProgress(true) ? 'ready' : 'failed';
 }
 
@@ -164,15 +195,14 @@ function setupProgressRestore() {
     window.addEventListener('pageshow', event => {
         if (event.persisted) updateResumeButton();
     });
-    window.addEventListener('pagehide', () => {
+    function saveOnExit() {
         finishStroke?.();
         flushProgress();
-    });
+    }
+
+    window.addEventListener('pagehide', saveOnExit);
     document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            finishStroke?.();
-            flushProgress();
-        }
+        if (document.hidden) saveOnExit();
     });
     button.onclick = async () => {
         const saved = readProgress();

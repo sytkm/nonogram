@@ -9,6 +9,13 @@ function mosaicShareURL(pageURL, puzzle) {
     return puzzleShareURL(pageURL, puzzle, mosaicSharePrefix);
 }
 
+/**
+ * 問題だけを共有URLに含める。上限を超える場合は生成しない。
+ * @param {string|URL} pageURL
+ * @param {PuzzleData} puzzle
+ * @param {string} [prefix] - 通常または分割の共有形式
+ * @returns {Promise<string|null>}
+ */
 async function puzzleShareURL(pageURL, { matrix, palette, blank }, prefix = normalSharePrefix) {
     const json = JSON.stringify({ matrix, palette, blank });
     const stream = new Blob([json]).stream().pipeThrough(new CompressionStream('gzip'));
@@ -25,6 +32,13 @@ function readMosaicShare(hash) {
     return readPuzzleShare(hash, mosaicSharePrefix);
 }
 
+/**
+ * 共有フラグメントを読み、サイズ・形・色番号を検証して問題データを返す。
+ * @param {string} hash - # を含むURLのフラグメント
+ * @param {string} [prefix] - 期待する共有形式
+ * @returns {Promise<PuzzleData>}
+ * @throws {Error} 形式が不正、または展開後のサイズが上限を超える場合
+ */
 async function readPuzzleShare(hash, prefix = normalSharePrefix) {
     const marker = prefix + '1.';
     const invalid = () => new Error('ノノグラムの共有リンクが不正です。');
@@ -53,17 +67,21 @@ async function readPuzzleShare(hash, prefix = normalSharePrefix) {
         reader.releaseLock();
     }
 
-    const { matrix, palette, blank } = JSON.parse(json);
-    const width = matrix?.[0]?.length;
-    if (!Array.isArray(matrix) || !Array.isArray(matrix[0]) || !width || width * matrix.length > maxSharedPuzzleCells ||
-        (prefix === mosaicSharePrefix && !canSplitPuzzle(matrix)) ||
-        !Array.isArray(palette) || !palette.length || palette.length > 256 ||
-        !Number.isInteger(blank) || blank < 0 || blank > palette.length ||
-        !palette.every(color => Array.isArray(color) && color.length === 3 &&
-            color.every(channel => Number.isInteger(channel) && channel >= 0 && channel <= 255)) ||
-        !matrix.every(row => Array.isArray(row) && row.length === width &&
-            row.every(color => color === blank || (Number.isInteger(color) && color >= 0 && color < palette.length)))) {
-        throw invalid();
-    }
+    const puzzle = JSON.parse(json);
+    if (!isValidSharedPuzzle(puzzle, prefix === mosaicSharePrefix)) throw invalid();
+    const { matrix, palette, blank } = puzzle;
     return { matrix, palette, blank };
+}
+
+function isValidSharedPuzzle({ matrix, palette, blank }, split) {
+    const width = matrix?.[0]?.length;
+    if (!Array.isArray(matrix) || !Array.isArray(matrix[0]) || !width ||
+        width * matrix.length > maxSharedPuzzleCells || (split && !canSplitPuzzle(matrix))) return false;
+    if (!Array.isArray(palette) || !palette.length || palette.length > 256 ||
+        !Number.isInteger(blank) || blank < 0 || blank > palette.length) return false;
+
+    return palette.every(color => Array.isArray(color) && color.length === 3 &&
+        color.every(channel => Number.isInteger(channel) && channel >= 0 && channel <= 255)) &&
+        matrix.every(row => Array.isArray(row) && row.length === width &&
+            row.every(color => color === blank || (Number.isInteger(color) && color >= 0 && color < palette.length)));
 }

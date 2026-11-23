@@ -12,6 +12,11 @@ function canSplitPuzzle(matrix) {
     return count > 0 && count <= MAX_MOSAIC_TILES;
 }
 
+/**
+ * 外周の不足分を空白で埋め、区画の表示・保存で使う順番（左から右、上から下）に並べる。
+ * @param {number[][]} matrix - 答えの行列
+ * @param {number} blank - その問題の空白番号
+ */
 function splitMosaic(matrix, blank) {
     const width = matrix[0].length;
     const height = matrix.length;
