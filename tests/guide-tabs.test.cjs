@@ -19,7 +19,7 @@ function setup() {
         querySelector: () => content,
     };
     const context = vm.createContext({});
-    vm.runInContext(fs.readFileSync(path.join(__dirname, '../guide-tabs.js'), 'utf8'), context);
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/ui/guide-tabs.js'), 'utf8'), context);
     const reset = context.setupGuideTabs(dialog);
     return { tabs, panels, content, reset, focused: () => focused };
 }

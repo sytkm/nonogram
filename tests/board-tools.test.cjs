@@ -5,7 +5,7 @@ const vm = require('node:vm');
 const test = require('node:test');
 
 const context = vm.createContext({});
-vm.runInContext(fs.readFileSync(path.join(__dirname, '../board-tools.js'), 'utf8'), context);
+vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/board/board-tools.js'), 'utf8'), context);
 
 test('行・列の数字の位置と色を取得できる', () => {
     const rows = [[[1, 3]], [[1, 1], [2, 1]], [[-1, 0]]];

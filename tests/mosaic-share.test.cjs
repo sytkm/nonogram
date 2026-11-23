@@ -6,7 +6,7 @@ const { gzipSync } = require('node:zlib');
 const test = require('node:test');
 
 const context = vm.createContext({ URL, Blob, CompressionStream, DecompressionStream, Response, TextDecoder, atob, btoa });
-for (const file of ['mosaic.js', 'mosaic-share.js']) {
+for (const file of ['js/play/mosaic.js', 'js/puzzle/mosaic-share.js']) {
     vm.runInContext(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), context);
 }
 const { puzzleShareURL, readPuzzleShare, mosaicShareURL, readMosaicShare, splitMosaic } = context;
