@@ -127,6 +127,7 @@ async function startPuzzle({ matrix, palette, blank }, options = {}, openFirstGu
         controls = setupBoard({
             answer: matrix, palette, blank, rowClues, columnClues, initialCellSize, clock, board,
             multiColor: paintColors.length > 1, onEdit, fixedSlashes, paletteControls,
+            startWithColor: Boolean(options.tileLabel) && !options.review,
         });
         activeBoard = controls;
     } catch (error) {

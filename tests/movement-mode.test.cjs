@@ -4,7 +4,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const test = require('node:test');
 
-function fixture(tracePaint = true) {
+function fixture(tracePaint = true, startWithColor = false) {
     const elements = new Map();
     function element() {
         return {
@@ -50,7 +50,7 @@ function fixture(tracePaint = true) {
     context.boardClueAt = () => null;
     const paletteControls = context.drawUnderPalette([[255, 255, 255], [0, 0, 0]], new Set([0, 1]), 0, 1);
     const controls = context.setupBoard({ answer: [[1, 1]], palette: [], blank: 0,
-        rowClues: [[], 0], columnClues: [[], 0], initialCellSize: 40,
+        startWithColor, rowClues: [[], 0], columnClues: [[], 0], initialCellSize: 40,
         clock: { addPenalty() {} }, board, fixedSlashes: new Set(), paletteControls, onEdit() {} });
     const canvas = get('canvas');
     const event = (x = 20) => ({ pointerType: 'touch', pointerId: 1, isPrimary: true,
@@ -138,4 +138,18 @@ test('演出は手で変えたマスだけに送り、同じ色・移動・自�
     f.get('solve').onclick();
     assert.equal(f.board.cells[0][1], 1);
     assert.equal(f.feedbackCalls.length, 1);
+});
+
+test('色で開始した区画は設定に従って最初のタップで塗れ、移動にも切り替えられる', () => {
+    for (const trace of [true, false]) {
+        const f = fixture(trace, true);
+        assert.equal(f.get('palette-move').attributes['aria-pressed'], 'false');
+        assert.equal(f.get('color-palette').children[0].attributes['aria-pressed'], 'true');
+        assert.deepEqual(f.board.cells, [[0, 0]]);
+        f.tap();
+        assert.equal(f.board.cells[0][0], 1);
+        f.get('palette-move').onclick();
+        f.tap(60);
+        assert.equal(f.board.cells[0][1], 0);
+    }
 });
