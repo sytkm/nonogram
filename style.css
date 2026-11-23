@@ -481,7 +481,7 @@ header:has(#play-panel:not([hidden])),
 }
 
 #play-panel.is-viewing-tile .play-only,
-body:has(#play-panel.is-viewing-tile) #board-view-tools .play-only {
+body:has(#play-panel.is-viewing-tile) #board-side-controls .play-only {
     display: none;
 }
 
@@ -680,8 +680,12 @@ body:has(#play-panel.is-viewing-tile) #board-view-tools .play-only {
     min-width: 0;
 }
 
+#board-view-tools,
+.paint-controls {
+    position: relative;
+}
+
 #board-view-tools {
-    container-type: inline-size;
     padding: 0.25rem max(0.5rem, env(safe-area-inset-right)) 0.375rem max(0.5rem, env(safe-area-inset-left));
 }
 
@@ -708,13 +712,21 @@ body:has(#play-panel.is-viewing-tile) #board-view-tools .play-only {
 }
 
 .board-menu:not([hidden]) {
-    margin-top: 0.45rem;
+    position: absolute;
+    z-index: 2;
+    inset-inline: 0;
+    bottom: calc(100% + 0.25rem);
+    max-inline-size: 24rem;
     padding: 0.5rem;
-    border: 1px solid #d3dce8;
+    border: 1px solid var(--puzzle-major-rule);
     border-radius: 0.5rem;
     background: #f2f6fb;
-    max-block-size: min(9rem, 32dvh);
+    max-block-size: min(14rem, 50dvh);
     overflow: auto;
+}
+
+#hint-tools:not([hidden]) {
+    inset-inline: max(0.5rem, env(safe-area-inset-left)) max(0.5rem, env(safe-area-inset-right));
 }
 
 #clue-tools dl {
@@ -1116,6 +1128,12 @@ dialog button:focus-visible {
     max-inline-size: 100%;
 }
 
+#answer-tool {
+    margin-top: 0.5rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--puzzle-rule);
+}
+
 .penalty {
     display: inline-block;
     box-sizing: border-box;
@@ -1139,6 +1157,7 @@ dialog button:focus-visible {
 }
 
 #fix-phone-under-menu {
+    container-type: inline-size;
     flex: 0 0 auto;
     min-width: 0;
     border-top: 1px solid var(--puzzle-rule);
@@ -1214,6 +1233,15 @@ dialog button:focus-visible {
     font-size: 0.8125rem;
 }
 
+#clue-tools-toggle {
+    inline-size: 7.25em;
+    line-height: 1.2;
+}
+
+#clue-tools-toggle strong {
+    display: block;
+}
+
 #fix-phone-under-menu .paint-tools .history-control {
     font-size: 1.125rem;
 }
@@ -1233,7 +1261,6 @@ dialog button:focus-visible {
         grid-column: 2;
         grid-row: 1;
         width: 11.75rem;
-        overflow: auto;
         padding: 0.75rem 0.5rem;
         border-inline-start: 1px solid var(--puzzle-rule);
     }
@@ -1245,11 +1272,16 @@ dialog button:focus-visible {
         align-items: center;
     }
 
+    #hint-tools:not([hidden]) {
+        inset: 0 calc(100% + 0.25rem) auto auto;
+        width: min(22rem, 50vw);
+    }
+
     #palette-panel {
         flex: 1 1 auto;
     }
 
-    #fix-phone-under-menu .paint-tools {
+    .paint-controls {
         flex: 0 0 auto;
     }
 }
