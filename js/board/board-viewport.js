@@ -19,9 +19,9 @@ function createBoardViewport({
     ))));
     let cellSize;
 
-    function clueGutters() {
+    function clueGutters(scrollLeft = viewport.scrollLeft, scrollTop = viewport.scrollTop) {
         return shouldStickClues()
-            ? fixedClueGutters(viewport.scrollLeft, viewport.scrollTop, viewport.clientWidth,
+            ? fixedClueGutters(scrollLeft, scrollTop, viewport.clientWidth,
                 viewport.clientHeight, leftClueCount * cellSize, topClueCount * cellSize)
             : { left: 0, top: 0 };
     }
@@ -42,6 +42,19 @@ function createBoardViewport({
         const { left, top } = clueGutters();
         viewport.scrollLeft = Math.min(x - left, Math.max(viewport.scrollLeft, x + cellSize - viewport.clientWidth));
         viewport.scrollTop = Math.min(y - top, Math.max(viewport.scrollTop, y + cellSize - viewport.clientHeight));
+    }
+
+    /**
+     * @param {number} row - 盤面上の行の位置（小数を含む）
+     * @param {number} column - 盤面上の列の位置（小数を含む）
+     */
+    function centerOnCell(row, column) {
+        const { clientWidth, clientHeight, scrollWidth, scrollHeight } = viewport;
+        const left = (leftClueCount + column) * cellSize - clientWidth / 2;
+        const top = (topClueCount + row) * cellSize - clientHeight / 2;
+        const gutters = clueGutters(left, top);
+        viewport.scrollLeft = Math.max(0, Math.min(scrollWidth - clientWidth, left - gutters.left / 2));
+        viewport.scrollTop = Math.max(0, Math.min(scrollHeight - clientHeight, top - gutters.top / 2));
     }
 
     function scrollLineIntoView(axis, index) {
@@ -121,6 +134,6 @@ function createBoardViewport({
 
     return {
         get cellSize() { return cellSize; },
-        initialize, fitBoard, updateZoomButtons, clueGutters, pointFor, scrollCellIntoView, scrollLineIntoView, pinch,
+        initialize, fitBoard, updateZoomButtons, clueGutters, pointFor, scrollCellIntoView, centerOnCell, scrollLineIntoView, pinch,
     };
 }

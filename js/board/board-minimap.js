@@ -96,6 +96,24 @@ function createBoardMinimap({ cells, palette, blank, viewport, leftClueCount, to
         updateViewport();
     }
 
+    canvas.onclick = event => {
+        const { left, top, width, height } = canvas.getBoundingClientRect();
+        if (!width || !height) return;
+        const row = (event.clientY - top) * rows / height;
+        const column = (event.clientX - left) * columns / width;
+        boardView.centerOnCell(row, column);
+        updateViewport();
+    };
+
+    panel.onkeydown = event => {
+        const direction = { ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1] }[event.key];
+        if (!direction || event.altKey || event.ctrlKey || event.metaKey) return;
+        event.preventDefault();
+        viewport.scrollLeft += direction[0] * viewport.clientWidth / 2;
+        viewport.scrollTop += direction[1] * viewport.clientHeight / 2;
+        updateViewport();
+    };
+
     close();
     toggle.onclick = toggleMinimap;
     panel.parentElement.onkeydown = event => {
