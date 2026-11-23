@@ -16,7 +16,7 @@
     <script src="js/play/daily-puzzle.js?v=shared-clues"></script>
     <script src="js/puzzle/quality-controls.js?v=clue-labels"></script>
     <script src="js/puzzle/mosaic-share.js?v=normal-share"></script>
-    <script src="js/play/mosaic.js?v=mosaic-overview-order"></script>
+    <script src="js/play/mosaic.js?v=mosaic-tile-clear"></script>
     <script src="js/ui/share-controls.js?v=play-sharing"></script>
     <script src="js/ui/guide-tabs.js?v=preview-tabs"></script>
     <script src="js/puzzle/puzzle-rules.js?v=shared-clues"></script>
@@ -28,11 +28,11 @@
     <script src="js/board/board-minimap.js?v=minimap-navigation"></script>
     <script src="js/board/board-feedback.js"></script>
     <script src="js/board/board-controller.js?v=paint-feedback"></script>
-    <script src="js/play/play-dialogs.js?v=mosaic-overview-order"></script>
-    <script src="js/play/puzzle-play.js?v=mosaic-overview-order"></script>
+    <script src="js/play/play-dialogs.js?v=mosaic-tile-clear"></script>
+    <script src="js/play/puzzle-play.js?v=mosaic-tile-clear"></script>
     <script src="js/app.js?v=shared-initial-fit"></script>
     <link rel="stylesheet" href="styles/start.css?v=mosaic-overview-order">
-    <link rel="stylesheet" href="styles/play.css?v=mosaic-overview-order">
+    <link rel="stylesheet" href="styles/play.css?v=mosaic-tile-clear">
     <link rel="stylesheet" href="styles/dialogs.css?v=paint-feedback">
     <link rel="stylesheet" href="styles/mosaic.css?v=mosaic-overview-order">
     <script src="js/ui/dialog-dismiss.js?v=clear-results" defer></script>
@@ -183,24 +183,26 @@
         </div>
         <div id="play-panel" hidden>
             <div class="play-clock">
-                <div class="mosaic-tile-navigation">
+                <div class="play-clock-controls">
+                    <div class="mosaic-tile-navigation">
+                        <div class="play-timer">
+                            <div class="play-timer-readout">
+                                <span id="mosaic-tile-label" class="play-timer-caption"></span>
+                                <span role="status"><span class="mosaic-progress-caption">完成</span> <span id="mosaic-tile-progress" class="play-timer-value"></span></span>
+                            </div>
+                        </div>
+                        <button type="button" id="return-mosaic" hidden>全体図に戻る</button>
+                    </div>
                     <div class="play-timer">
                         <div class="play-timer-readout">
-                            <span id="mosaic-tile-label" class="play-timer-caption"></span>
-                            <span role="status"><span class="mosaic-progress-caption">完成</span> <span id="mosaic-tile-progress" class="play-timer-value"></span></span>
+                            <span class="play-timer-caption" aria-hidden="true">プレイ時間</span>
+                            <span id="play-time" class="play-timer-value" role="timer" aria-label="プレイ時間">00:00</span>
                         </div>
+                        <button type="button" id="pause-play" class="play-only">
+                            <span class="pause-icon" aria-hidden="true"></span>
+                            <span id="pause-play-label">一時停止</span>
+                        </button>
                     </div>
-                    <button type="button" id="return-mosaic" hidden>全体図に戻る</button>
-                </div>
-                <div class="play-timer">
-                    <div class="play-timer-readout">
-                        <span class="play-timer-caption" aria-hidden="true">プレイ時間</span>
-                        <span id="play-time" class="play-timer-value" role="timer" aria-label="プレイ時間">00:00</span>
-                    </div>
-                    <button type="button" id="pause-play" class="play-only">
-                        <span class="pause-icon" aria-hidden="true"></span>
-                        <span id="pause-play-label">一時停止</span>
-                    </button>
                 </div>
             </div>
             <div id="play-actions">
@@ -262,6 +264,7 @@
                 <a class="action-link" id="mosaic-save-large" download="nonogram-mosaic-large.png" hidden>拡大した画像を保存</a>
             </div>
             <button type="button" id="clear-result-restart" class="action-link" aria-haspopup="dialog" aria-controls="restart-dialog" hidden>もう一度遊ぶ</button>
+            <button type="button" id="clear-result-return-mosaic" class="action-link action-primary" hidden>全体図に戻る</button>
             <a href="?" class="action-link" data-play-home>ホームに戻る</a>
         </div>
     </dialog>

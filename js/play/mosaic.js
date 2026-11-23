@@ -194,7 +194,11 @@ function openMosaic(puzzle, { saved, fromShare = saved?.fromShare === true } = {
                 board: tile.board ??= {},
                 clock: tile.clock,
                 review: tile.complete,
-                onReturn: () => updateOverview(button),
+                onReturn: () => {
+                    const showCompletion = finished.hidden && completedCount === mosaic.tiles.length;
+                    updateOverview(button);
+                    if (showCompletion) clearResult.click();
+                },
                 onSolved: () => {
                     tile.complete = true;
                     completedCount++;
@@ -202,10 +206,6 @@ function openMosaic(puzzle, { saved, fromShare = saved?.fromShare === true } = {
                     delete tile.board.past;
                     delete tile.board.future;
                     reveal(tile, button);
-                    if (completedCount === mosaic.tiles.length) {
-                        updateOverview(button);
-                        clearResult.click();
-                    }
                 },
             });
         };
