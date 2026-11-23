@@ -45,17 +45,19 @@ function createPlayClock(now = () => performance.now(), state = {}) {
         startedAt = null;
     }
 
+    function elapsed() {
+        return saved + (startedAt === null ? 0 : now() - startedAt);
+    }
+
     return {
         start,
         suspend,
         resume() {
             if (started) start();
         },
-        elapsed() {
-            return saved + (startedAt === null ? 0 : now() - startedAt);
-        },
+        elapsed,
         snapshot() {
-            return { elapsed: this.elapsed(), started, finished };
+            return { elapsed: elapsed(), started, finished };
         },
         addPenalty(seconds) {
             if (finished) return;
