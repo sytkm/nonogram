@@ -37,6 +37,7 @@ function setupPaletteNavigation() {
 
 function drawUnderPalette(palette, usedColors, blank, initialColor) {
     let selectedColor = initialColor;
+    let onSelect = () => {};
     const container = document.getElementById('color-palette');
     container.replaceChildren();
     const buttons = new Map([
@@ -50,6 +51,7 @@ function drawUnderPalette(palette, usedColors, blank, initialColor) {
         buttons.get(selectedColor)?.setAttribute('aria-pressed', 'false');
         button.setAttribute('aria-pressed', 'true');
         selectedColor = color;
+        onSelect();
         if (container.contains(button)) {
             // Move only the palette to reveal a color selected with a clue or the eyedropper.
             const viewport = container.getBoundingClientRect();
@@ -96,7 +98,15 @@ function drawUnderPalette(palette, usedColors, blank, initialColor) {
     container.scrollLeft = 0;
     container.scrollTop = 0;
     updatePaletteNavigation();
-    return { selectColor, getSelectedColor: () => selectedColor };
+    return {
+        selectColor, getSelectedColor: () => selectedColor,
+        onSelect(callback) { onSelect = callback; },
+        showSelection(show) {
+            for (const [color, button] of buttons) {
+                button.setAttribute('aria-pressed', String(show && color === selectedColor));
+            }
+        },
+    };
 }
 
 /**

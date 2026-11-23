@@ -140,3 +140,20 @@ test('モード変更で破棄したピンチは次の描画で反映しない',
     frames.shift()();
     assert.deepEqual(updates, []);
 });
+
+test('別フレームの平行移動でも小さな間隔の揺れは倍率に反映しない', () => {
+    const { pan, event, frames, updates } = pinchFixture();
+    pan.move(event(1, 112, 120));
+    frames.shift()();
+    pan.move(event(2, 212, 120));
+    frames.shift()();
+    pan.move(event(1, 121, 140));
+    pan.move(event(2, 215, 140));
+    frames.shift()();
+    assert.equal(updates.length, 3);
+    assert.ok(updates.every(update => update.size === 40));
+    pan.move(event(1, 90, 140));
+    pan.move(event(2, 240, 140));
+    frames.shift()();
+    assert.equal(updates.at(-1).size, 60);
+});
