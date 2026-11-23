@@ -833,9 +833,6 @@ body:not(:has(#play-panel:not([hidden]), #mosaic-panel:not([hidden]))) #open-pla
 #canvas.is-moving:active { cursor: grabbing; }
 #palette-move { display: inline-grid; place-items: center; }
 @media (max-width: 63.99rem) {
-    #fix-phone-under-menu .paint-tools { flex-wrap: nowrap; }
+    #fix-phone-under-menu .paint-tools { flex-wrap: wrap; }
     #fix-phone-under-menu .history-controls { margin-inline-start: auto; }
-    #board-undo, #board-redo { font-size: 0 !important; }
-    #board-undo::before { content: "↶"; font-size: 1.25rem; }
-    #board-redo::before { content: "↷"; font-size: 1.25rem; }
 }
