@@ -1,3 +1,16 @@
+/** キャンバスの表示寸法と描画だけを更新する。 */
+function drawPuzzlePreview(canvas, { matrix, palette, blank }) {
+    canvas.width = matrix[0].length;
+    canvas.height = matrix.length;
+    canvas.style.width = Math.min(240, canvas.width * 8, 240 * canvas.width / canvas.height) + 'px';
+    const context = canvas.getContext('2d');
+    const styles = palette.map(rgb => 'rgb(' + rgb.join(',') + ')');
+    matrix.forEach((row, y) => row.forEach((value, x) => {
+        context.fillStyle = value === blank ? '#fff' : styles[value];
+        context.fillRect(x, y, 1, 1);
+    }));
+}
+
 // 画像選択から作成プレビュー、共有、プレイ開始までをつなぐ。
 function setupImagePicker() {
     const input = document.getElementById('file');
@@ -47,6 +60,10 @@ function setupImagePicker() {
         return mode.value === 'color' && Boolean(currentImage.originalPuzzle);
     }
 
+    function originalShareSource() {
+        return currentImage.puzzle === currentImage.originalPuzzle ? currentImage.shareSource : undefined;
+    }
+
     function updatePreview() {
         const useColor = mode.value === 'color';
         const indexed = usesIndexedColors();
@@ -65,7 +82,7 @@ function setupImagePicker() {
             };
         }
         currentImage.puzzle = puzzle;
-        const { matrix, palette, blank } = puzzle;
+        const { matrix } = puzzle;
         const { naturalWidth, naturalHeight } = currentImage.image;
         document.getElementById('preview-size').textContent =
             '元画像 ' + naturalWidth + ' × ' + naturalHeight +
@@ -90,20 +107,12 @@ function setupImagePicker() {
                 : '10×10の小さな区画を解いて、1枚の絵を完成させます。';
         }
         if (!playPreview.disabled) {
-            updatePuzzleSharing(puzzle, puzzle === currentImage.originalPuzzle ? currentImage.shareSource : undefined);
+            updatePuzzleSharing(puzzle, originalShareSource());
         }
         document.getElementById('threshold-panel').hidden = useColor;
         document.getElementById('color-note').hidden = !useColor || indexed;
         document.getElementById('threshold-value').value = threshold.value;
-        canvas.width = matrix[0].length;
-        canvas.height = matrix.length;
-        canvas.style.width = Math.min(240, canvas.width * 8, 240 * canvas.width / canvas.height) + 'px';
-        const context = canvas.getContext('2d');
-        const styles = palette.map(rgb => 'rgb(' + rgb.join(',') + ')');
-        matrix.forEach((row, y) => row.forEach((value, x) => {
-            context.fillStyle = value === blank ? '#fff' : styles[value];
-            context.fillRect(x, y, 1, 1);
-        }));
+        drawPuzzlePreview(canvas, puzzle);
 
         const first = matrix[0][0];
         const uniform = matrix.every(row => row.every(value => value === first));
@@ -179,22 +188,20 @@ function setupImagePicker() {
             if (currentImage !== selection) return;
             selection.image = decoded.image;
             selection.canMakeConvertedColor = decoded.canMakeConvertedColor;
+            let fallbackMessage;
             if (decoded.canPlayLegacyColor) {
                 try {
                     const src = await readBase64(file);
                     if (currentImage !== selection) return;
                     selection.originalPuzzle = decodeLegacyPng(src);
                     selection.shareSource = src;
-                    openPreview();
-                    return;
                 } catch {
                     if (currentImage !== selection) return;
-                    openPreview();
-                    status.textContent = 'このPNGはカラー問題にできません。白黒のプレビューを表示しました。';
-                    return;
+                    fallbackMessage = 'このPNGはカラー問題にできません。白黒のプレビューを表示しました。';
                 }
             }
             openPreview();
+            if (fallbackMessage) status.textContent = fallbackMessage;
         } catch (error) {
             if (currentImage !== selection) return;
             currentImage = undefined;
@@ -236,7 +243,7 @@ function setupImagePicker() {
         const initialCheck = previewLogicResult;
         resetPreviewChecks();
         const generated = !usesIndexedColors();
-        const shareSource = currentImage.puzzle === currentImage.originalPuzzle ? currentImage.shareSource : undefined;
+        const shareSource = originalShareSource();
         startPuzzle(currentImage.puzzle, { generated, initialCheck, shareSource, fitOnStart: true });
     });
     splitPreview.addEventListener('click', () => {
