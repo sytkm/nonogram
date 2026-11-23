@@ -18,7 +18,7 @@
     <script src="mosaic.js?v=operation-styles"></script>
     <script src="share-controls.js?v=play-sharing"></script>
     <script src="guide-tabs.js?v=preview-tabs"></script>
-    <script src="importfile.js?v=daily-puzzle"></script>
+    <script src="importfile.js?v=stable-paint-viewport"></script>
     <link rel="stylesheet" href="style.css?v=daily-puzzle">
     <script src="dialog-dismiss.js?v=keep-shared-game" defer></script>
     <title>画像でノノグラム</title>
@@ -433,8 +433,8 @@
                 <div class="toolbar-group paint-tools" role="group" aria-label="塗りと編集">
                     <button type="button" id="palette-blank" aria-label="空白に戻す" aria-pressed="false">空白</button>
                     <button type="button" id="palette-slash" aria-label="斜線で印を付ける" aria-pressed="false">斜線</button>
-                    <button type="button" id="pick-painted-color" aria-pressed="false" aria-describedby="paint-instructions">スポイト</button>
-                    <button type="button" id="paint-mode" aria-pressed="false" aria-describedby="paint-instructions">なぞり塗り</button>
+                    <button type="button" id="pick-painted-color" aria-pressed="false" aria-describedby="paint-instructions" title="塗ったマスを押すと色を拾えます。">スポイト</button>
+                    <button type="button" id="paint-mode" aria-pressed="false" aria-describedby="paint-instructions" title="通ったマスをまとめて塗ります。盤面を動かすときはオフにします。">なぞり塗り</button>
                     <button type="button" id="board-undo" class="history-control" aria-label="操作を取り消す" title="操作を取り消す" disabled>↶</button>
                     <button type="button" id="board-redo" class="history-control" aria-label="取り消しを戻す" title="取り消しを戻す" disabled>↷</button>
                 </div>
