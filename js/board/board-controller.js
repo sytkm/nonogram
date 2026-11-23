@@ -37,10 +37,15 @@ function setupBoard({
     const rows = answer.length;
     const [rowsOfClues, leftClueCount] = rowClues;
     const [columnsOfClues, topClueCount] = columnClues;
+    const feedback = createBoardFeedback({
+        marker: document.getElementById('paint-feedback-marker'), leftClueCount, topClueCount,
+        cellSize: () => boardView.cellSize,
+        enabled: () => boardSetting('paintFeedback', board),
+    });
     const boardView = createBoardViewport({
         viewport, canvas, columns, rows, leftClueCount, topClueCount,
         shouldStickClues: () => boardSetting('stickClues', board),
-        beforeResize: stopStroke,
+        beforeResize() { stopStroke(); feedback.clear(); },
         redraw() {
             renderBoard(true);
             positionHintMarker();
@@ -138,6 +143,7 @@ function setupBoard({
     }
 
     function renderBoard(force = false) {
+        feedback.clear();
         renderer.drawBoard(force, { cellSize: boardView.cellSize, showSymbols, conflicts, highlightedHint });
         renderFixedClues();
     }
@@ -308,6 +314,7 @@ function setupBoard({
             clock.suspend();
             showBoardMenu();
             minimap.close();
+            feedback.clear();
             setPlayAreaVisible(false);
         }
         board.paused = Boolean(pausedPosition);
@@ -348,7 +355,7 @@ function setupBoard({
         selectColor(color);
     }
 
-    function applyColor({ row, column }, color, action) {
+    function applyColor({ row, column }, color, action, manual = false) {
         if (fixedSlashes.has(row * columns + column)) return;
         const before = cells[row][column];
         if (before === color) return;
@@ -356,6 +363,7 @@ function setupBoard({
         cells[row][column] = color;
         renderer.paintCell(row, column, color, boardView.cellSize, showSymbols);
         minimap.repaint();
+        if (manual) feedback.show(row, column);
     }
 
     function continueStroke(event) {
@@ -363,10 +371,10 @@ function setupBoard({
         const point = boardView.pointFor(event, true);
         if (point && !stroke.point) {
             const cell = boardCellAt(point, columns, rows);
-            if (cell) applyColor(cell, stroke.color, stroke.changes);
+            if (cell) applyColor(cell, stroke.color, stroke.changes, true);
         } else if (point) {
             for (const cell of traceBoardCells(stroke.point, point, columns, rows)) {
-                applyColor(cell, stroke.color, stroke.changes);
+                applyColor(cell, stroke.color, stroke.changes, true);
             }
         }
         stroke.point = point;
@@ -404,7 +412,7 @@ function setupBoard({
         if (board.finished) return;
         stopStroke();
         const action = [];
-        applyColor(cell, color, action);
+        applyColor(cell, color, action, true);
         if (record(action, true)) onEdit();
     }
 
@@ -499,7 +507,7 @@ function setupBoard({
         if (!cell) return;
         canvas.setPointerCapture(event.pointerId);
         stroke = { id: event.pointerId, point, color: getSelectedColor(), changes: [] };
-        applyColor(cell, stroke.color, stroke.changes);
+        applyColor(cell, stroke.color, stroke.changes, true);
     };
     canvas.onpointermove = event => {
         if (touchPan.move(event)) return;
@@ -520,7 +528,11 @@ function setupBoard({
     viewport.onscroll = renderFixedClues;
     return {
         state: board,
-        stopStroke,
+        stopStroke() {
+            const changed = stopStroke();
+            feedback.clear();
+            return changed;
+        },
         closeMinimap: minimap.close,
         redraw() {
             renderBoard();
