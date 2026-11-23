@@ -592,9 +592,7 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
     const qualityNote = document.getElementById('quality-play-note');
     qualityNote.textContent = fixedSlashes.size
         ? '青い斜線は、答えが一つに決まるための空白マスです。'
-        : board.quality === 'inconclusive'
-            ? '答えが一つか確認できなかったため、ヒント数字に合う配置でクリアになります。'
-            : '';
+        : '';
     qualityNote.hidden = !qualityNote.textContent;
     const usedColors = options.generated && !options.shared
         ? new Set([...palette.slice(1).map((_, i) => i + 1), blank])
