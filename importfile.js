@@ -314,7 +314,7 @@ function setupImagePicker() {
         resetPreviewChecks();
         const generated = !usesIndexedColors();
         const shareSource = currentImage.puzzle === currentImage.originalPuzzle ? currentImage.shareSource : undefined;
-        startPuzzle(currentImage.puzzle, { generated, initialCheck, shareSource });
+        startPuzzle(currentImage.puzzle, { generated, initialCheck, shareSource, fitOnStart: true });
     });
     splitPreview.addEventListener('click', () => {
         resetPreviewChecks();
