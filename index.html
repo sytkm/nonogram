@@ -4,7 +4,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <script src="inflate.min.js"></script>
     <script src="js/image/image-input.js?v=split-image-preview"></script>
     <script src="js/image/indexed-png.js"></script>
@@ -29,7 +28,10 @@
     <script src="js/play/play-dialogs.js"></script>
     <script src="js/play/puzzle-play.js"></script>
     <script src="js/app.js"></script>
-    <link rel="stylesheet" href="style.css?v=clue-eyedropper-settings">
+    <link rel="stylesheet" href="styles/start.css">
+    <link rel="stylesheet" href="styles/play.css">
+    <link rel="stylesheet" href="styles/dialogs.css">
+    <link rel="stylesheet" href="styles/mosaic.css">
     <script src="js/ui/dialog-dismiss.js?v=clear-results" defer></script>
     <title>画像でノノグラム</title>
 </head>
@@ -161,26 +163,12 @@
                                     <p>リンクから答えの画像を復元できます。進み具合やプレイ時間は含まれません。</p>
                                     <div id="preview-share" class="puzzle-share" role="group" aria-label="通常問題を共有" hidden>
                                         <p>通常問題のリンクを開くと、画像全体を1つの盤面で遊べます。</p>
-                                        <div class="toolbar-group">
-                                            <a class="action-link" data-share-bluesky aria-label="Blueskyで共有（通常問題）" target="_blank" rel="noopener noreferrer" hidden>Blueskyで共有</a>
-                                            <button type="button" class="action-link" data-share-copy>通常問題の共有リンクをコピー</button>
-                                        </div>
-                                        <p class="quality-result" data-share-status role="status"></p>
-                                        <div data-share-manual hidden>
-                                            <label>共有リンク <input type="text" readonly></label>
-                                        </div>
+                                        <div data-share-actions="通常問題"></div>
                                     </div>
                                     <p id="preview-share-message" class="quality-result" role="status"></p>
                                     <div id="preview-mosaic-share" class="puzzle-share" role="group" aria-label="分割ノノグラムを共有" hidden>
                                         <p>分割問題のリンクを開くと、10×10の区画に分けて遊べます。</p>
-                                        <div class="toolbar-group">
-                                            <a class="action-link" data-share-bluesky aria-label="Blueskyで共有（分割問題）" target="_blank" rel="noopener noreferrer" hidden>Blueskyで共有</a>
-                                            <button type="button" class="action-link" data-share-copy>分割問題の共有リンクをコピー</button>
-                                        </div>
-                                        <p class="quality-result" data-share-status role="status"></p>
-                                        <div data-share-manual hidden>
-                                            <label>共有リンク <input type="text" readonly></label>
-                                        </div>
+                                        <div data-share-actions="分割問題"></div>
                                     </div>
                                     <p id="preview-mosaic-share-message" class="quality-result" role="status"></p>
                                 </div>
@@ -240,7 +228,7 @@
         </section>
     </main>
     <dialog id="clear-result-dialog" aria-labelledby="clear-result-title" aria-describedby="clear-result-note">
-        <div class="settings-heading">
+        <div class="dialog-heading">
             <h2 id="clear-result-title">クリア！</h2>
             <form method="dialog"><button type="submit" autofocus>閉じる</button></form>
         </div>
@@ -256,7 +244,7 @@
         </div>
     </dialog>
     <dialog id="play-menu-dialog" aria-labelledby="play-menu-title">
-        <div class="settings-heading">
+        <div class="dialog-heading">
             <h2 id="play-menu-title">プレイメニュー</h2>
             <form method="dialog"><button type="submit" autofocus>閉じる</button></form>
         </div>
@@ -279,14 +267,24 @@
             </div>
         </form>
     </dialog>
+    <template id="share-actions-template">
+        <div class="toolbar-group">
+            <a class="action-link" data-share-bluesky target="_blank" rel="noopener noreferrer" hidden>Blueskyで共有</a>
+            <button type="button" class="action-link" data-share-copy></button>
+        </div>
+        <p class="quality-result" data-share-status role="status"></p>
+        <div data-share-manual hidden>
+            <label>共有リンク <input type="text" readonly></label>
+        </div>
+    </template>
     <dialog id="play-share-dialog" aria-labelledby="play-share-title">
-        <div class="settings-heading">
+        <div class="dialog-heading">
             <h2 id="play-share-title">問題を共有</h2>
             <form method="dialog"><button type="submit" autofocus>閉じる</button></form>
         </div>
     </dialog>
     <dialog id="settings-dialog" aria-labelledby="settings-title">
-        <div class="settings-heading">
+        <div class="dialog-heading">
             <h2 id="settings-title">設定</h2>
             <form method="dialog"><button type="submit" autofocus>閉じる</button></form>
         </div>
@@ -305,7 +303,7 @@
         </fieldset>
     </dialog>
     <dialog id="play-guide-dialog" aria-labelledby="play-guide-title">
-        <div class="settings-heading">
+        <div class="dialog-heading">
             <h2 id="play-guide-title">遊び方</h2>
             <form method="dialog"><button type="submit" autofocus>閉じる</button></form>
         </div>
