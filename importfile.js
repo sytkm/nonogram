@@ -20,6 +20,7 @@ const samplePNG = 'iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAMAAAC6sdbXAAAABlBMVEX///8wW
 window.onload = async function () {
     setupImagePicker();
     setupProgressRestore();
+    setupDailyPuzzle();
     setupBoardMenus();
     setupSettings();
     document.getElementById('open-play-menu').onclick = () => {
@@ -620,6 +621,9 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
         setPlaying(false);
         throw error;
     }
+    const dailyLabel = document.getElementById('daily-play-label');
+    dailyLabel.textContent = options.daily ? '日替わり問題 · ' + options.daily.label : '';
+    dailyLabel.hidden = !options.daily;
     const tileLabel = document.getElementById('mosaic-tile-label');
     tileLabel.hidden = !options.tileLabel;
     tileLabel.textContent = options.tileLabel ?? '';
@@ -651,6 +655,7 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
             result.textContent = 'クリア！' + note;
             download.hidden = options.shared === true;
             restart.textContent = 'もう一度遊ぶ';
+            restart.hidden = Boolean(options.daily);
         }
     }
 
@@ -705,7 +710,7 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
             options: { sample, shared, generated, shareSource: savedShareSource },
             board,
             clock: clock.snapshot(),
-        }), options.progressId, shared === true);
+        }), options.progressId, shared === true, options.daily?.key);
     }
     if (board.finished) showClear();
     else if (!board.paused) checkCompletion(hasSavedCells);

@@ -10,14 +10,16 @@
     <script src="play-clock.js?v=penalty-wrap"></script>
     <script src="board-tools.js?v=clue-eyedropper"></script>
     <script src="line-logic.js"></script>
-    <script src="progress-store.js?v=saved-puzzle-summary"></script>
+    <script src="progress-store.js?v=generated-daily"></script>
+    <script src="puzzle-quality.js?v=line-solvability"></script>
+    <script src="daily-puzzle.js?v=generated-daily"></script>
     <script src="quality-controls.js?v=clear-quality-note"></script>
     <script src="mosaic-share.js?v=normal-share"></script>
     <script src="mosaic.js?v=operation-styles"></script>
     <script src="share-controls.js?v=play-sharing"></script>
     <script src="guide-tabs.js?v=preview-tabs"></script>
-    <script src="importfile.js?v=clear-quality-note"></script>
-    <link rel="stylesheet" href="style.css?v=penalty-wrap">
+    <script src="importfile.js?v=daily-puzzle"></script>
+    <link rel="stylesheet" href="style.css?v=daily-puzzle">
     <script src="dialog-dismiss.js?v=keep-shared-game" defer></script>
     <title>画像でノノグラム</title>
 </head>
@@ -44,6 +46,11 @@
                     </div>
                     <input type="file" id="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" hidden>
                     <p id="image-formats">PNG・JPEG・WebPに対応しています。画像はブラウザ内で処理します。</p>
+                    <div class="home-daily toolbar-group">
+                        <button type="button" id="open-daily-puzzle" class="action-link" aria-describedby="daily-date">今日の問題を遊ぶ</button>
+                        <time id="daily-date"></time>
+                    </div>
+                    <p id="daily-status" role="status" hidden></p>
                     <div class="home-recovery">
                         <p id="shared-link-status" role="status"></p>
                         <div id="saved-progress" class="toolbar-group" hidden>
@@ -188,6 +195,7 @@
                 </div>
             </div>
             <div id="play-actions">
+                <p id="daily-play-label" class="play-instructions" hidden></p>
                 <p id="mosaic-tile-label" class="play-instructions" hidden></p>
                 <p class="play-instructions play-only" id="paint-instructions" hidden>パレットで色を選び、マスを押して塗ります。大きな盤面は上下左右にスクロールできます。</p>
                 <p id="hint-message" class="play-only" role="status"></p>

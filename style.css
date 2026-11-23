@@ -113,6 +113,14 @@ header:has(#start-panel:not([hidden]) #image-preview[hidden]) .site-heading {
     font-size: 0.875rem;
 }
 
+.home-daily {
+    margin-block: 1rem;
+}
+
+.home-daily time {
+    font-size: 0.875rem;
+}
+
 .home-recovery:has(#saved-progress:not([hidden]), #shared-link-status:not(:empty)) {
     padding-block-start: 0.75rem;
     border-top: 1px solid var(--puzzle-rule);
