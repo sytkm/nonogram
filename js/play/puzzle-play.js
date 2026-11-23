@@ -25,7 +25,6 @@ function suspendCurrentPuzzle() {
 
 function showPuzzleScreen(clock) {
     playClock = clock;
-    clock.resume();
     showPlayScreen('board');
     updatePlayTime();
 }
@@ -65,7 +64,8 @@ function updatePlayTime() {
     if (display.textContent !== value) display.textContent = value;
 }
 
-async function startPuzzle({ matrix, palette, blank }, options = {}) {
+/** @param {((onClose: () => void) => boolean)} [openFirstGuide] - 初回案内を開いた場合は true。 */
+async function startPuzzle({ matrix, palette, blank }, options = {}, openFirstGuide) {
     suspendCurrentPuzzle();
     const board = options.board ?? {};
     const hasSavedCells = Boolean(board.cells);
@@ -232,8 +232,14 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
             clock: clock.snapshot(),
         }), options.progressId, shared === true, options.daily?.key);
     }
-    if (board.finished) showClear();
-    else if (!board.paused) checkCompletion(hasSavedCells);
+    if (board.finished) {
+        clock.finish();
+        showClear();
+    } else if (!board.paused) checkCompletion(hasSavedCells);
     if (options.tileLabel || options.fitOnStart) controls.fitInitially();
     if (options.tileLabel) returnToMosaic.focus();
+    const startTime = () => {
+        if (activeBoard === controls && !playPanel.hidden && !board.paused && !board.finished) clock.start();
+    };
+    if (!openFirstGuide?.(startTime)) startTime();
 }

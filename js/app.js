@@ -23,6 +23,7 @@ window.onload = async function () {
         document.getElementById('play-menu-dialog').showModal();
     };
     const showFirstSharedGuide = setupPlayGuide();
+    const guideBeforePlay = onClose => showFirstSharedGuide(false, onClose);
     setupPaletteNavigation();
     setupPlayDisplay();
 
@@ -38,9 +39,12 @@ window.onload = async function () {
     if (isPuzzleShareHash(hash)) {
         try {
             const mosaic = hash.startsWith(mosaicSharePrefix);
-            if (mosaic) openMosaic(await readMosaicShare(hash), { fromShare: true });
-            else await startPuzzle(await readPuzzleShare(hash), { shared: true, generated: true });
-            showFirstSharedGuide(mosaic);
+            if (mosaic) {
+                openMosaic(await readMosaicShare(hash), { fromShare: true });
+                showFirstSharedGuide(true);
+            } else {
+                await startPuzzle(await readPuzzleShare(hash), { shared: true, generated: true }, guideBeforePlay);
+            }
         } catch {
             showInvalidSharedPuzzle();
         }
@@ -53,8 +57,7 @@ window.onload = async function () {
             await startPuzzle(decodeLegacyPng(samplePNG), { sample: true, shareSource: samplePNG });
         } else {
             const shareSource = decodeURIComponent(query.slice(1));
-            await startPuzzle(decodeLegacyPng(shareSource), { shared: true, shareSource });
-            showFirstSharedGuide(false);
+            await startPuzzle(decodeLegacyPng(shareSource), { shared: true, shareSource }, guideBeforePlay);
         }
     } catch {
         showInvalidSharedPuzzle();
