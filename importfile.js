@@ -49,7 +49,7 @@ window.onload = async function () {
     if (isPuzzleShareHash(hash)) {
         try {
             const mosaic = hash.startsWith(mosaicSharePrefix);
-            if (mosaic) openMosaic(await readMosaicShare(hash));
+            if (mosaic) openMosaic(await readMosaicShare(hash), { fromShare: true });
             else await startPuzzle(await readPuzzleShare(hash), { shared: true, generated: true });
             showFirstSharedGuide(mosaic);
         } catch {
@@ -707,7 +707,7 @@ async function startPuzzle({ matrix, palette, blank }, options = {}) {
             options: { sample, shared, generated, shareSource: savedShareSource },
             board,
             clock: clock.snapshot(),
-        }), options.progressId);
+        }), options.progressId, shared === true);
     }
     if (board.finished) showClear();
     else if (!board.paused) checkCompletion(hasSavedCells);

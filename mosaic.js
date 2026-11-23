@@ -47,7 +47,7 @@ function prepareMosaicDownload(link, canvas) {
     }, 'image/png');
 }
 
-function openMosaic(puzzle, saved) {
+function openMosaic(puzzle, { saved, fromShare = saved?.fromShare === true } = {}) {
     const { matrix, palette, blank } = puzzle;
     const mosaic = splitMosaic(matrix, blank);
     mosaic.tiles.forEach((tile, index) => {
@@ -211,10 +211,11 @@ function openMosaic(puzzle, saved) {
     updateOverview(title);
     setProgressSource(() => ({
         kind: 'mosaic',
+        fromShare,
         puzzle: { matrix, palette, blank },
         showTimes,
         tiles: mosaic.tiles.map(tile => ({
             complete: tile.complete, board: tile.board, clock: tile.clock?.snapshot(),
         })),
-    }), saved?.id);
+    }), saved?.id, fromShare);
 }

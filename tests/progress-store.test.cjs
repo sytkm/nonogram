@@ -52,3 +52,32 @@ test('容量が足りないときも、履歴を省いて現在の盤面と時�
     assert.equal(saved.clock.elapsed, 60_000);
     assert.equal(elements['progress-warning'].textContent, '');
 });
+
+test('未編集の共有問題はホームに戻る前に保存できる', () => {
+    const { context } = setup();
+    context.setProgressSource(() => ({ kind: 'board', board: { cells: [[0]] } }), 'shared', true);
+    assert.equal(context.readProgress(), null);
+    assert.equal(context.saveProgressForHome(), 'ready');
+    assert.equal(context.readProgress().id, 'shared');
+});
+
+test('別の保存がある場合は共有問題で自動上書きせず、選んだ場合に限り保存する', () => {
+    const { context } = setup();
+    context.setProgressSource(() => ({ kind: 'board' }), 'previous');
+    context.queueProgressSave();
+    context.setProgressSource(() => ({ kind: 'mosaic', tiles: [{ complete: false }] }), 'shared', true);
+    assert.equal(context.saveProgressForHome(), 'conflict');
+    context.flushProgress();
+    assert.equal(context.readProgress().id, 'previous');
+    assert.equal(context.saveProgressForHome(true), 'ready');
+    assert.equal(context.readProgress().id, 'shared');
+    assert.equal(context.readProgress().tiles[0].complete, false);
+});
+
+test('共有問題を保存できないときはホームへ移動できる結果を返さない', () => {
+    const { context, elements } = setup(0);
+    context.setProgressSource(() => ({ kind: 'board' }), 'shared', true);
+    assert.equal(context.saveProgressForHome(), 'failed');
+    assert.equal(context.readProgress(), null);
+    assert.match(elements['progress-warning'].textContent, /保存できません/);
+});

@@ -10,15 +10,15 @@
     <script src="play-clock.js?v=hint-penalties"></script>
     <script src="board-tools.js?v=clue-eyedropper"></script>
     <script src="line-logic.js"></script>
-    <script src="progress-store.js?v=recovery-messages"></script>
+    <script src="progress-store.js?v=keep-shared-game"></script>
     <script src="quality-controls.js?v=check-result-wording"></script>
     <script src="mosaic-share.js?v=normal-share"></script>
-    <script src="mosaic.js?v=play-menu"></script>
+    <script src="mosaic.js?v=keep-shared-game"></script>
     <script src="share-controls.js?v=play-sharing"></script>
     <script src="guide-tabs.js?v=preview-tabs"></script>
-    <script src="importfile.js?v=board-view-controls"></script>
+    <script src="importfile.js?v=keep-shared-game"></script>
     <link rel="stylesheet" href="style.css?v=board-view-controls">
-    <script src="dialog-dismiss.js?v=play-menu" defer></script>
+    <script src="dialog-dismiss.js?v=keep-shared-game" defer></script>
     <title>画像でノノグラム</title>
 </head>
 
@@ -230,8 +230,19 @@
             <button type="button" class="action-link" data-open-settings aria-haspopup="dialog" aria-controls="settings-dialog">設定</button>
             <button type="button" class="action-link" data-open-play-guide aria-haspopup="dialog" aria-controls="play-guide-dialog">遊び方</button>
             <button type="button" id="restart-board" class="action-link" aria-haspopup="dialog" aria-controls="restart-dialog" hidden>最初からやり直す</button>
-            <a href="?" class="action-link">ホームに戻る</a>
+            <a href="?" id="play-menu-home" class="action-link">ホームに戻る</a>
         </div>
+    </dialog>
+    <dialog id="leave-shared-dialog" aria-labelledby="leave-shared-title" aria-describedby="leave-shared-message">
+        <form method="dialog">
+            <h2 id="leave-shared-title">ホームに戻る</h2>
+            <p id="leave-shared-message"></p>
+            <div class="toolbar-group restart-actions">
+                <button type="submit" class="action-link" value="cancel" autofocus>キャンセル</button>
+                <button type="submit" class="action-link" value="save" id="leave-shared-save">この問題を保存して戻る</button>
+                <button type="submit" class="action-link" value="without-save">保存せずに戻る</button>
+            </div>
+        </form>
     </dialog>
     <dialog id="play-share-dialog" aria-labelledby="play-share-title">
         <div class="settings-heading">
