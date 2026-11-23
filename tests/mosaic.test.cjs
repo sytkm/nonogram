@@ -5,7 +5,7 @@ const vm = require('node:vm');
 const test = require('node:test');
 
 const context = vm.createContext({});
-vm.runInContext(fs.readFileSync(path.join(__dirname, '../mosaic.js'), 'utf8'), context);
+vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/play/mosaic.js'), 'utf8'), context);
 
 test('余りがある画像を10×10の正方形に分け、余白は背景色で埋める', () => {
     const blank = 256;

@@ -6,7 +6,7 @@ const test = require('node:test');
 
 function loadDailyPuzzle(overrides = {}) {
     const context = vm.createContext({ window: {}, ...overrides });
-    for (const file of ['line-logic.js', 'puzzle-quality.js', 'puzzle-rules.js', 'daily-puzzle.js', 'progress-store.js']) {
+    for (const file of ['js/puzzle/line-logic.js', 'js/puzzle/puzzle-quality.js', 'js/puzzle/puzzle-rules.js', 'js/play/daily-puzzle.js', 'js/play/progress-store.js']) {
         vm.runInContext(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), context);
     }
     return context;

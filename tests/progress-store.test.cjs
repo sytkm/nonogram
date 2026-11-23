@@ -22,7 +22,7 @@ function setup(maxLength = Infinity) {
             },
         },
     });
-    vm.runInContext(fs.readFileSync(path.join(__dirname, '../progress-store.js'), 'utf8'), context);
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/play/progress-store.js'), 'utf8'), context);
     return { context, elements };
 }
 

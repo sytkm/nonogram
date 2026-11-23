@@ -5,7 +5,7 @@ const vm = require('node:vm');
 const test = require('node:test');
 
 const context = vm.createContext({});
-vm.runInContext(fs.readFileSync(path.join(__dirname, '../line-logic.js'), 'utf8'), context);
+vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/puzzle/line-logic.js'), 'utf8'), context);
 const { isLinePossible, findBoardConflicts, lineCellChoices, findLogicalHint } = context;
 
 test('未入力のマスと確定した斜線を区別する', () => {

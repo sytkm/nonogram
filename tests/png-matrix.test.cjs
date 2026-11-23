@@ -5,7 +5,7 @@ const vm = require('node:vm');
 const test = require('node:test');
 
 const context = vm.createContext({ window: {} });
-vm.runInContext(fs.readFileSync(path.join(__dirname, '../indexed-png.js'), 'utf8'), context);
+vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/image/indexed-png.js'), 'utf8'), context);
 
 // PNGのフィルター方式0（フィルターなし）の行データを使用する。
 for (const bitDepth of [1, 2, 4, 8]) {

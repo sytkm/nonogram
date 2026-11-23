@@ -4,7 +4,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const test = require('node:test');
 
-const script = fs.readFileSync(path.join(__dirname, '../share-controls.js'), 'utf8');
+const script = fs.readFileSync(path.join(__dirname, '../js/ui/share-controls.js'), 'utf8');
 
 test('共有URLが従来の形式を保ち、Blueskyの投稿画面に長いURLも渡す', () => {
     const context = vm.createContext({ URL });

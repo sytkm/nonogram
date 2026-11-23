@@ -1,4 +1,4 @@
-const puzzleQualityWorkerURL = 'puzzle-quality-worker.js?v=line-solvability';
+const puzzleQualityWorkerURL = 'js/puzzle/puzzle-quality-worker.js?v=line-solvability';
 
 function requestPuzzleQuality(data) {
     let worker;

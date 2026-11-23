@@ -5,7 +5,7 @@ const vm = require('node:vm');
 const test = require('node:test');
 
 const context = vm.createContext({});
-vm.runInContext(fs.readFileSync(path.join(__dirname, '../image-input.js'), 'utf8'), context);
+vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/image/image-input.js'), 'utf8'), context);
 
 test('指定した最長辺で縦横比を保ち、元画像より拡大しない', () => {
     for (const [width, height, side, expected] of [

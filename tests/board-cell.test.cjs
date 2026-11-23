@@ -5,7 +5,7 @@ const vm = require('node:vm');
 const test = require('node:test');
 
 const context = vm.createContext({ window: {} });
-for (const file of ['board-renderer.js', 'board-gestures.js', 'puzzle-rules.js']) {
+for (const file of ['js/board/board-renderer.js', 'js/board/board-gestures.js', 'js/puzzle/puzzle-rules.js']) {
     vm.runInContext(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), context);
 }
 

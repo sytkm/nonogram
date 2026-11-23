@@ -5,7 +5,7 @@ const vm = require('node:vm');
 const test = require('node:test');
 
 const context = vm.createContext({});
-for (const file of ['line-logic.js', 'puzzle-quality.js']) {
+for (const file of ['js/puzzle/line-logic.js', 'js/puzzle/puzzle-quality.js']) {
     vm.runInContext(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), context);
 }
 const { inspectPuzzleQuality } = context;

@@ -14,7 +14,7 @@ function setup() {
         close(value) { this.open = false; closed.push(value); listeners.close(); },
     };
     const context = vm.createContext({ document: { addEventListener() {} } });
-    vm.runInContext(fs.readFileSync(path.join(__dirname, '../dialog-dismiss.js'), 'utf8'), context);
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/ui/dialog-dismiss.js'), 'utf8'), context);
     context.setupDialogDismiss(dialog);
     const emit = (type, overrides = {}) => {
         const event = { target: dialog, pointerId: 1, isPrimary: true, button: 0,

@@ -5,7 +5,7 @@ const vm = require('node:vm');
 const test = require('node:test');
 
 const context = vm.createContext({});
-vm.runInContext(fs.readFileSync(path.join(__dirname, '../play-clock.js'), 'utf8'), context);
+vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/play/play-clock.js'), 'utf8'), context);
 
 test('最初の操作で計測し、一時停止と再開を繰り返しても停止時間を数えない', () => {
     let now = 0;
