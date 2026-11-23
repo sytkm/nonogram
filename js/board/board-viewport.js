@@ -12,6 +12,8 @@ function createBoardViewport({
     const maxCellSize = 64;
     const zoomIn = document.getElementById('zoom-in');
     const zoomOut = document.getElementById('zoom-out');
+    const zoomFit = document.getElementById('zoom-fit');
+    const zoomStandard = document.getElementById('zoom-standard');
     const fit = () => Math.max(1, Math.min(maxCellSize, Math.floor(Math.min(
         viewport.clientWidth / widthInCells, viewport.clientHeight / heightInCells
     ))));
@@ -75,8 +77,14 @@ function createBoardViewport({
             viewport.scrollTop = 0;
         }
         afterResize();
+        updateZoomButtons();
+    }
+
+    function updateZoomButtons() {
         zoomIn.disabled = cellSize >= maxCellSize;
         zoomOut.disabled = cellSize <= 1;
+        zoomFit.disabled = cellSize === fit();
+        zoomStandard.disabled = cellSize === standardCellSize;
     }
 
     function fitBoard() {
@@ -91,10 +99,8 @@ function createBoardViewport({
         resizeBoard(onSmallScreen ? Math.max(28, Math.min(standardCellSize, fit())) : Math.min(initialCellSize, maxCellSize), false);
         zoomIn.onclick = () => resizeBoard(Math.min(maxCellSize, Math.ceil(cellSize * 1.25)), true);
         zoomOut.onclick = () => resizeBoard(Math.max(1, Math.floor(cellSize / 1.25)), true);
-        document.getElementById('zoom-fit').onclick = fitBoard;
-        document.getElementById('zoom-standard').onclick = () => {
-            if (cellSize !== standardCellSize) resizeBoard(standardCellSize, true);
-        };
+        zoomFit.onclick = fitBoard;
+        zoomStandard.onclick = () => resizeBoard(standardCellSize, true);
     }
 
     const pinch = {
@@ -115,6 +121,6 @@ function createBoardViewport({
 
     return {
         get cellSize() { return cellSize; },
-        initialize, fitBoard, clueGutters, pointFor, scrollCellIntoView, scrollLineIntoView, pinch,
+        initialize, fitBoard, updateZoomButtons, clueGutters, pointFor, scrollCellIntoView, scrollLineIntoView, pinch,
     };
 }

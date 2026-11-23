@@ -507,7 +507,10 @@ function setupBoard({
     return {
         state: board,
         stopStroke,
-        redraw: renderBoard,
+        redraw() {
+            renderBoard();
+            boardView.updateZoomButtons();
+        },
         refreshSettings() {
             const mode = configuredPaintMode();
             if (inputMode !== 'pick' && inputMode !== mode) setInputMode(mode);
