@@ -5,7 +5,7 @@ const vm = require('node:vm');
 const test = require('node:test');
 
 const context = vm.createContext({ window: {} });
-vm.runInContext(fs.readFileSync(path.join(__dirname, '../importfile.js'), 'utf8'), context);
+vm.runInContext(fs.readFileSync(path.join(__dirname, '../puzzle-rules.js'), 'utf8'), context);
 const plain = value => JSON.parse(JSON.stringify(value));
 
 test('未完成の行と列の両方を候補にし、すでに合っている斜線は変更しない', () => {
