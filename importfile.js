@@ -1264,14 +1264,15 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
 
     function setInputMode(mode) {
         stopStroke();
+        touchPan.reset();
         inputMode = mode;
         paintMode.setAttribute('aria-pressed', String(mode === 'trace'));
         pickPaintedColor.setAttribute('aria-pressed', String(mode === 'pick'));
         canvas.classList.toggle('is-painting', mode === 'trace');
 
         const messages = {
-            paint: 'パレットで色を選び、マスを押して塗ります。大きな盤面は上下左右にスクロールできます。',
-            trace: '指やマウスでなぞるとまとめて塗れます。盤面を移動するには「なぞり塗り」をオフにします。',
+            paint: 'マスを押して塗り、1本指または2本指で盤面を動かせます。',
+            trace: '1本指でなぞると塗れます。2本指で盤面を動かせます。マウスでもなぞって塗れます。',
             pick: '塗ったマスを押すと色を拾えます。キーボードでは Space または Enter を押します。',
         };
         instructions.textContent = messages[mode];
@@ -1327,6 +1328,20 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         return record(changes, true);
     }
 
+    const touchPan = createTouchPan(viewport, () => {
+        // 2本目の指を置くまでの未確定な塗りを戻し、移動を履歴に残さない。
+        if (stroke) {
+            const changes = stroke.changes;
+            stroke = undefined;
+            for (const change of changes.slice().reverse()) {
+                cells[change.row][change.column] = change.before;
+            }
+            renderBoard(true);
+            queueProgressSave();
+        }
+        pressedClue = undefined;
+    });
+
     setInputMode('paint');
     pickPaintedColor.disabled = false;
     paintMode.onclick = () => setInputMode(inputMode === 'trace' ? 'paint' : 'trace');
@@ -1347,7 +1362,7 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     redo.onclick = () => moveHistory('redo');
     updateHistoryButtons();
     canvas.onclick = event => {
-        if (board.finished || !event.detail) return;
+        if (board.finished || !event.detail || touchPan.suppressesClick()) return;
         const point = pointFor(event);
         const clue = boardClueAt(point, rowsOfClues, columnsOfClues);
         if (clue && clue.key === pressedClue) {
@@ -1413,6 +1428,10 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         }
     };
     canvas.onpointerdown = event => {
+        if (event.pointerType === 'touch') {
+            canvas.setPointerCapture(event.pointerId);
+            if (touchPan.down(event, inputMode !== 'trace' || board.finished)) return;
+        } else touchPan.reset();
         if (board.finished || stroke || !event.isPrimary || event.button !== 0) return;
         const point = pointFor(event);
         pressedClue = boardClueAt(point, rowsOfClues, columnsOfClues)?.key;
@@ -1424,16 +1443,19 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
         applyColor(cell, stroke.color, stroke.changes);
     };
     canvas.onpointermove = event => {
+        if (touchPan.move(event)) return;
         if (!stroke || event.pointerId !== stroke.id) return;
         for (const move of event.getCoalescedEvents?.() ?? []) continueStroke(move);
         continueStroke(event);
     };
     canvas.onpointerup = event => {
+        if (touchPan.end(event)) return;
         if (!stroke || event.pointerId !== stroke.id) return;
         continueStroke(event);
         if (stopStroke()) onEdit();
     };
     canvas.onpointercancel = canvas.onlostpointercapture = event => {
+        if (touchPan.end(event)) return;
         if (event.pointerId === stroke?.id && stopStroke()) onEdit();
     };
     viewport.onscroll = renderFixedClues;
@@ -1868,4 +1890,67 @@ function hex(s) {
         result += h;
     }
     return result;
+}
+
+/**
+ * タッチを追跡し、2本以上なら重心の移動量でスクロールする。
+ * singleFingerPan のときは1本指のドラッグも移動に使い、短いタップとは区別する。
+ * 移動後は全ての指が離れるまで塗りを抑止する。cancelStroke は未確定の塗りを戻す。
+ */
+function createTouchPan(viewport, cancelStroke) {
+    const pointers = new Map();
+    let panning = false;
+    let singleFingerPan = false;
+    let startPoint;
+    function center() {
+        const points = [...pointers.values()];
+        return {
+            x: points.reduce((sum, p) => sum + p.x, 0) / points.length,
+            y: points.reduce((sum, p) => sum + p.y, 0) / points.length,
+        };
+    }
+    return {
+        down(event, allowSingleFingerPan = false) {
+            if (!pointers.size) {
+                panning = false;
+                singleFingerPan = allowSingleFingerPan;
+                startPoint = { x: event.clientX, y: event.clientY };
+            }
+            pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+            if (pointers.size > 1) {
+                singleFingerPan = false;
+                if (!panning) {
+                    panning = true;
+                    cancelStroke();
+                }
+            }
+            return panning;
+        },
+        move(event) {
+            if (!pointers.has(event.pointerId)) return false;
+            let previous = center();
+            pointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+            const next = center();
+            if (!panning && singleFingerPan &&
+                Math.hypot(next.x - startPoint.x, next.y - startPoint.y) >= 6) {
+                panning = true;
+                previous = startPoint;
+                cancelStroke();
+            }
+            if (panning && (pointers.size > 1 || singleFingerPan)) {
+                viewport.scrollLeft += previous.x - next.x;
+                viewport.scrollTop += previous.y - next.y;
+            }
+            return panning;
+        },
+        end(event) {
+            if (!pointers.delete(event.pointerId)) return false;
+            return panning;
+        },
+        suppressesClick() { return panning; },
+        reset() {
+            pointers.clear();
+            panning = false;
+        },
+    };
 }
