@@ -187,7 +187,7 @@ function setupBoard({
             conflictMessage.textContent = '矛盾があります（' + rowCount + '行・' + columnCount + '列）。' +
                 '最初の印は' + first.join('と') + 'です。';
         } else {
-            conflictMessage.textContent = '今のところ、ヒント数字と矛盾する行・列はありません。';
+            conflictMessage.textContent = '今のところ、ヒントの数字と矛盾する行・列はありません。';
         }
         conflictMessage.textContent += addHintPenalty(conflictCheckPenalty);
         renderBoard(true);
@@ -201,7 +201,7 @@ function setupBoard({
         logicalHintShown = true;
         const current = findBoardConflicts(cells, rowsOfClues, columnsOfClues, blank);
         if (current.rows.size || current.columns.size) {
-            hintMessage.textContent = '今の入力とヒント数字に矛盾があります。「矛盾チェック」で場所を確認できます。';
+            hintMessage.textContent = '今の入力とヒントの数字に矛盾があります。「矛盾チェック」で場所を確認できます。';
         } else {
             const deduction = findLogicalHint(cells, rowsOfClues, columnsOfClues, blank);
             if (deduction) {

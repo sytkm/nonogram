@@ -29,7 +29,7 @@ function lineSolvabilityMessage(result) {
         complete: '行・列の推理だけで、すべてのマスが決まりました。',
         partial: '行・列の推理は途中で止まりました。別の考え方で解ける場合があります。',
         inconclusive: '行・列の推理で解けるか、確認しきれませんでした。解けないと決まったわけではありません。',
-        contradiction: 'ヒント数字と、最初からあるマスの状態に矛盾が見つかりました。',
+        contradiction: 'ヒントの数字と、最初からあるマスの状態に矛盾が見つかりました。',
         unavailable: '行・列の推理で解けるか調べられませんでした。',
     };
     return messages[result?.logic ?? result] ?? messages.unavailable;
@@ -63,9 +63,9 @@ function setupQualityCheck(button, output, readClues, describe = describeUniquen
 function describeUniqueness(result) {
     const messages = {
         unique: '答えは一つです。',
-        multiple: 'ヒント数字に合う答えが複数あります。',
+        multiple: 'ヒントの数字に合う答えが複数あります。',
         inconclusive: '答えが一つか、確認しきれませんでした。複数あると決まったわけではありません。マス数を減らしてもう一度調べられます。',
-        none: 'ヒント数字に合う答えが見つかりませんでした。',
+        none: 'ヒントの数字に合う答えが見つかりませんでした。',
     };
     return messages[result] ?? '検査を実行できませんでした。';
 }
