@@ -1076,11 +1076,23 @@ function setupBoard(answer, palette, blank, rowClues, columnClues, initialCellSi
     const answerPenalty = rows * rowPenalty;
     logicHint.querySelector('.penalty').textContent = '+' + formatPenaltyTime(logicHintPenalty);
     checkConflicts.querySelector('.penalty').textContent = '+' + formatPenaltyTime(conflictCheckPenalty);
-    solve.querySelector('.penalty').textContent = '+' + formatPenaltyTime(answerPenalty);
-    hint.querySelector('.penalty').textContent = rowPenalty === columnPenalty
-        ? '+' + formatPenaltyTime(rowPenalty)
-        : '+' + formatPenaltyTime(Math.min(rowPenalty, columnPenalty)) +
-            '〜' + formatPenaltyTime(Math.max(rowPenalty, columnPenalty));
+    const linePenalties = rowPenalty === columnPenalty
+        ? [formatPenaltyTime(rowPenalty)]
+        : [formatPenaltyTime(Math.min(rowPenalty, columnPenalty)) + '〜',
+            formatPenaltyTime(Math.max(rowPenalty, columnPenalty))];
+    setPenaltyLabel(hint, linePenalties);
+    setPenaltyLabel(solve, penaltyTimeParts(answerPenalty));
+
+    function setPenaltyLabel(button, parts) {
+        const label = button.querySelector('.penalty');
+        label.replaceChildren();
+        for (const [index, part] of parts.entries()) {
+            const unit = document.createElement('span');
+            unit.textContent = index === 0 ? '+' + part : part;
+            if (index > 0) label.append(document.createElement('wbr'));
+            label.append(unit);
+        }
+    }
 
     function addHintPenalty(seconds) {
         clock.addPenalty(seconds);
