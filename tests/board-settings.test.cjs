@@ -48,6 +48,23 @@ test('保存できない環境でも演出の設定はそのページで切り�
     assert.equal(f.context.boardSetting('paintFeedback'), false);
 });
 
+test('効果音は初期オフで、演出とは独立に保存する', () => {
+    let saved;
+    const storage = { getItem: () => saved, setItem: (key, value) => { saved = value; } };
+    const first = fixture(storage);
+    assert.equal(first.get('paint-sound').checked, false);
+    first.get('paint-sound').checked = true;
+    first.get('paint-sound').onchange();
+    first.get('paint-feedback').checked = false;
+    first.get('paint-feedback').onchange();
+    const next = fixture(storage);
+    assert.equal(next.get('paint-sound').checked, true);
+    assert.equal(next.get('paint-feedback').checked, false);
+    next.get('paint-sound').checked = false;
+    next.get('paint-sound').onchange();
+    assert.equal(fixture(storage).get('paint-sound').checked, false);
+});
+
 test('数字を押したときの動作は旧盤面の設定を読み、切り替え後は共通設定を優先する', () => {
     let saved;
     const storage = { getItem: () => saved, setItem: (key, value) => { saved = value; } };
