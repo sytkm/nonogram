@@ -87,6 +87,7 @@ test('パレットPNGは200マス超でも再変換せずプレビューし、�
     assert.equal(ui.element('threshold-panel').hidden, true);
     assert.equal(ui.element('paint-color-count-panel').hidden, true);
     assert.equal(ui.element('puzzle-side-range').hidden, true);
+    assert.equal(ui.element('puzzle-side-estimate').hidden, true);
     assert.equal(ui.element('image-status').textContent, '');
     assert.equal(ui.element('puzzle-side').value, '201');
     assert.equal(ui.element('reset-puzzle-side').disabled, true);
@@ -217,7 +218,9 @@ test('推定した長辺を初期値にし、そのマス数で変換すると�
     await ui.element('file').change();
     assert.equal(ui.element('puzzle-side').value, '2');
     assert.deepEqual(ui.sourceReads[0], { longestSide: 2, preservePixels: true });
-    assert.match(ui.element('image-status').textContent, /ドット絵の格子/);
+    assert.equal(ui.element('puzzle-side-estimate').hidden, false);
+    assert.match(ui.element('puzzle-side-estimate').textContent, /長い辺を2マスと推定/);
+    assert.equal(ui.element('image-status').textContent, '');
     ui.element('puzzle-side-range').value = '1';
     ui.element('puzzle-side-range').input();
     assert.deepEqual(ui.sourceReads.at(-1), { longestSide: 1, preservePixels: false });

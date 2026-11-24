@@ -22,6 +22,7 @@ function setupImagePicker() {
     const canvas = document.getElementById('preview-canvas');
     const side = document.getElementById('puzzle-side');
     const sideRange = document.getElementById('puzzle-side-range');
+    const sideEstimate = document.getElementById('puzzle-side-estimate');
     const resetSize = document.getElementById('reset-puzzle-side');
     const mode = document.getElementById('puzzle-mode');
     const threshold = document.getElementById('threshold');
@@ -183,14 +184,15 @@ function setupImagePicker() {
         colorCount.value = colorCount.max;
         updateSizeLimit(true);
         updateSize();
-        if (currentImage.pixelArtSide) {
-            status.textContent = 'ドット絵の格子に合わせて、最初の長い辺を' + currentImage.pixelArtSide + 'マスにしました。';
-        } else {
-            status.textContent = !usesIndexedColors() && originalSide > MAX_PUZZLE_SIDE
-                ? '大きな画像なので、最長辺' + SUGGESTED_PHOTO_SIDE + 'マスを提案します。' +
-                  MAX_PUZZLE_SIDE + 'マスまで変更できます。'
-                : '';
-        }
+        const estimatedSide = currentImage.pixelArtSide;
+        sideEstimate.hidden = !estimatedSide;
+        sideEstimate.textContent = estimatedSide
+            ? 'ドット絵の格子から、長い辺を' + estimatedSide + 'マスと推定しました。'
+            : '';
+        status.textContent = !estimatedSide && !usesIndexedColors() && originalSide > MAX_PUZZLE_SIDE
+            ? '大きな画像なので、最長辺' + SUGGESTED_PHOTO_SIDE + 'マスを提案します。' +
+              MAX_PUZZLE_SIDE + 'マスまで変更できます。'
+            : '';
         resetPreviewTabs();
         preview.hidden = false;
         leavePuzzleScreen();
