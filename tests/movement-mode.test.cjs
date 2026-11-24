@@ -33,7 +33,10 @@ function fixture(tracePaint = true, startWithColor = false) {
         paletteSymbol: String,
         createBoardRenderer: () => renderer,
         createBoardFeedback: () => ({ clear() {}, show(...cell) { feedbackCalls.push(cell); } }),
-        playBoardPaintSound(enabled, retry) { if (enabled() && !retry) soundCalls.push('play'); },
+        paintSoundStyle: () => settings.paintSoundStyle ?? 'pop',
+        playBoardPaintSound(enabled, { sound = 'pop', retryOnTouchEnd = false } = {}) {
+            if (enabled() && !retryOnTouchEnd) soundCalls.push(sound);
+        },
         createBoardViewport: () => ({ initialize() {}, cellSize: 40,
             pointFor: event => ({ x: event.clientX / 40, y: 0.5 }),
             clueGutters: () => ({}), scrollCellIntoView() {} }),
@@ -142,7 +145,7 @@ test('演出は手で変えたマスだけに送り、同じ色・移動・自�
     f.get('solve').onclick();
     assert.equal(f.board.cells[0][1], 1);
     assert.equal(f.feedbackCalls.length, 1);
-    assert.deepEqual(f.soundCalls, ['play']);
+    assert.deepEqual(f.soundCalls, ['pop']);
 });
 
 test('色で開始した区画は設定に従って最初のタップで塗れ、移動にも切り替えられる', () => {
@@ -166,7 +169,7 @@ test('ヒントの数字は音がオンでチェックを新しく付けると�
     f.settings.paintSound = true;
     f.tap();
     assert.equal(f.board.marks[key], true);
-    assert.deepEqual(f.soundCalls, ['play']);
+    assert.deepEqual(f.soundCalls, ['pop']);
     f.tap();
     assert.equal(f.board.marks[key], undefined);
     f.settings.pickClueColor = true;
@@ -176,5 +179,15 @@ test('ヒントの数字は音がオンでチェックを新しく付けると�
     f.settings.paintSound = false;
     f.tap();
     assert.equal(f.board.marks[key], true);
-    assert.deepEqual(f.soundCalls, ['play']);
+    assert.deepEqual(f.soundCalls, ['pop']);
+});
+
+test('塗りには選んだ音、斜線には専用の音を使う', () => {
+    const f = fixture(false, true);
+    f.settings.paintSound = true;
+    f.settings.paintSoundStyle = 'wood';
+    f.tap();
+    f.paletteControls.selectColor(-1);
+    f.tap();
+    assert.deepEqual(f.soundCalls, ['wood', 'slash']);
 });

@@ -38,6 +38,9 @@ function setupBoard({
     const [rowsOfClues, leftClueCount] = rowClues;
     const [columnsOfClues, topClueCount] = columnClues;
     const paintSoundEnabled = () => boardSetting('paintSound', board);
+    const playCellSound = (color, retryOnTouchEnd = false) => playBoardPaintSound(paintSoundEnabled, {
+        sound: color < 0 ? 'slash' : paintSoundStyle(), retryOnTouchEnd,
+    });
     const feedback = createBoardFeedback({
         marker: document.getElementById('paint-feedback-marker'), leftClueCount, topClueCount,
         cellSize: () => boardView.cellSize,
@@ -366,7 +369,7 @@ function setupBoard({
         minimap.repaint();
         if (manual) {
             feedback.show(row, column);
-            playBoardPaintSound(paintSoundEnabled);
+            playCellSound(color);
         }
     }
 
@@ -526,7 +529,7 @@ function setupBoard({
         continueStroke(event);
         if (event.pointerType === 'touch' && stroke.changes.length) {
             // Touch activation can start at pointerup, after the first cell was painted.
-            playBoardPaintSound(paintSoundEnabled, true);
+            playCellSound(stroke.color, true);
         }
         if (stopStroke()) onEdit();
     };

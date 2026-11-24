@@ -12,7 +12,8 @@ function fixture(storage, state = {}) {
         return inputs.get(id);
     };
     const clueActions = [{ value: 'mark' }, { value: 'color' }];
-    get('settings-dialog').querySelectorAll = () => clueActions;
+    const soundStyles = ['pop', 'paper', 'wood'].map(value => ({ value }));
+    get('settings-dialog').querySelectorAll = selector => selector.includes('clue-action') ? clueActions : soundStyles;
     const open = {};
     const context = vm.createContext({ localStorage: storage,
         document: { getElementById: get, querySelectorAll: () => [open] },
@@ -21,7 +22,7 @@ function fixture(storage, state = {}) {
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/board/board-settings.js'), 'utf8'), context);
     context.setupSettings();
     open.onclick();
-    return { get, context, clueActions, refreshed: () => refreshed };
+    return { get, context, clueActions, soundStyles, refreshed: () => refreshed };
 }
 
 test('演出は初期オンで、明示したオフとオンを再読み込み後も保つ', () => {
@@ -63,6 +64,19 @@ test('効果音は初期オフで、演出とは独立に保存する', () => {
     next.get('paint-sound').checked = false;
     next.get('paint-sound').onchange();
     assert.equal(fixture(storage).get('paint-sound').checked, false);
+});
+
+test('塗る音を保存し、以前の設定や未知の音ではポッを選ぶ', () => {
+    let saved = '{"paintSound":true}';
+    const storage = { getItem: () => saved, setItem: (key, value) => { saved = value; } };
+    const first = fixture(storage);
+    assert.deepEqual(first.soundStyles.map(input => input.checked), [true, false, false]);
+    first.soundStyles[1].onchange();
+    const next = fixture(storage);
+    assert.deepEqual(next.soundStyles.map(input => input.checked), [false, true, false]);
+    assert.equal(next.get('paint-sound').checked, true);
+    saved = '{"paintSoundStyle":"slash"}';
+    assert.equal(fixture(storage).context.paintSoundStyle(), 'pop');
 });
 
 test('数字を押したときの動作は旧盤面の設定を読み、切り替え後は共通設定を優先する', () => {

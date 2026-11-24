@@ -22,19 +22,19 @@
     <script src="js/puzzle/puzzle-rules.js?v=shared-clues"></script>
     <script src="js/board/board-gestures.js"></script>
     <script src="js/board/board-palette.js"></script>
-    <script src="js/board/board-settings.js?v=paint-sound"></script>
+    <script src="js/board/board-settings.js?v=paint-sound-styles"></script>
     <script src="js/board/board-renderer.js?v=clue-mark-position"></script>
     <script src="js/board/board-viewport.js?v=minimap-navigation"></script>
     <script src="js/board/board-minimap.js?v=minimap-navigation"></script>
     <script src="js/board/board-feedback.js"></script>
-    <script src="js/board/board-sound.js"></script>
-    <script src="js/board/board-controller.js?v=clue-check-sound"></script>
+    <script src="js/board/board-sound.js?v=paint-sound-styles"></script>
+    <script src="js/board/board-controller.js?v=paint-sound-styles"></script>
     <script src="js/play/play-dialogs.js?v=mosaic-tile-clear"></script>
     <script src="js/play/puzzle-play.js?v=mosaic-initial-color"></script>
     <script src="js/app.js?v=magazine-puzzle-colors"></script>
     <link rel="stylesheet" href="styles/start.css?v=compact-home-headline">
     <link rel="stylesheet" href="styles/play.css?v=separate-answer-tool">
-    <link rel="stylesheet" href="styles/dialogs.css?v=clue-action-options">
+    <link rel="stylesheet" href="styles/dialogs.css?v=paint-sound-styles">
     <link rel="stylesheet" href="styles/mosaic.css?v=puzzle-magazine">
     <script src="js/ui/dialog-dismiss.js?v=clear-results" defer></script>
     <title>画像でノノグラム</title>
@@ -324,7 +324,7 @@
             <legend>共通設定</legend>
             <label><input type="checkbox" id="trace-paint" checked> なぞり塗り</label>
             <label><input type="checkbox" id="stick-clues" checked> ヒントの数字を固定</label>
-            <fieldset class="clue-action-options">
+            <fieldset class="settings-options">
                 <legend>数字を押すと</legend>
                 <div>
                     <label><input type="radio" name="clue-action" value="mark" checked> チェック</label>
@@ -336,6 +336,18 @@
             <label><input type="checkbox" id="paint-feedback" checked aria-describedby="paint-feedback-note"> 塗ったマスに短い演出</label>
             <p id="paint-feedback-note">端末で動きを減らす設定を使っているときは表示しません。</p>
             <label><input type="checkbox" id="paint-sound"> 塗り・チェックの効果音</label>
+            <fieldset class="settings-options">
+                <legend>塗る音の種類</legend>
+                <div class="sound-choices">
+                    <label><input type="radio" name="paint-sound-style" value="pop" checked> ポッ</label>
+                    <label><input type="radio" name="paint-sound-style" value="paper"> パリッ</label>
+                    <label><input type="radio" name="paint-sound-style" value="wood"> コッ</label>
+                </div>
+                <div class="sound-previews">
+                    <button type="button" class="action-link" id="preview-paint-sound">塗りを試聴</button>
+                    <button type="button" class="action-link" id="preview-slash-sound">斜線を試聴</button>
+                </div>
+            </fieldset>
         </fieldset>
     </dialog>
     <dialog id="play-guide-dialog" aria-labelledby="play-guide-title">
