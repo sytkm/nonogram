@@ -208,7 +208,36 @@ function makeColorPuzzle({ data, width, height }, maxColors = MAX_CONVERSION_COL
         pixels.push(entry);
     }
 
-    const groups = colors.size ? [describeColorGroup([...colors.values()])] : [];
+    const palette = reducePaintColors([...colors.values()], maxColors);
+    const matrix = Array.from({ length: height }, (_, row) =>
+        Array.from({ length: width }, (_, column) => pixels[row * width + column]?.paletteIndex ?? 0)
+    );
+    return { matrix, palette, blank: 0 };
+}
+
+// パレットPNGは空白が確定済みなので、白に近い塗りマスも減色の対象にする。
+function reduceIndexedPuzzle(puzzle, maxColors) {
+    const { matrix, palette, blank } = puzzle;
+    const counts = new Map();
+    for (const row of matrix) {
+        for (const index of row) {
+            if (index !== blank) counts.set(index, (counts.get(index) ?? 0) + 1);
+        }
+    }
+    if (counts.size + 1 <= maxColors) return puzzle;
+
+    const entries = Array.from(counts, ([index, count]) => ({ index, rgb: palette[index], count }));
+    const reduced = reducePaintColors(entries, maxColors);
+    const indices = new Map(entries.map(entry => [entry.index, entry.paletteIndex]));
+    return {
+        matrix: matrix.map(row => row.map(index => indices.get(index) ?? 0)),
+        palette: reduced,
+        blank: 0,
+    };
+}
+
+function reducePaintColors(colors, maxColors) {
+    const groups = colors.length ? [describeColorGroup(colors)] : [];
     // 背景色の枠を一つ確保する。
     while (groups.length + 1 < maxColors) {
         // 最も色のばらつきが大きいグループを、画素数の中央値で分ける。
@@ -242,7 +271,7 @@ function makeColorPuzzle({ data, width, height }, maxColors = MAX_CONVERSION_COL
             palette.push(representative);
         }
     }
-    for (const entry of colors.values()) {
+    for (const entry of colors) {
         let closest = 1;
         for (let i = 2; i < palette.length; i++) {
             if (colorDistanceSquared(entry.rgb, palette[i]) < colorDistanceSquared(entry.rgb, palette[closest])) {
@@ -251,10 +280,7 @@ function makeColorPuzzle({ data, width, height }, maxColors = MAX_CONVERSION_COL
         }
         entry.paletteIndex = closest;
     }
-    const matrix = Array.from({ length: height }, (_, row) =>
-        Array.from({ length: width }, (_, column) => pixels[row * width + column]?.paletteIndex ?? 0)
-    );
-    return { matrix, palette, blank: 0 };
+    return palette;
 }
 
 function colorDistanceSquared(a, b) {

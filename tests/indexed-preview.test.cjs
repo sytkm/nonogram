@@ -4,7 +4,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const test = require('node:test');
 
-function setup({ decodeFails = false, pngColorType, pixelArtSide } = {}) {
+function setup({ decodeFails = false, pngColorType, pixelArtSide, indexedPuzzle } = {}) {
     const elements = {};
     const painted = [];
     const starts = [];
@@ -20,10 +20,11 @@ function setup({ decodeFails = false, pngColorType, pixelArtSide } = {}) {
             get valueAsNumber() { return Number(this.value); },
             addEventListener(type, handler) { this[type] = handler; },
             prepend(child) { this.firstElementChild = child; },
+            setAttribute(name, value) { this[name] = value; },
             focus() {}, getContext: () => ctx,
         };
     }
-    const original = {
+    const original = indexedPuzzle ?? {
         matrix: [Array(201).fill(0), Array(201).fill(2)],
         palette: [[200, 20, 30], [10, 40, 220]], blank: 2,
     };
@@ -85,8 +86,9 @@ test('パレットPNGは200マス超でも再変換せずプレビューし、�
     assert.equal(ui.element('image-preview').hidden, false);
     assert.equal(ui.element('puzzle-size-panel').hidden, false);
     assert.equal(ui.element('threshold-panel').hidden, true);
-    assert.equal(ui.element('paint-color-count-panel').hidden, true);
-    assert.equal(ui.element('puzzle-side-range').hidden, true);
+    assert.equal(ui.element('paint-color-count-panel').hidden, false);
+    assert.equal(ui.element('paint-color-limit').value, '元の配色');
+    assert.equal(ui.element('puzzle-side-range').hidden, false);
     assert.equal(ui.element('puzzle-side-estimate').hidden, true);
     assert.equal(ui.element('image-status').textContent, '');
     assert.equal(ui.element('puzzle-side').value, '201');
@@ -249,4 +251,41 @@ test('カラーの縮小は元の色と空白を使い、通常共有には縮�
     assert.equal(ui.element('preview-share').url, '?original-png');
     ui.element('play-preview').click();
     assert.equal(ui.starts.at(-1).puzzle, ui.original);
+});
+
+test('パレットPNGの減色は塗るマスと空白を保ち、マス数と配色は別々に元へ戻せる', async () => {
+    const ui = setup({ indexedPuzzle: {
+        matrix: Array.from({ length: 2 }, () => Array.from({ length: 201 }, (_, i) => i % 4)),
+        palette: [[200, 20, 30], [10, 40, 220], [253, 252, 251]],
+        blank: 3,
+    } });
+    await ui.element('file').change();
+    const slider = ui.element('paint-color-count');
+    slider.value = '2';
+    slider.input();
+    const reduced = ui.normalShares.at(-1).puzzle;
+    assert.equal(ui.splitShares.at(-1).puzzle, reduced);
+    assert.equal(reduced.palette.length, 2);
+    assert.deepEqual([...reduced.matrix[0].slice(0, 4)], [1, 1, 1, 0]);
+    assert.equal(ui.element('reset-puzzle-side').disabled, true);
+    assert.equal(ui.element('preview-share').url, null);
+    ui.element('play-preview').click();
+    assert.equal(ui.starts.at(-1).puzzle, reduced);
+    assert.equal(ui.starts.at(-1).options.shareSource, undefined);
+
+    const size = ui.element('puzzle-side-range');
+    size.value = '110';
+    size.input();
+    assert.equal(ui.normalShares.at(-1).puzzle.matrix[0].length, 110);
+    ui.element('reset-puzzle-side').click();
+    assert.equal(size.value, '201');
+    assert.equal(slider.value, '2');
+    assert.equal(ui.normalShares.at(-1).puzzle.palette.length, 2);
+
+    slider.value = slider.max;
+    slider.input();
+    assert.equal(ui.element('preview-share').url, '?original-png');
+    ui.element('play-preview').click();
+    assert.equal(ui.starts.at(-1).puzzle, ui.original);
+    assert.equal(ui.rasterizations(), 0);
 });
