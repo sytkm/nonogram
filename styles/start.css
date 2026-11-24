@@ -120,7 +120,7 @@ header:has(#start-panel:not([hidden]) #image-preview[hidden]) .site-heading {
 
 .home-title {
     margin: 0 0 0.7rem;
-    font-size: clamp(2rem, 5.5vw, 4.5rem);
+    font-size: clamp(2rem, 4vw, 3.25rem);
     line-height: 1.12;
     letter-spacing: -0.035em;
     font-weight: 850;
@@ -280,10 +280,73 @@ header:has(#start-panel:not([hidden]) #image-preview[hidden]) .site-heading {
 }
 
 @media (min-width: 48rem) {
-    .home-title-break { display: initial; }
+    .home-title-break {
+        display: initial;
+    }
 
     #start-panel:has(#image-preview[hidden]) .home-intro {
         grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    }
+}
+
+@media (min-width: 48rem) and (max-height: 42rem) {
+    header:has(#start-panel:not([hidden]) #image-preview[hidden]) {
+        padding-block: 0.5rem;
+    }
+
+    header:has(#start-panel:not([hidden]) #image-preview[hidden]) .site-heading {
+        padding-block-end: 0.5rem;
+    }
+
+    #start-panel:has(#image-preview[hidden]) .home-intro {
+        margin-block-start: 0.75rem;
+    }
+
+    .home-title {
+        font-size: clamp(2rem, 4vw, 2.75rem);
+        line-height: 1.05;
+    }
+
+    .home-title,
+    .home-lead {
+        margin-block-end: 0.5rem;
+    }
+
+    .home-copy > .home-lead {
+        line-height: 1.5;
+    }
+
+    .home-copy > #image-formats {
+        margin-block: 0.5rem;
+    }
+
+    .home-quick-play {
+        margin-block: 0.625rem 0.5rem;
+        padding-block-start: 0.5rem;
+    }
+
+    .home-recovery:has(#saved-progress:not([hidden]), #shared-link-status:not(:empty)) {
+        padding-block-start: 0.5rem;
+    }
+
+    .home-puzzle {
+        --example-cell: clamp(1.75rem, 3.5vw, 2.5rem);
+    }
+
+    #start-panel:has(#image-preview[hidden]) .home-credits {
+        margin-block-start: 0.75rem;
+        line-height: 1.55;
+    }
+
+    .home-credits p,
+    #start-panel:has(#image-preview[hidden]) #image-status:empty {
+        margin-block: 0;
+    }
+}
+
+@media (min-width: 48rem) and (max-height: 36rem) {
+    .home-title {
+        font-size: clamp(2rem, 3.5vw, 2.375rem);
     }
 }
 
