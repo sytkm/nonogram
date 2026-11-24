@@ -28,7 +28,7 @@
     <script src="js/board/board-minimap.js?v=minimap-navigation"></script>
     <script src="js/board/board-feedback.js"></script>
     <script src="js/board/board-sound.js"></script>
-    <script src="js/board/board-controller.js?v=paint-sound"></script>
+    <script src="js/board/board-controller.js?v=clue-check-sound"></script>
     <script src="js/play/play-dialogs.js?v=mosaic-tile-clear"></script>
     <script src="js/play/puzzle-play.js?v=mosaic-initial-color"></script>
     <script src="js/app.js?v=magazine-puzzle-colors"></script>
@@ -335,7 +335,7 @@
             <label><input type="checkbox" id="auto-slash"> 完成した行・列の空白に斜線</label>
             <label><input type="checkbox" id="paint-feedback" checked aria-describedby="paint-feedback-note"> 塗ったマスに短い演出</label>
             <p id="paint-feedback-note">端末で動きを減らす設定を使っているときは表示しません。</p>
-            <label><input type="checkbox" id="paint-sound"> マスを塗ると効果音</label>
+            <label><input type="checkbox" id="paint-sound"> 塗り・チェックの効果音</label>
         </fieldset>
     </dialog>
     <dialog id="play-guide-dialog" aria-labelledby="play-guide-title">
