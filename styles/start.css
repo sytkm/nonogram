@@ -126,6 +126,10 @@ header:has(#start-panel:not([hidden]) #image-preview[hidden]) .site-heading {
     font-weight: 850;
 }
 
+.home-title-break {
+    display: none;
+}
+
 .home-lead {
     max-width: 26em;
     margin: 0 0 1.25rem;
@@ -276,6 +280,10 @@ header:has(#start-panel:not([hidden]) #image-preview[hidden]) .site-heading {
 }
 
 @media (min-width: 48rem) {
+    .home-title-break {
+        display: initial;
+    }
+
     #start-panel:has(#image-preview[hidden]) .home-intro {
         grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
     }
@@ -283,35 +291,7 @@ header:has(#start-panel:not([hidden]) #image-preview[hidden]) .site-heading {
 
 @media (min-width: 48rem) and (max-height: 42rem) {
     header:has(#start-panel:not([hidden]) #image-preview[hidden]) {
-        padding-block: 0.75rem 1rem;
-    }
-
-    #start-panel:has(#image-preview[hidden]) .home-intro {
-        margin-block-start: 1rem;
-    }
-
-    .home-lead {
-        margin-block-end: 0.875rem;
-    }
-
-    .home-quick-play {
-        margin-block: 1rem 0.75rem;
-        padding-block-start: 0.65rem;
-    }
-
-    .home-puzzle {
-        --example-cell: clamp(1.75rem, 3.5vw, 2.5rem);
-    }
-
-    #start-panel:has(#image-preview[hidden]) .home-credits {
-        margin-block-start: 1rem;
-        padding-block-start: 0.5rem;
-    }
-}
-
-@media (min-width: 48rem) and (max-height: 36rem) {
-    header:has(#start-panel:not([hidden]) #image-preview[hidden]) {
-        padding-block: 0.5rem 0.75rem;
+        padding-block: 0.5rem;
     }
 
     header:has(#start-panel:not([hidden]) #image-preview[hidden]) .site-heading {
@@ -320,6 +300,11 @@ header:has(#start-panel:not([hidden]) #image-preview[hidden]) .site-heading {
 
     #start-panel:has(#image-preview[hidden]) .home-intro {
         margin-block-start: 0.75rem;
+    }
+
+    .home-title {
+        font-size: clamp(2rem, 4vw, 2.75rem);
+        line-height: 1.05;
     }
 
     .home-title,
@@ -344,13 +329,24 @@ header:has(#start-panel:not([hidden]) #image-preview[hidden]) .site-heading {
         padding-block-start: 0.5rem;
     }
 
+    .home-puzzle {
+        --example-cell: clamp(1.75rem, 3.5vw, 2.5rem);
+    }
+
     #start-panel:has(#image-preview[hidden]) .home-credits {
         margin-block-start: 0.75rem;
         line-height: 1.55;
     }
 
+    .home-credits p,
     #start-panel:has(#image-preview[hidden]) #image-status:empty {
         margin-block: 0;
+    }
+}
+
+@media (min-width: 48rem) and (max-height: 36rem) {
+    .home-title {
+        font-size: clamp(2rem, 3.5vw, 2.375rem);
     }
 }
 
