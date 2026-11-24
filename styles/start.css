@@ -439,6 +439,29 @@ header:has(#start-panel:not([hidden]) #image-preview:not([hidden])) {
     vertical-align: middle;
 }
 
+.preview-range-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.preview-range-row input[type="range"] {
+    flex: 1 1 8rem;
+    min-width: 0;
+    min-height: 44px;
+    margin-inline: 0;
+}
+
+#puzzle-side {
+    width: 5rem;
+}
+
+#paint-color-limit {
+    min-width: 3ch;
+    font-variant-numeric: tabular-nums;
+}
+
 #preview-split-help,
 .preview-tab-panel p,
 .preview-image p {

@@ -60,8 +60,9 @@ function setup({ decodeFails = false, pngColorType } = {}) {
         if (decodeFails) throw new Error('unsupported');
         return original;
     };
-    context.rasterizePuzzleImage = () => {
+    context.rasterizePuzzleImage = (_, longestSide) => {
         rasterizations++;
+        if (longestSide === 1) return { width: 1, height: 1, data: [230, 20, 40, 255] };
         if (pngColorType !== undefined) {
             return { width: 2, height: 2, data: [230, 20, 40, 255, 12, 45, 235, 255, 0, 0, 0, 0, 255, 255, 255, 255] };
         }
@@ -81,7 +82,8 @@ test('パレットPNGは200マス超でも再変換せずプレビューし、�
     assert.equal(ui.element('image-preview').hidden, false);
     assert.equal(ui.element('puzzle-size-panel').hidden, false);
     assert.equal(ui.element('threshold-panel').hidden, true);
-    assert.equal(ui.element('color-note').hidden, true);
+    assert.equal(ui.element('paint-color-count-panel').hidden, true);
+    assert.equal(ui.element('puzzle-side-range').hidden, true);
     assert.equal(ui.element('image-status').textContent, '');
     assert.equal(ui.element('puzzle-side').value, '201');
     assert.equal(ui.element('reset-puzzle-side').disabled, true);
@@ -173,6 +175,38 @@ test('RGB・RGBAのPNGは通常のカラー変換で遊べる', async () => {
         assert.deepEqual([...palette[matrix[0][1]]], [12, 45, 235]);
         assert.equal(matrix[1][0], blank);
     }
+});
+
+test('画像変換の色数・マス数を調整すると、共有とプレイにプレビューの盤面を渡す', async () => {
+    const ui = setup({ pngColorType: 6 });
+    await ui.element('file').change();
+    assert.equal(ui.element('puzzle-side-range').hidden, false);
+    assert.equal(ui.element('puzzle-side-range').value, '2');
+    assert.equal(ui.element('paint-color-count-panel').hidden, false);
+    assert.equal(ui.element('paint-color-limit').value, '16色');
+    assert.match(ui.element('paint-color-result').textContent, /塗る色2色 ＋ 背景色1色/);
+
+    ui.element('paint-color-count').value = '2';
+    ui.element('paint-color-count').input();
+    assert.equal(ui.rasterizations(), 1);
+    assert.match(ui.element('paint-color-result').textContent, /塗る色1色 ＋ 背景色1色/);
+    const puzzle = ui.normalShares.at(-1).puzzle;
+    assert.equal(puzzle.palette.length, 2);
+    assert.equal(puzzle.matrix[1][0], puzzle.blank);
+    ui.element('play-preview').click();
+    assert.equal(ui.starts.at(-1).puzzle, puzzle);
+
+    ui.element('puzzle-side-range').value = '1';
+    ui.element('puzzle-side-range').input();
+    assert.equal(ui.element('puzzle-side').value, '1');
+    assert.equal(ui.normalShares.at(-1).puzzle.matrix[0].length, 1);
+    ui.element('puzzle-mode').value = 'monochrome';
+    ui.element('puzzle-mode').change();
+    assert.equal(ui.element('paint-color-count-panel').hidden, true);
+    assert.equal(ui.element('threshold-panel').hidden, false);
+    ui.element('puzzle-mode').value = 'color';
+    ui.element('puzzle-mode').change();
+    assert.equal(ui.element('paint-color-limit').value, '2色');
 });
 
 test('カラーの縮小は元の色と空白を使い、通常共有には縮小後の盤面を渡す', async () => {

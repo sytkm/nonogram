@@ -1,7 +1,7 @@
 // ブラウザで盤面を描画できる大きさに収める。
 const MAX_PUZZLE_SIDE = 200;
 const SUGGESTED_PHOTO_SIDE = 40;
-const MAX_PAINT_COLORS = 7;
+const MAX_CONVERSION_COLORS = 16;
 const WHITE_BACKGROUND_LEVEL = 245;
 const MIN_PALETTE_DISTANCE = 40;
 
@@ -142,9 +142,10 @@ function makeMonochromeMatrix({ data, width, height }, threshold) {
 
 /**
  * @param {ImageData} pixels - RGBAの画像データ
+ * @param {number} maxColors - 背景色を含めた色数の上限
  * @returns {PuzzleData} 空白と塗る色に分類した盤面
  */
-function makeColorPuzzle({ data, width, height }) {
+function makeColorPuzzle({ data, width, height }, maxColors = MAX_CONVERSION_COLORS) {
     // 透明な部分を白に合成し、白に近い画素は空白にまとめる。
     const colors = new Map();
     const pixels = [];
@@ -163,7 +164,8 @@ function makeColorPuzzle({ data, width, height }) {
     }
 
     const groups = colors.size ? [describeColorGroup([...colors.values()])] : [];
-    while (groups.length < MAX_PAINT_COLORS) {
+    // 背景色の枠を一つ確保する。
+    while (groups.length + 1 < maxColors) {
         // 最も色のばらつきが大きいグループを、画素数の中央値で分ける。
         let best = -1;
         for (let i = 0; i < groups.length; i++) {

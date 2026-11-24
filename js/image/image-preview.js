@@ -21,9 +21,15 @@ function setupImagePicker() {
     const resetPreviewTabs = setupTabs(preview);
     const canvas = document.getElementById('preview-canvas');
     const side = document.getElementById('puzzle-side');
+    const sideRange = document.getElementById('puzzle-side-range');
     const resetSize = document.getElementById('reset-puzzle-side');
     const mode = document.getElementById('puzzle-mode');
     const threshold = document.getElementById('threshold');
+    const colorCount = document.getElementById('paint-color-count');
+    const colorPanel = document.getElementById('paint-color-count-panel');
+    const colorLimit = document.getElementById('paint-color-limit');
+    const colorResult = document.getElementById('paint-color-result');
+    colorCount.max = String(MAX_CONVERSION_COLORS);
     const playPreview = document.getElementById('play-preview');
     const splitPreview = document.getElementById('split-preview');
     const playOptions = document.getElementById('preview-play-options');
@@ -72,7 +78,7 @@ function setupImagePicker() {
         if (indexed) {
             puzzle = resizeIndexedPuzzle(currentImage.originalPuzzle, side.valueAsNumber);
         } else if (useColor) {
-            currentImage.colorPuzzle ??= makeColorPuzzle(currentImage.imageData);
+            currentImage.colorPuzzle ??= makeColorPuzzle(currentImage.imageData, colorCount.valueAsNumber);
             puzzle = currentImage.colorPuzzle;
         } else {
             puzzle = {
@@ -88,6 +94,7 @@ function setupImagePicker() {
             '元画像 ' + naturalWidth + ' × ' + naturalHeight +
             ' ／ 盤面 ' + matrix[0].length + ' × ' + matrix.length + ' マス';
         document.getElementById('preview-original-color').hidden = !indexed;
+        sideRange.hidden = indexed;
         resetSize.hidden = !indexed;
         resetSize.disabled = puzzle === currentImage.originalPuzzle;
         const tileCount = mosaicTileCount(matrix);
@@ -110,7 +117,16 @@ function setupImagePicker() {
             updatePuzzleSharing(puzzle, originalShareSource());
         }
         document.getElementById('threshold-panel').hidden = useColor;
-        document.getElementById('color-note').hidden = !useColor || indexed;
+        colorPanel.hidden = !useColor || indexed;
+        if (!colorPanel.hidden) {
+            const usedColors = new Set();
+            for (const row of matrix) {
+                for (const color of row) usedColors.add(color);
+            }
+            usedColors.delete(puzzle.blank);
+            colorLimit.value = colorCount.value + '色';
+            colorResult.textContent = '変換結果：塗る色' + usedColors.size + '色 ＋ 背景色1色。';
+        }
         document.getElementById('threshold-value').value = threshold.value;
         drawPuzzlePreview(canvas, puzzle);
 
@@ -132,6 +148,7 @@ function setupImagePicker() {
 
     function updateSize() {
         playPreview.disabled = false;
+        sideRange.value = side.value;
         if (usesIndexedColors()) {
             updatePreview();
             return;
@@ -150,6 +167,7 @@ function setupImagePicker() {
         const indexed = usesIndexedColors();
         const limit = indexed ? originalSide : Math.min(originalSide, MAX_PUZZLE_SIDE);
         side.max = String(limit);
+        sideRange.max = side.max;
         if (reset || !side.validity.valid || !side.value) {
             side.value = String(!indexed && originalSide > MAX_PUZZLE_SIDE ? SUGGESTED_PHOTO_SIDE : originalSide);
         }
@@ -161,6 +179,7 @@ function setupImagePicker() {
         const hasColorMode = Boolean(currentImage.originalPuzzle) || currentImage.canMakeConvertedColor;
         document.getElementById('puzzle-mode-panel').hidden = !hasColorMode;
         mode.value = hasColorMode ? 'color' : 'monochrome';
+        colorCount.value = colorCount.max;
         updateSizeLimit(true);
         updateSize();
         status.textContent = !usesIndexedColors() && originalSide > MAX_PUZZLE_SIDE
@@ -221,6 +240,10 @@ function setupImagePicker() {
             updateSize();
         }
     });
+    sideRange.addEventListener('input', () => {
+        side.value = sideRange.value;
+        updateSize();
+    });
     mode.addEventListener('change', () => {
         if (currentImage.originalPuzzle) {
             status.textContent = '';
@@ -234,6 +257,11 @@ function setupImagePicker() {
         side.focus();
     });
     threshold.addEventListener('input', () => {
+        if (!playPreview.disabled) updatePreview();
+    });
+    colorCount.addEventListener('input', () => {
+        currentImage.colorPuzzle = undefined;
+        colorLimit.value = colorCount.value + '色';
         if (!playPreview.disabled) updatePreview();
     });
     document.getElementById('reset-threshold').addEventListener('click', () => {

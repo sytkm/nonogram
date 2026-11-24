@@ -5,9 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="inflate.min.js"></script>
-    <script src="js/image/image-input.js?v=preview-simplify"></script>
+    <script src="js/image/image-input.js?v=conversion-colors-16"></script>
     <script src="js/image/indexed-png.js"></script>
-    <script src="js/image/image-preview.js?v=play-screen-transitions"></script>
+    <script src="js/image/image-preview.js?v=conversion-colors-16"></script>
     <script src="js/play/play-clock.js?v=start-when-ready"></script>
     <script src="js/board/board-tools.js?v=clue-eyedropper"></script>
     <script src="js/puzzle/line-logic.js"></script>
@@ -32,7 +32,7 @@
     <script src="js/play/play-dialogs.js?v=mosaic-tile-clear"></script>
     <script src="js/play/puzzle-play.js?v=mosaic-initial-color"></script>
     <script src="js/app.js?v=magazine-puzzle-colors"></script>
-    <link rel="stylesheet" href="styles/start.css?v=compact-home-headline">
+    <link rel="stylesheet" href="styles/start.css?v=conversion-sliders">
     <link rel="stylesheet" href="styles/play.css?v=separate-answer-tool">
     <link rel="stylesheet" href="styles/dialogs.css?v=paint-sound-styles">
     <link rel="stylesheet" href="styles/mosaic.css?v=puzzle-magazine">
@@ -140,8 +140,11 @@
                             </div>
                             <div id="puzzle-size-panel">
                                 <label for="puzzle-side">長い辺のマス数</label>
-                                <input id="puzzle-side" type="number" min="1" step="1" inputmode="numeric">
-                                <button type="button" id="reset-puzzle-side" class="action-link" hidden>元のマス数に戻す</button>
+                                <div class="preview-range-row">
+                                    <input id="puzzle-side-range" type="range" min="1" aria-label="長い辺のマス数を調整" hidden>
+                                    <input id="puzzle-side" type="number" min="1" step="1" inputmode="numeric">
+                                    <button type="button" id="reset-puzzle-side" class="action-link" hidden>元のマス数に戻す</button>
+                                </div>
                             </div>
                             <div id="threshold-panel">
                                 <label for="threshold">黒にする明るさの境目</label>
@@ -150,7 +153,14 @@
                                 <button type="button" id="reset-threshold" class="action-link">自動設定に戻す</button>
                                 <p>境目は画像に合わせて自動で選びます。値を上げると、より明るい部分も黒になります。</p>
                             </div>
-                            <p id="color-note" hidden>近い色を最大7色にまとめます。白に近い部分は空白になります。</p>
+                            <div id="paint-color-count-panel" hidden>
+                                <label for="paint-color-count">色数の上限（背景色を含む）</label>
+                                <div class="preview-range-row">
+                                    <input id="paint-color-count" type="range" min="2">
+                                    <output id="paint-color-limit" for="paint-color-count"></output>
+                                </div>
+                                <p id="paint-color-result"></p>
+                            </div>
                         </section>
                         <section id="preview-check-panel" class="preview-tab-panel" role="tabpanel" aria-labelledby="preview-tab-check" tabindex="0" hidden>
                             <p>盤面全体を調べます。確認は任意です。</p>
