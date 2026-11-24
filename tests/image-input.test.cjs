@@ -18,6 +18,24 @@ test('指定した最長辺で縦横比を保ち、元画像より拡大しな�
     }
 });
 
+test('色と透明度の境界が揃う画像だけで、等倍のドット間隔を見つける', () => {
+    const width = 48;
+    const height = 32;
+    const data = new Uint8ClampedArray(width * height * 4);
+    for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+            const i = (y * width + x) * 4;
+            data[i] = Math.floor(x / 4) * 17;
+            data[i + 3] = y < 4 ? 0 : 255;
+        }
+    }
+    const image = { data, width, height };
+    assert.equal(context.inferPixelArtScale(image), 4);
+    data[(width + 1) * 4 + 3] = 127;
+    assert.equal(context.inferPixelArtScale(image), 1);
+    assert.equal(context.inferPixelArtScale({ ...image, data: new Uint8ClampedArray(data.length) }), 1);
+});
+
 test('明るい画像でも暗い画像でも、元の輪郭に対応する境目を自動で選ぶ', () => {
     for (const [foreground, background] of [[160, 220], [25, 85]]) {
         const image = {

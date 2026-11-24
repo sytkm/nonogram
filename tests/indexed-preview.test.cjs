@@ -4,12 +4,13 @@ const path = require('node:path');
 const vm = require('node:vm');
 const test = require('node:test');
 
-function setup({ decodeFails = false, pngColorType } = {}) {
+function setup({ decodeFails = false, pngColorType, pixelArtSide } = {}) {
     const elements = {};
     const painted = [];
     const starts = [];
     const splitShares = [];
     const normalShares = [];
+    const sourceReads = [];
     let rasterizations = 0;
     const ctx = { fillRect() { painted.push(this.fillStyle); } };
     function element(id) {
@@ -50,8 +51,8 @@ function setup({ decodeFails = false, pngColorType } = {}) {
         element('file').files = [{ slice: () => ({ arrayBuffer: async () => header.buffer }) }];
         context.URL = { createObjectURL: () => 'blob:image', revokeObjectURL() {} };
         context.Image = class {
-            naturalWidth = 2;
-            naturalHeight = 2;
+            naturalWidth = pixelArtSide ? 8 : 2;
+            naturalHeight = pixelArtSide ? 8 : 2;
             async decode() {}
         };
     }
@@ -60,8 +61,10 @@ function setup({ decodeFails = false, pngColorType } = {}) {
         if (decodeFails) throw new Error('unsupported');
         return original;
     };
-    context.rasterizePuzzleImage = (_, longestSide) => {
+    context.suggestPixelArtSide = () => pixelArtSide;
+    context.rasterizePuzzleImage = (_, longestSide, preservePixels) => {
         rasterizations++;
+        sourceReads.push({ longestSide, preservePixels });
         if (longestSide === 1) return { width: 1, height: 1, data: [230, 20, 40, 255] };
         if (pngColorType !== undefined) {
             return { width: 2, height: 2, data: [230, 20, 40, 255, 12, 45, 235, 255, 0, 0, 0, 0, 255, 255, 255, 255] };
@@ -71,7 +74,7 @@ function setup({ decodeFails = false, pngColorType } = {}) {
     context.leavePuzzleScreen = () => {};
     context.startPuzzle = (puzzle, options) => starts.push({ puzzle, options });
     context.setupImagePicker();
-    return { element, original, painted, starts, splitShares, normalShares, rasterizations: () => rasterizations };
+    return { element, original, painted, starts, splitShares, normalShares, sourceReads, rasterizations: () => rasterizations };
 }
 
 test('パレットPNGは200マス超でも再変換せずプレビューし、空白を白で描く', async () => {
@@ -84,6 +87,7 @@ test('パレットPNGは200マス超でも再変換せずプレビューし、�
     assert.equal(ui.element('threshold-panel').hidden, true);
     assert.equal(ui.element('paint-color-count-panel').hidden, true);
     assert.equal(ui.element('puzzle-side-range').hidden, true);
+    assert.equal(ui.element('puzzle-side-estimate').hidden, true);
     assert.equal(ui.element('image-status').textContent, '');
     assert.equal(ui.element('puzzle-side').value, '201');
     assert.equal(ui.element('reset-puzzle-side').disabled, true);
@@ -207,6 +211,22 @@ test('画像変換の色数・マス数を調整すると、共有とプレイ�
     ui.element('puzzle-mode').value = 'color';
     ui.element('puzzle-mode').change();
     assert.equal(ui.element('paint-color-limit').value, '2色');
+});
+
+test('推定した長辺を初期値にし、そのマス数で変換するときだけ色を混ぜない', async () => {
+    const ui = setup({ pngColorType: 6, pixelArtSide: 2 });
+    await ui.element('file').change();
+    assert.equal(ui.element('puzzle-side').value, '2');
+    assert.deepEqual(ui.sourceReads[0], { longestSide: 2, preservePixels: true });
+    assert.equal(ui.element('puzzle-side-estimate').hidden, false);
+    assert.match(ui.element('puzzle-side-estimate').textContent, /長い辺を2マスと推定/);
+    assert.equal(ui.element('image-status').textContent, '');
+    ui.element('puzzle-side-range').value = '1';
+    ui.element('puzzle-side-range').input();
+    assert.deepEqual(ui.sourceReads.at(-1), { longestSide: 1, preservePixels: false });
+    ui.element('puzzle-side-range').value = '2';
+    ui.element('puzzle-side-range').input();
+    assert.deepEqual(ui.sourceReads.at(-1), { longestSide: 2, preservePixels: true });
 });
 
 test('カラーの縮小は元の色と空白を使い、通常共有には縮小後の盤面を渡す', async () => {

@@ -2,6 +2,7 @@
 const MAX_PUZZLE_SIDE = 200;
 const SUGGESTED_PHOTO_SIDE = 40;
 const MAX_CONVERSION_COLORS = 16;
+const MAX_GRID_SCAN_PIXELS = 4_194_304;
 const WHITE_BACKGROUND_LEVEL = 245;
 const MIN_PALETTE_DISTANCE = 40;
 
@@ -78,17 +79,61 @@ async function readPuzzleImage(file) {
 /**
  * @param {HTMLImageElement} image - 復号済みの画像
  * @param {number} longestSide - 変換する盤面の長辺のマス数
+ * @param {boolean} preservePixels - ドット絵の格子に合わせる場合は色を混ぜない
  * @returns {ImageData} 変換用キャンバスのRGBAピクセル
  */
-function rasterizePuzzleImage(image, longestSide) {
+function rasterizePuzzleImage(image, longestSide, preservePixels = false) {
     const { width, height } = fitPuzzleSize(image.naturalWidth, image.naturalHeight, longestSide);
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
     const context = canvas.getContext('2d');
+    context.imageSmoothingEnabled = !preservePixels;
     context.imageSmoothingQuality = 'high';
     context.drawImage(image, 0, 0, width, height);
     return context.getImageData(0, 0, width, height);
+}
+
+function greatestCommonDivisor(a, b) {
+    while (b) [a, b] = [b, a % b];
+    return a;
+}
+
+function inferPixelArtScale({ data, width, height }) {
+    let scale = greatestCommonDivisor(width, height);
+    const pixels = new Uint32Array(data.buffer, data.byteOffset, width * height);
+    let hasHorizontalChange = false;
+    let hasVerticalChange = false;
+    // 等倍の格子なら、色・透明度が変わる座標はどちらの軸でも格子の境界に揃う。
+    for (let y = 0; y < height; y++) {
+        const row = y * width;
+        for (let x = 0; x < width; x++) {
+            const pixel = pixels[row + x];
+            if (x && pixel !== pixels[row + x - 1]) {
+                hasHorizontalChange = true;
+                if (x % scale) scale = greatestCommonDivisor(scale, x);
+            }
+            if (y && pixel !== pixels[row + x - width]) {
+                hasVerticalChange = true;
+                if (y % scale) scale = greatestCommonDivisor(scale, y);
+            }
+            if (scale === 1) return 1;
+        }
+    }
+    return hasHorizontalChange && hasVerticalChange ? scale : 1;
+}
+
+function suggestPixelArtSide(image) {
+    const { naturalWidth: width, naturalHeight: height } = image;
+    if (width * height > MAX_GRID_SCAN_PIXELS || greatestCommonDivisor(width, height) < 2) return;
+    const originalSide = Math.max(width, height);
+    try {
+        const scale = inferPixelArtScale(rasterizePuzzleImage(image, originalSide));
+        const suggestedSide = originalSide / scale;
+        if (scale > 1 && suggestedSide <= MAX_PUZZLE_SIDE) return suggestedSide;
+    } catch {
+        // We can still convert with the usual size if the full image cannot be read.
+    }
 }
 
 function pixelBrightness(data, i) {

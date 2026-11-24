@@ -22,6 +22,7 @@ function setupImagePicker() {
     const canvas = document.getElementById('preview-canvas');
     const side = document.getElementById('puzzle-side');
     const sideRange = document.getElementById('puzzle-side-range');
+    const sideEstimate = document.getElementById('puzzle-side-estimate');
     const resetSize = document.getElementById('reset-puzzle-side');
     const mode = document.getElementById('puzzle-mode');
     const threshold = document.getElementById('threshold');
@@ -154,7 +155,7 @@ function setupImagePicker() {
             return;
         }
         const image = currentImage.image;
-        const imageData = rasterizePuzzleImage(image, side.valueAsNumber);
+        const imageData = rasterizePuzzleImage(image, side.valueAsNumber, side.valueAsNumber === currentImage.pixelArtSide);
         currentImage.imageData = imageData;
         currentImage.colorPuzzle = undefined;
         currentImage.suggestedThreshold = suggestMonochromeThreshold(imageData);
@@ -169,7 +170,8 @@ function setupImagePicker() {
         side.max = String(limit);
         sideRange.max = side.max;
         if (reset || !side.validity.valid || !side.value) {
-            side.value = String(!indexed && originalSide > MAX_PUZZLE_SIDE ? SUGGESTED_PHOTO_SIDE : originalSide);
+            const convertedSide = currentImage.pixelArtSide ?? (originalSide > MAX_PUZZLE_SIDE ? SUGGESTED_PHOTO_SIDE : originalSide);
+            side.value = String(indexed ? originalSide : convertedSide);
         }
     }
 
@@ -182,7 +184,12 @@ function setupImagePicker() {
         colorCount.value = colorCount.max;
         updateSizeLimit(true);
         updateSize();
-        status.textContent = !usesIndexedColors() && originalSide > MAX_PUZZLE_SIDE
+        const estimatedSide = currentImage.pixelArtSide;
+        sideEstimate.hidden = !estimatedSide;
+        sideEstimate.textContent = estimatedSide
+            ? 'ドット絵の格子から、長い辺を' + estimatedSide + 'マスと推定しました。'
+            : '';
+        status.textContent = !estimatedSide && !usesIndexedColors() && originalSide > MAX_PUZZLE_SIDE
             ? '大きな画像なので、最長辺' + SUGGESTED_PHOTO_SIDE + 'マスを提案します。' +
               MAX_PUZZLE_SIDE + 'マスまで変更できます。'
             : '';
@@ -219,6 +226,7 @@ function setupImagePicker() {
                     fallbackMessage = 'このPNGはカラー問題にできません。白黒のプレビューを表示しました。';
                 }
             }
+            if (!selection.originalPuzzle) selection.pixelArtSide = suggestPixelArtSide(decoded.image);
             openPreview();
             if (fallbackMessage) status.textContent = fallbackMessage;
         } catch (error) {
