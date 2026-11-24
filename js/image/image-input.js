@@ -142,9 +142,10 @@ function makeMonochromeMatrix({ data, width, height }, threshold) {
 
 /**
  * @param {ImageData} pixels - RGBAの画像データ
+ * @param {number} maxPaintColors - 空白を除いた塗る色の上限
  * @returns {PuzzleData} 空白と塗る色に分類した盤面
  */
-function makeColorPuzzle({ data, width, height }) {
+function makeColorPuzzle({ data, width, height }, maxPaintColors = MAX_PAINT_COLORS) {
     // 透明な部分を白に合成し、白に近い画素は空白にまとめる。
     const colors = new Map();
     const pixels = [];
@@ -163,7 +164,7 @@ function makeColorPuzzle({ data, width, height }) {
     }
 
     const groups = colors.size ? [describeColorGroup([...colors.values()])] : [];
-    while (groups.length < MAX_PAINT_COLORS) {
+    while (groups.length < maxPaintColors) {
         // 最も色のばらつきが大きいグループを、画素数の中央値で分ける。
         let best = -1;
         for (let i = 0; i < groups.length; i++) {
