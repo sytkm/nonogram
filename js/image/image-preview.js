@@ -18,6 +18,8 @@ function setupImagePicker() {
     document.getElementById('change-preview-image').onclick = () => input.click();
     const status = document.getElementById('image-status');
     const preview = document.getElementById('image-preview');
+    const cropButton = document.getElementById('open-image-crop');
+    const openCrop = setupImageCrop();
     const resetPreviewTabs = setupTabs(preview);
     const canvas = document.getElementById('preview-canvas');
     const side = document.getElementById('puzzle-side');
@@ -99,8 +101,10 @@ function setupImagePicker() {
         currentImage.puzzle = puzzle;
         const { matrix } = puzzle;
         const { naturalWidth, naturalHeight } = currentImage.image;
+        const crop = currentImage.crop;
         document.getElementById('preview-size').textContent =
             '元画像 ' + naturalWidth + ' × ' + naturalHeight +
+            (crop ? ' ／ 切り抜き ' + crop.width + ' × ' + crop.height : '') +
             ' ／ 盤面 ' + matrix[0].length + ' × ' + matrix.length + ' マス';
         document.getElementById('preview-original-color').hidden = !indexed;
         resetSize.disabled = side.value === side.max;
@@ -162,8 +166,9 @@ function setupImagePicker() {
             updatePreview();
             return;
         }
-        const image = currentImage.image;
-        const imageData = rasterizePuzzleImage(image, side.valueAsNumber, side.valueAsNumber === currentImage.pixelArtSide);
+        const image = currentImage.croppedImage ?? currentImage.image;
+        const imageData = rasterizePuzzleImage(image, side.valueAsNumber,
+            side.valueAsNumber === currentImage.pixelArtSide);
         currentImage.imageData = imageData;
         currentImage.colorPuzzle = undefined;
         currentImage.suggestedThreshold = suggestMonochromeThreshold(imageData);
@@ -171,8 +176,8 @@ function setupImagePicker() {
     }
 
     function updateSizeLimit(reset) {
-        const { naturalWidth, naturalHeight } = currentImage.image;
-        const originalSide = Math.max(naturalWidth, naturalHeight);
+        const { width, height } = currentImage.crop ?? fullImageRegion(currentImage.image);
+        const originalSide = Math.max(width, height);
         const indexed = usesIndexedColors();
         const limit = indexed ? originalSide : Math.min(originalSide, MAX_PUZZLE_SIDE);
         side.max = String(limit);
@@ -183,15 +188,9 @@ function setupImagePicker() {
         }
     }
 
-    function openPreview() {
-        const image = currentImage.image;
-        const originalSide = Math.max(image.naturalWidth, image.naturalHeight);
-        const hasColorMode = Boolean(currentImage.originalPuzzle) || currentImage.canMakeConvertedColor;
-        document.getElementById('puzzle-mode-panel').hidden = !hasColorMode;
-        mode.value = hasColorMode ? 'color' : 'monochrome';
-        // 右端は元の配色。元の色数が16色を超えていても復元できる。
-        colorCount.max = String(currentImage.originalPuzzle ? MAX_CONVERSION_COLORS + 1 : MAX_CONVERSION_COLORS);
-        colorCount.value = colorCount.max;
+    function updateSourceSize() {
+        const { width, height } = currentImage.crop ?? fullImageRegion(currentImage.image);
+        const originalSide = Math.max(width, height);
         updateSizeLimit(true);
         updateSize();
         const estimatedSide = currentImage.pixelArtSide;
@@ -203,17 +202,44 @@ function setupImagePicker() {
             ? '大きな画像なので、最長辺' + SUGGESTED_PHOTO_SIDE + 'マスを提案します。' +
               MAX_PUZZLE_SIDE + 'マスまで変更できます。'
             : '';
+    }
+
+    function openPreview() {
+        cropButton.hidden = !currentImage.canCrop;
+        const hasColorMode = Boolean(currentImage.originalPuzzle) || currentImage.canMakeConvertedColor;
+        document.getElementById('puzzle-mode-panel').hidden = !hasColorMode;
+        mode.value = hasColorMode ? 'color' : 'monochrome';
+        // 右端は元の配色。元の色数が16色を超えていても復元できる。
+        colorCount.max = String(currentImage.originalPuzzle ? MAX_CONVERSION_COLORS + 1 : MAX_CONVERSION_COLORS);
+        colorCount.value = colorCount.max;
+        updateSourceSize();
         resetPreviewTabs();
         preview.hidden = false;
         leavePuzzleScreen();
         document.getElementById('preview-heading').focus();
     }
 
+    cropButton.addEventListener('click', () => {
+        const selection = currentImage;
+        openCrop(selection.image, selection.crop, (crop, croppedImage) => {
+            if (selection !== currentImage) {
+                croppedImage?.close();
+                return;
+            }
+            selection.croppedImage?.close();
+            selection.crop = crop;
+            selection.croppedImage = croppedImage;
+            selection.pixelArtSide = suggestPixelArtSide(croppedImage ?? selection.image);
+            updateSourceSize();
+        });
+    });
+
     input.addEventListener('change', async () => {
         const file = input.files[0];
         if (!file) return;
         document.getElementById('shared-link-status').textContent = '';
         const selection = {};
+        currentImage?.croppedImage?.close();
         currentImage = selection;
         updatePuzzleSharing();
         resetPreviewChecks();
@@ -224,6 +250,7 @@ function setupImagePicker() {
             if (currentImage !== selection) return;
             selection.image = decoded.image;
             selection.canMakeConvertedColor = decoded.canMakeConvertedColor;
+            selection.canCrop = decoded.canCrop;
             let fallbackMessage;
             if (decoded.canPlayLegacyColor) {
                 try {
