@@ -92,9 +92,9 @@ function createBoardRenderer({ canvas, viewport, clueOverlay, board, rowClues, c
             context.fillText(text, left + width / 2, top + height / 2, width * 0.9);
         }
         if (board.marks[key]) {
-            // Keep the number legible by striking through its lower half.
             const thickness = Math.max(1, Math.floor(height / 12));
-            context.fillRect(left + width * 0.1, top + height * 0.60, width * 0.8, thickness);
+            const lineTop = top + Math.round((height - thickness) / 2);
+            context.fillRect(left + width * 0.1, lineTop, width * 0.8, thickness);
         }
         if (hasConflict) {
             const border = Math.max(1, Math.floor(Math.min(width, height) / 10));
