@@ -58,7 +58,8 @@ function fixture(tracePaint = true, startWithColor = false) {
     const event = (x = 20) => ({ pointerType: 'touch', pointerId: 1, isPrimary: true,
         button: 0, detail: 1, clientX: x, clientY: 20, preventDefault() {} });
     function tap(x = 20) { const e = event(x); canvas.onpointerdown(e); canvas.onpointerup(e); canvas.onclick(e); }
-    return { get, canvas, board, controls, paletteControls, settings, event, tap, feedbackCalls, soundCalls };
+    function hitClue(clue) { context.boardClueAt = () => clue; }
+    return { get, canvas, board, controls, paletteControls, settings, event, tap, feedbackCalls, soundCalls, hitClue };
 }
 
 test('初期の移動モードではタップ・ドラッグ・キーで塗らず、設定変更でも移動を保つ', () => {
@@ -156,4 +157,24 @@ test('色で開始した区画は設定に従って最初のタップで塗れ�
         f.tap(60);
         assert.equal(f.board.cells[0][1], 0);
     }
+});
+
+test('ヒントの数字は音がオンでチェックを新しく付けるときだけ鳴る', () => {
+    const f = fixture(false, true);
+    const key = 'row:0:0';
+    f.hitClue({ key, color: 0 });
+    f.settings.paintSound = true;
+    f.tap();
+    assert.equal(f.board.marks[key], true);
+    assert.deepEqual(f.soundCalls, ['play']);
+    f.tap();
+    assert.equal(f.board.marks[key], undefined);
+    f.settings.pickClueColor = true;
+    f.tap();
+    assert.equal(f.board.marks[key], undefined);
+    f.settings.pickClueColor = false;
+    f.settings.paintSound = false;
+    f.tap();
+    assert.equal(f.board.marks[key], true);
+    assert.deepEqual(f.soundCalls, ['play']);
 });

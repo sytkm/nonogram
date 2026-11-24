@@ -446,6 +446,7 @@ function setupBoard({
             else board.marks[key] = true;
             record([{ key, before, after: !before }]);
             renderBoard(true);
+            if (!before) playBoardPaintSound(paintSoundEnabled);
             return;
         }
         const cell = boardCellAt(point, columns, rows);
