@@ -31,10 +31,10 @@
     <script src="js/play/play-dialogs.js?v=mosaic-tile-clear"></script>
     <script src="js/play/puzzle-play.js?v=mosaic-initial-color"></script>
     <script src="js/app.js?v=shared-initial-fit"></script>
-    <link rel="stylesheet" href="styles/start.css?v=mosaic-overview-order">
-    <link rel="stylesheet" href="styles/play.css?v=mosaic-tile-clear">
-    <link rel="stylesheet" href="styles/dialogs.css?v=concise-controls">
-    <link rel="stylesheet" href="styles/mosaic.css?v=mosaic-overview-order">
+    <link rel="stylesheet" href="styles/start.css?v=puzzle-magazine">
+    <link rel="stylesheet" href="styles/play.css?v=puzzle-magazine">
+    <link rel="stylesheet" href="styles/dialogs.css?v=puzzle-magazine">
+    <link rel="stylesheet" href="styles/mosaic.css?v=puzzle-magazine">
     <script src="js/ui/dialog-dismiss.js?v=clear-results" defer></script>
     <title>画像でノノグラム</title>
 </head>
@@ -53,17 +53,23 @@
         <div id="start-panel">
             <div class="home-intro">
                 <div class="home-copy">
-                    <p>写真やイラストから問題を作り、数字を手がかりにマスを塗って絵を完成させます。</p>
-                    <div class="toolbar-group" role="group" aria-label="新しい問題">
+                    <h2 class="home-title">画像から<br class="home-title-break">問題を作る</h2>
+                    <p class="home-lead">写真やイラストをノノグラムに。数字を手がかりにマスを塗って、元の絵を完成させます。</p>
+                    <div class="toolbar-group" role="group" aria-label="問題を作る">
                         <button type="button" id="open-image" class="action-link action-primary" aria-describedby="image-formats">自分の画像で作る</button>
-                        <a href="?sample" class="action-link">サンプル問題で遊ぶ</a>
-                        <button type="button" class="action-link" data-open-play-guide aria-haspopup="dialog" aria-controls="play-guide-dialog">遊び方</button>
                     </div>
                     <input type="file" id="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" hidden>
                     <p id="image-formats">PNG・JPEG・WebPに対応しています。画像はブラウザ内で処理します。</p>
-                    <div class="home-daily toolbar-group">
-                        <button type="button" id="open-daily-puzzle" class="action-link" aria-describedby="daily-date">今日の問題を遊ぶ</button>
-                        <time id="daily-date"></time>
+                    <div class="home-quick-play">
+                        <h3>すぐ遊ぶ</h3>
+                        <div class="toolbar-group">
+                            <a href="?sample" class="action-link">サンプル問題</a>
+                            <span class="home-daily">
+                                <button type="button" id="open-daily-puzzle" class="action-link" aria-describedby="daily-date">今日の問題を遊ぶ</button>
+                                <time id="daily-date"></time>
+                            </span>
+                            <button type="button" class="action-link" data-open-play-guide aria-haspopup="dialog" aria-controls="play-guide-dialog">遊び方</button>
+                        </div>
                     </div>
                     <p id="daily-status" role="status" hidden></p>
                     <div class="home-recovery">
@@ -78,6 +84,7 @@
                     </div>
                 </div>
                 <figure class="home-art">
+                    <figcaption>サンプル問題 <span>5 × 5</span></figcaption>
                     <table class="home-puzzle" aria-hidden="true">
                         <thead>
                             <tr><td></td><th>1</th><th>1</th><th>5</th><th>1</th><th>1</th></tr>
@@ -90,7 +97,7 @@
                             <tr><th>1</th><td></td><td></td><td></td><td></td><td></td></tr>
                         </tbody>
                     </table>
-                    <figcaption>サンプルの最初の一手。左が「5」の行は、5マスすべてを塗れます。</figcaption>
+                    <p>左の数字が「5」の行は、5マスすべて塗れます。</p>
                 </figure>
             </div>
             <div class="home-credits">

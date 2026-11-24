@@ -23,13 +23,13 @@ dialog {
     max-height: calc(100% - 2rem);
     padding: 1rem;
     border: 1px solid var(--puzzle-major-rule);
-    border-radius: 0.35rem;
+    border-radius: var(--ui-corner);
     background: var(--puzzle-paper);
     color: var(--puzzle-ink);
 }
 
 dialog::backdrop {
-    background: rgb(26 42 35 / 45%);
+    background: rgb(32 32 31 / 50%);
 }
 
 dialog button:focus-visible {
@@ -74,7 +74,6 @@ dialog button:focus-visible {
 .dialog-heading h2,
 #restart-dialog h2 {
     margin: 0;
-    font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
     font-size: 1.25rem;
 }
 
