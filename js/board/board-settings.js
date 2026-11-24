@@ -20,7 +20,7 @@ function saveBoardSetting(name, value) {
 function setupSettings() {
     const dialog = document.getElementById('settings-dialog');
     const playPanel = document.getElementById('play-panel');
-    const clueAction = document.getElementById('clue-action');
+    const clueActions = dialog.querySelectorAll('input[name="clue-action"]');
     const settingsInputs = {
         stickClues: document.getElementById('stick-clues'),
         showSymbols: document.getElementById('color-symbols'),
@@ -42,7 +42,9 @@ function setupSettings() {
             if (!playPanel.hidden) activeBoard?.refreshSettings();
         };
     }
-    clueAction.onchange = () => saveBoardSetting('pickClueColor', clueAction.value === 'color');
+    for (const input of clueActions) {
+        input.onchange = () => saveBoardSetting('pickClueColor', input.value === 'color');
+    }
     for (const button of document.querySelectorAll('[data-open-settings]')) {
         button.onclick = () => {
             showBoardMenu();
@@ -50,7 +52,10 @@ function setupSettings() {
             for (const [name, input] of Object.entries(settingsInputs)) {
                 input.checked = boardSetting(name, board);
             }
-            clueAction.value = boardSetting('pickClueColor', board) ? 'color' : 'mark';
+            const clueAction = boardSetting('pickClueColor', board) ? 'color' : 'mark';
+            for (const input of clueActions) {
+                input.checked = input.value === clueAction;
+            }
             dialog.showModal();
         };
     }

@@ -22,7 +22,7 @@
     <script src="js/puzzle/puzzle-rules.js?v=shared-clues"></script>
     <script src="js/board/board-gestures.js"></script>
     <script src="js/board/board-palette.js"></script>
-    <script src="js/board/board-settings.js?v=paint-feedback"></script>
+    <script src="js/board/board-settings.js?v=clue-action-options"></script>
     <script src="js/board/board-renderer.js"></script>
     <script src="js/board/board-viewport.js?v=minimap-navigation"></script>
     <script src="js/board/board-minimap.js?v=minimap-navigation"></script>
@@ -33,7 +33,7 @@
     <script src="js/app.js?v=magazine-puzzle-colors"></script>
     <link rel="stylesheet" href="styles/start.css?v=compact-home-headline">
     <link rel="stylesheet" href="styles/play.css?v=separate-answer-tool">
-    <link rel="stylesheet" href="styles/dialogs.css?v=example-clues">
+    <link rel="stylesheet" href="styles/dialogs.css?v=clue-action-options">
     <link rel="stylesheet" href="styles/mosaic.css?v=puzzle-magazine">
     <script src="js/ui/dialog-dismiss.js?v=clear-results" defer></script>
     <title>画像でノノグラム</title>
@@ -323,12 +323,13 @@
             <legend>共通設定</legend>
             <label><input type="checkbox" id="trace-paint" checked> なぞり塗り</label>
             <label><input type="checkbox" id="stick-clues" checked> ヒントの数字を固定</label>
-            <label>数字を押すと
-                <select id="clue-action">
-                    <option value="mark">チェック</option>
-                    <option value="color">色を選ぶ</option>
-                </select>
-            </label>
+            <fieldset class="clue-action-options">
+                <legend>数字を押すと</legend>
+                <div>
+                    <label><input type="radio" name="clue-action" value="mark" checked> チェック</label>
+                    <label><input type="radio" name="clue-action" value="color"> 色を選ぶ</label>
+                </div>
+            </fieldset>
             <label><input type="checkbox" id="color-symbols"> 色の記号を表示（カラー問題）</label>
             <label><input type="checkbox" id="auto-slash"> 完成した行・列の空白に斜線</label>
             <label><input type="checkbox" id="paint-feedback" checked aria-describedby="paint-feedback-note"> 塗ったマスに短い演出</label>
