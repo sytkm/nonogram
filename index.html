@@ -5,9 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="inflate.min.js"></script>
-    <script src="js/image/image-input.js?v=conversion-sliders"></script>
+    <script src="js/image/image-input.js?v=conversion-colors-16"></script>
     <script src="js/image/indexed-png.js"></script>
-    <script src="js/image/image-preview.js?v=conversion-sliders"></script>
+    <script src="js/image/image-preview.js?v=conversion-colors-16"></script>
     <script src="js/play/play-clock.js?v=start-when-ready"></script>
     <script src="js/board/board-tools.js?v=clue-eyedropper"></script>
     <script src="js/puzzle/line-logic.js"></script>
@@ -154,9 +154,9 @@
                                 <p>境目は画像に合わせて自動で選びます。値を上げると、より明るい部分も黒になります。</p>
                             </div>
                             <div id="paint-color-count-panel" hidden>
-                                <label for="paint-color-count">塗る色の上限（空白を除く）</label>
+                                <label for="paint-color-count">色数の上限（背景色を含む）</label>
                                 <div class="preview-range-row">
-                                    <input id="paint-color-count" type="range" min="1">
+                                    <input id="paint-color-count" type="range" min="2">
                                     <output id="paint-color-limit" for="paint-color-count"></output>
                                 </div>
                                 <p id="paint-color-result"></p>

@@ -183,13 +183,13 @@ test('画像変換の色数・マス数を調整すると、共有とプレイ�
     assert.equal(ui.element('puzzle-side-range').hidden, false);
     assert.equal(ui.element('puzzle-side-range').value, '2');
     assert.equal(ui.element('paint-color-count-panel').hidden, false);
-    assert.equal(ui.element('paint-color-limit').value, '7色');
-    assert.match(ui.element('paint-color-result').textContent, /使う色：2色/);
+    assert.equal(ui.element('paint-color-limit').value, '16色');
+    assert.match(ui.element('paint-color-result').textContent, /塗る色2色 ＋ 背景色1色/);
 
-    ui.element('paint-color-count').value = '1';
+    ui.element('paint-color-count').value = '2';
     ui.element('paint-color-count').input();
     assert.equal(ui.rasterizations(), 1);
-    assert.match(ui.element('paint-color-result').textContent, /使う色：1色/);
+    assert.match(ui.element('paint-color-result').textContent, /塗る色1色 ＋ 背景色1色/);
     const puzzle = ui.normalShares.at(-1).puzzle;
     assert.equal(puzzle.palette.length, 2);
     assert.equal(puzzle.matrix[1][0], puzzle.blank);
@@ -206,7 +206,7 @@ test('画像変換の色数・マス数を調整すると、共有とプレイ�
     assert.equal(ui.element('threshold-panel').hidden, false);
     ui.element('puzzle-mode').value = 'color';
     ui.element('puzzle-mode').change();
-    assert.equal(ui.element('paint-color-limit').value, '1色');
+    assert.equal(ui.element('paint-color-limit').value, '2色');
 });
 
 test('カラーの縮小は元の色と空白を使い、通常共有には縮小後の盤面を渡す', async () => {

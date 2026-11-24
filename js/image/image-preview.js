@@ -29,7 +29,7 @@ function setupImagePicker() {
     const colorPanel = document.getElementById('paint-color-count-panel');
     const colorLimit = document.getElementById('paint-color-limit');
     const colorResult = document.getElementById('paint-color-result');
-    colorCount.max = String(MAX_PAINT_COLORS);
+    colorCount.max = String(MAX_CONVERSION_COLORS);
     const playPreview = document.getElementById('play-preview');
     const splitPreview = document.getElementById('split-preview');
     const playOptions = document.getElementById('preview-play-options');
@@ -125,7 +125,7 @@ function setupImagePicker() {
             }
             usedColors.delete(puzzle.blank);
             colorLimit.value = colorCount.value + '色';
-            colorResult.textContent = '盤面で使う色：' + usedColors.size + '色。白に近い部分は空白になります。';
+            colorResult.textContent = '変換結果：塗る色' + usedColors.size + '色 ＋ 背景色1色。';
         }
         document.getElementById('threshold-value').value = threshold.value;
         drawPuzzlePreview(canvas, puzzle);

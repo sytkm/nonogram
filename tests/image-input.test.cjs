@@ -51,15 +51,17 @@ test('カラー盤面は異なる色を保ち、透明と白に近い画素を�
     assert.deepEqual([...palette[matrix[1][1]]], [12, 45, 235]);
 });
 
-test('多色の画像を7色以内に整理し、画素は有効な色を参照する', () => {
-    const data = Uint8ClampedArray.from(
-        Array.from({ length: 24 }, (_, i) => [i * 10, 200 - i * 8, 30, 255]).flat()
-    );
-    const { matrix, palette } = context.makeColorPuzzle({ width: 6, height: 4, data });
-    assert.ok(palette.length >= 3 && palette.length <= 8);
+test('多色の画像を背景色込みで最大16色に整理し、画素は有効な色を参照する', () => {
+    const pixels = Array.from({ length: 24 }, (_, i) =>
+        [i % 4 * 80, Math.floor(i / 4) % 3 * 100, Math.floor(i / 12) * 160, i === 0 ? 0 : 255]);
+    const data = Uint8ClampedArray.from(pixels.flat());
+    const { matrix, palette, blank } = context.makeColorPuzzle({ width: 6, height: 4, data });
+    assert.equal(palette.length, 16);
     assert.equal(matrix.length, 4);
+    assert.equal(matrix[0][0], blank);
+    assert.ok(matrix[0].slice(1).every(index => index > 0 && index < palette.length));
     assert.ok(matrix.every(row => row.length === 6 &&
-        row.every(index => index > 0 && index < palette.length)));
+        row.every(index => index >= 0 && index < palette.length)));
 });
 
 test('圧縮で生じた近い色は同じ色として扱う', () => {
