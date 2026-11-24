@@ -30,6 +30,10 @@ function dailyDay(date = new Date()) {
     };
 }
 
+function dailyPalette() {
+    return [[255, 255, 255], [173, 48, 36]];
+}
+
 function dailyPuzzle(day) {
     let seed = Math.imul(day.index, 0x9e3779b1) || 1;
     function pick(limit) {
@@ -61,7 +65,7 @@ function dailyPuzzle(day) {
         }
     }
 
-    return { matrix, palette: [[255, 255, 255], [48, 91, 163]], blank };
+    return { matrix, palette: dailyPalette(), blank };
 }
 
 function updateDailyPuzzleButton() {
@@ -95,7 +99,8 @@ function setupDailyPuzzle() {
         button.disabled = true;
         status.hidden = true;
         try {
-            await startPuzzle(saved?.puzzle ?? dailyPuzzle(day), {
+            const puzzle = saved ? { ...saved.puzzle, palette: dailyPalette() } : dailyPuzzle(day);
+            await startPuzzle(puzzle, {
                 daily: day,
                 board: saved?.board ?? { quality: 'unique' },
                 clock: saved ? createPlayClock(undefined, saved.clock) : undefined,

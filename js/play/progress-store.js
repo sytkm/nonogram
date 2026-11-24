@@ -225,8 +225,14 @@ function setupProgressRestore() {
             if (saved.kind === 'mosaic') {
                 openMosaic(saved.puzzle, { saved });
             } else {
-                await startPuzzle(saved.puzzle, {
-                    ...saved.options,
+                const options = { ...saved.options };
+                const puzzle = { ...saved.puzzle };
+                if (options.sample && !options.shared) {
+                    puzzle.palette = decodeLegacyPng(samplePNG).palette;
+                    options.shareSource = samplePNG;
+                }
+                await startPuzzle(puzzle, {
+                    ...options,
                     board: saved.board,
                     clock: createPlayClock(undefined, saved.clock),
                     progressId: saved.id,

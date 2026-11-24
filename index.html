@@ -11,9 +11,9 @@
     <script src="js/play/play-clock.js?v=start-when-ready"></script>
     <script src="js/board/board-tools.js?v=clue-eyedropper"></script>
     <script src="js/puzzle/line-logic.js"></script>
-    <script src="js/play/progress-store.js?v=validate-resume"></script>
+    <script src="js/play/progress-store.js?v=magazine-puzzle-colors"></script>
     <script src="js/puzzle/puzzle-quality.js?v=line-solvability"></script>
-    <script src="js/play/daily-puzzle.js?v=shared-clues"></script>
+    <script src="js/play/daily-puzzle.js?v=magazine-puzzle-colors"></script>
     <script src="js/puzzle/quality-controls.js?v=clue-labels"></script>
     <script src="js/puzzle/mosaic-share.js?v=normal-share"></script>
     <script src="js/play/mosaic.js?v=mosaic-always-visible"></script>
@@ -30,11 +30,11 @@
     <script src="js/board/board-controller.js?v=mosaic-initial-color"></script>
     <script src="js/play/play-dialogs.js?v=mosaic-tile-clear"></script>
     <script src="js/play/puzzle-play.js?v=mosaic-initial-color"></script>
-    <script src="js/app.js?v=shared-initial-fit"></script>
-    <link rel="stylesheet" href="styles/start.css?v=mosaic-overview-order">
-    <link rel="stylesheet" href="styles/play.css?v=mosaic-tile-clear">
-    <link rel="stylesheet" href="styles/dialogs.css?v=concise-controls">
-    <link rel="stylesheet" href="styles/mosaic.css?v=mosaic-overview-order">
+    <script src="js/app.js?v=magazine-puzzle-colors"></script>
+    <link rel="stylesheet" href="styles/start.css?v=example-clues">
+    <link rel="stylesheet" href="styles/play.css?v=magazine-puzzle-colors">
+    <link rel="stylesheet" href="styles/dialogs.css?v=example-clues">
+    <link rel="stylesheet" href="styles/mosaic.css?v=puzzle-magazine">
     <script src="js/ui/dialog-dismiss.js?v=clear-results" defer></script>
     <title>画像でノノグラム</title>
 </head>
@@ -53,17 +53,23 @@
         <div id="start-panel">
             <div class="home-intro">
                 <div class="home-copy">
-                    <p>写真やイラストから問題を作り、数字を手がかりにマスを塗って絵を完成させます。</p>
-                    <div class="toolbar-group" role="group" aria-label="新しい問題">
+                    <h2 class="home-title">画像から<br class="home-title-break">問題を作る</h2>
+                    <p class="home-lead">写真やイラストをノノグラムに。数字を手がかりにマスを塗って、元の絵を完成させます。</p>
+                    <div class="toolbar-group" role="group" aria-label="問題を作る">
                         <button type="button" id="open-image" class="action-link action-primary" aria-describedby="image-formats">自分の画像で作る</button>
-                        <a href="?sample" class="action-link">サンプル問題で遊ぶ</a>
-                        <button type="button" class="action-link" data-open-play-guide aria-haspopup="dialog" aria-controls="play-guide-dialog">遊び方</button>
                     </div>
                     <input type="file" id="file" accept=".png,.jpg,.jpeg,.webp,image/png,image/jpeg,image/webp" hidden>
                     <p id="image-formats">PNG・JPEG・WebPに対応しています。画像はブラウザ内で処理します。</p>
-                    <div class="home-daily toolbar-group">
-                        <button type="button" id="open-daily-puzzle" class="action-link" aria-describedby="daily-date">今日の問題を遊ぶ</button>
-                        <time id="daily-date"></time>
+                    <div class="home-quick-play">
+                        <h3>すぐ遊ぶ</h3>
+                        <div class="toolbar-group">
+                            <a href="?sample" class="action-link">サンプル問題</a>
+                            <span class="home-daily">
+                                <button type="button" id="open-daily-puzzle" class="action-link" aria-describedby="daily-date">今日の問題を遊ぶ</button>
+                                <time id="daily-date"></time>
+                            </span>
+                            <button type="button" class="action-link" data-open-play-guide aria-haspopup="dialog" aria-controls="play-guide-dialog">遊び方</button>
+                        </div>
                     </div>
                     <p id="daily-status" role="status" hidden></p>
                     <div class="home-recovery">
@@ -78,19 +84,20 @@
                     </div>
                 </div>
                 <figure class="home-art">
+                    <figcaption>サンプル問題 <span>5 × 5</span></figcaption>
                     <table class="home-puzzle" aria-hidden="true">
                         <thead>
-                            <tr><td></td><th>1</th><th>1</th><th>5</th><th>1</th><th>1</th></tr>
+                            <tr><td></td><th><span class="puzzle-clue">1</span></th><th><span class="puzzle-clue">1</span></th><th><span class="puzzle-clue">5</span></th><th><span class="puzzle-clue">1</span></th><th><span class="puzzle-clue">1</span></th></tr>
                         </thead>
                         <tbody>
-                            <tr><th>1</th><td></td><td></td><td></td><td></td><td></td></tr>
-                            <tr><th>1</th><td></td><td></td><td></td><td></td><td></td></tr>
-                            <tr class="home-first-move"><th>5</th><td></td><td></td><td></td><td></td><td></td></tr>
-                            <tr><th>1</th><td></td><td></td><td></td><td></td><td></td></tr>
-                            <tr><th>1</th><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th><span class="puzzle-clue">1</span></th><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th><span class="puzzle-clue">1</span></th><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr class="home-first-move"><th><span class="puzzle-clue">5</span></th><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th><span class="puzzle-clue">1</span></th><td></td><td></td><td></td><td></td><td></td></tr>
+                            <tr><th><span class="puzzle-clue">1</span></th><td></td><td></td><td></td><td></td><td></td></tr>
                         </tbody>
                     </table>
-                    <figcaption>サンプルの最初の一手。左が「5」の行は、5マスすべてを塗れます。</figcaption>
+                    <p>左の数字が「5」の行は、5マスすべて塗れます。</p>
                 </figure>
             </div>
             <div class="home-credits">
@@ -346,13 +353,13 @@
                 <table class="guide-example" aria-label="3マスの横一行の例">
                     <tbody>
                         <tr>
-                            <th scope="row">3</th>
+                            <th scope="row"><span class="guide-clues"><span class="puzzle-clue">3</span></span></th>
                             <td class="guide-filled" aria-label="塗る"></td>
                             <td class="guide-filled" aria-label="塗る"></td>
                             <td class="guide-filled" aria-label="塗る"></td>
                         </tr>
                         <tr>
-                            <th scope="row">1 1</th>
+                            <th scope="row"><span class="guide-clues"><span class="puzzle-clue">1</span><span class="puzzle-clue">1</span></span></th>
                             <td class="guide-filled" aria-label="塗る"></td>
                             <td aria-label="空白"><span aria-hidden="true">／</span></td>
                             <td class="guide-filled" aria-label="塗る"></td>
@@ -363,29 +370,29 @@
                 <p>行と列のヒントの数字をすべて満たすとクリアです。最初からある青い斜線は、答えを一つに決めるための空白マスで、変更できません。</p>
                 <div id="play-guide-sample">
                     <h3>最初の一手を試す</h3>
-                    <p>サンプルの真ん中の行は「5」。パレットで青を選び、横5マスをすべて塗ってみましょう。</p>
+                    <p>サンプルの真ん中の行は「5」。パレットで朱色を選び、横5マスをすべて塗ってみましょう。</p>
                     <a href="?sample" class="action-link">サンプル問題で遊ぶ</a>
                 </div>
             </section>
             <section id="guide-color" role="tabpanel" aria-labelledby="guide-tab-color" tabindex="0" hidden>
                 <h3>カラーの塗り方</h3>
-                    <p>数字の色を、その数だけ続けて塗ります。<span data-guide-symbol hidden>下の例では A が青、B が赤です。</span></p>
+                    <p>数字の色を、その数だけ続けて塗ります。<span data-guide-symbol hidden>下の例では A が朱色、B が黄土色です。</span></p>
                     <p>同じ色の組は、1マス以上空けます。</p>
-                    <table class="guide-example guide-color-example" aria-label="同じ青の1マスずつ2組。間に空白が必要">
+                    <table class="guide-example guide-color-example" aria-label="同じ朱色の1マスずつ2組。間に空白が必要">
                         <tbody><tr>
-                            <th scope="row"><span class="guide-clue-a">1<span data-guide-symbol hidden> A</span></span> <span class="guide-clue-a">1<span data-guide-symbol hidden> A</span></span></th>
-                            <td class="guide-color-a" aria-label="青"><span data-guide-symbol hidden>A</span></td>
+                            <th scope="row"><span class="guide-clues"><span class="puzzle-clue">1<span data-guide-symbol hidden>·A</span></span><span class="puzzle-clue">1<span data-guide-symbol hidden>·A</span></span></span></th>
+                            <td class="guide-color-a" aria-label="朱色"><span data-guide-symbol hidden>A</span></td>
                             <td aria-label="空白"><span aria-hidden="true">／</span></td>
-                            <td class="guide-color-a" aria-label="青"><span data-guide-symbol hidden>A</span></td>
+                            <td class="guide-color-a" aria-label="朱色"><span data-guide-symbol hidden>A</span></td>
                         </tr></tbody>
                     </table>
                     <p>違う色の組は、空白なしで隣り合えます。</p>
-                    <table class="guide-example guide-color-example" aria-label="青が2マス、赤が1マス。空白なしで隣り合える">
+                    <table class="guide-example guide-color-example" aria-label="朱色が2マス、黄土色が1マス。空白なしで隣り合える">
                         <tbody><tr>
-                            <th scope="row"><span class="guide-clue-a">2<span data-guide-symbol hidden> A</span></span> <span class="guide-clue-b">1<span data-guide-symbol hidden> B</span></span></th>
-                            <td class="guide-color-a" aria-label="青"><span data-guide-symbol hidden>A</span></td>
-                            <td class="guide-color-a" aria-label="青"><span data-guide-symbol hidden>A</span></td>
-                            <td class="guide-color-b" aria-label="赤"><span data-guide-symbol hidden>B</span></td>
+                            <th scope="row"><span class="guide-clues"><span class="puzzle-clue">2<span data-guide-symbol hidden>·A</span></span><span class="puzzle-clue guide-color-b">1<span data-guide-symbol hidden>·B</span></span></span></th>
+                            <td class="guide-color-a" aria-label="朱色"><span data-guide-symbol hidden>A</span></td>
+                            <td class="guide-color-a" aria-label="朱色"><span data-guide-symbol hidden>A</span></td>
+                            <td class="guide-color-b" aria-label="黄土色"><span data-guide-symbol hidden>B</span></td>
                         </tr></tbody>
                     </table>
 

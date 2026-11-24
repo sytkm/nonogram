@@ -23,13 +23,13 @@ dialog {
     max-height: calc(100% - 2rem);
     padding: 1rem;
     border: 1px solid var(--puzzle-major-rule);
-    border-radius: 0.35rem;
+    border-radius: var(--ui-corner);
     background: var(--puzzle-paper);
     color: var(--puzzle-ink);
 }
 
 dialog::backdrop {
-    background: rgb(26 42 35 / 45%);
+    background: rgb(32 32 31 / 50%);
 }
 
 dialog button:focus-visible {
@@ -74,7 +74,6 @@ dialog button:focus-visible {
 .dialog-heading h2,
 #restart-dialog h2 {
     margin: 0;
-    font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
     font-size: 1.25rem;
 }
 
@@ -112,19 +111,26 @@ dialog button:focus-visible {
 }
 
 .guide-example {
+    --example-cell: 1.75rem;
     border-collapse: collapse;
 }
 
+.guide-clues {
+    display: inline-flex;
+    vertical-align: middle;
+    font-size: 0.8125rem;
+}
+
 .guide-example th {
-    padding-inline-end: 0.6rem;
+    padding: 0;
     text-align: right;
     white-space: nowrap;
 }
 
 .guide-example td {
     box-sizing: border-box;
-    width: 1.75rem;
-    height: 1.75rem;
+    width: var(--example-cell);
+    height: var(--example-cell);
     border: 1px solid var(--puzzle-rule);
     background: #fff;
     color: var(--puzzle-ink);
@@ -143,25 +149,13 @@ dialog button:focus-visible {
 
 /* Keep the rule examples distinct from the puzzle's own palette. */
 .guide-color-example .guide-color-a {
-    background: #305ba3;
+    background: var(--ui-accent);
     color: #fff;
 }
 
 .guide-color-example .guide-color-b {
-    background: #a52c38;
-    color: #fff;
-}
-
-.guide-clue-a {
-    color: #305ba3;
-}
-
-.guide-clue-b {
-    color: #a52c38;
-}
-
-.guide-color-example th > span + span {
-    margin-inline-start: 0.5rem;
+    background: #e8c36d;
+    color: var(--ui-ink);
 }
 
 /* The guide keeps navigation visible while only its text scrolls. */

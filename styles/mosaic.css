@@ -42,8 +42,8 @@
     overflow: auto;
     padding: 0.5rem;
     border: 1px solid var(--puzzle-rule);
-    border-radius: 0.35rem;
-    background: #f1eee3;
+    border-radius: var(--ui-corner);
+    background: var(--ui-subtle);
 }
 
 .mosaic-map:focus-visible {
@@ -77,7 +77,7 @@
 
 .mosaic-tile:hover:not(.mosaic-complete),
 .mosaic-tile:active:not(.mosaic-complete) {
-    background: #e7eee5;
+    background: var(--ui-accent-tint);
 }
 
 .mosaic-tile:focus-visible {
@@ -117,7 +117,7 @@
     height: auto;
     padding: 0.5rem;
     border: 1px solid var(--puzzle-rule);
-    border-radius: 0.35rem;
-    background: #f1eee3;
+    border-radius: var(--ui-corner);
+    background: var(--ui-subtle);
     image-rendering: pixelated;
 }

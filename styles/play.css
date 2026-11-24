@@ -111,8 +111,8 @@ body:has(#play-panel.is-viewing-tile) #board-side-controls .play-only {
 
 #board-result.is-complete {
     padding: 0.375rem 0.65rem;
-    border-inline-start: 3px solid var(--puzzle-accent);
-    background: #e7eee5;
+    border: 1px solid var(--ui-accent);
+    background: var(--ui-accent-tint);
     color: var(--puzzle-accent-active);
     font-weight: 700;
 }
@@ -195,11 +195,11 @@ body:has(#play-panel.is-viewing-tile) #board-side-controls .play-only {
 }
 
 .play-clock #pause-play:hover:not(:disabled) {
-    background: #e5eee7;
+    background: var(--ui-accent-tint);
 }
 
 .play-timer:has(#pause-play[data-paused]) {
-    background: #e5eee7;
+    background: var(--ui-accent-tint);
     color: var(--puzzle-accent-active);
     box-shadow: inset 0 0 0 1px var(--puzzle-accent-active);
 }
@@ -214,8 +214,8 @@ body:has(#play-panel.is-viewing-tile) #board-side-controls .play-only {
 }
 
 .play-clock #pause-play:disabled {
-    background: #f1eee3;
-    color: #63716a;
+    background: var(--ui-subtle);
+    color: #676461;
 }
 
 .pause-icon {
@@ -286,7 +286,6 @@ body:has(#play-panel.is-viewing-tile) #board-side-controls .play-only {
     margin: 0 0 0.75rem;
     padding-bottom: 0.75rem;
     border-bottom: 1px solid var(--puzzle-rule);
-    font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
     font-size: 1.5rem;
 }
 
@@ -367,8 +366,8 @@ body:has(#play-panel.is-viewing-tile) #board-side-controls .play-only {
 }
 
 #toggle-board-minimap[aria-expanded="true"] {
-    background: #e1ebf8;
-    border-color: #6685ae;
+    background: var(--ui-hover);
+    border-color: var(--ui-rule-strong);
 }
 
 @media (max-width: 30rem) {
@@ -393,7 +392,7 @@ body:has(#play-panel.is-viewing-tile) #board-side-controls .play-only {
     padding: 0.5rem;
     border: 1px solid var(--puzzle-major-rule);
     border-radius: 0.5rem;
-    background: #f2f6fb;
+    background: var(--ui-subtle);
     max-block-size: min(14rem, 50dvh);
     overflow: auto;
 }
@@ -412,10 +411,10 @@ body:has(#play-panel.is-viewing-tile) #board-side-controls .play-only {
     box-sizing: border-box;
     min-height: 44px;
     padding: 0.45rem 0.65rem;
-    border: 1px solid #aebccc;
-    border-radius: 0.35rem;
+    border: 1px solid var(--ui-rule);
+    border-radius: var(--ui-corner);
     background: #fff;
-    color: #203751;
+    color: var(--ui-ink);
     font: inherit;
     font-size: 0.875rem;
     cursor: pointer;
@@ -436,33 +435,19 @@ body:has(#play-panel.is-viewing-tile) #board-side-controls .play-only {
 .dialog-heading button:hover,
 .action-link:hover:not(:disabled),
 .board-menu-button[aria-expanded="true"] {
-    background: #e1ebf8;
-    border-color: #6685ae;
+    background: var(--ui-hover);
+    border-color: var(--ui-rule-strong);
 }
 
 .action-link.action-primary:not(:disabled) {
-    border-color: #174d85;
-    background: #174d85;
+    border-color: var(--ui-accent);
+    background: var(--ui-accent);
     color: #fff;
 }
 
 .action-link.action-primary:hover:not(:disabled),
 .action-link.action-primary:active:not(:disabled) {
-    background: #103b67;
-}
-
-#start-panel .action-primary:not(:disabled),
-#mosaic-panel .action-primary:not(:disabled) {
-    border-color: var(--puzzle-accent);
-    background: var(--puzzle-accent);
-    color: #fff;
-}
-
-#start-panel .action-primary:hover:not(:disabled),
-#start-panel .action-primary:active:not(:disabled),
-#mosaic-panel .action-primary:hover:not(:disabled),
-#mosaic-panel .action-primary:active:not(:disabled) {
-    background: var(--puzzle-accent-active);
+    background: var(--ui-accent-active);
 }
 
 #palette-move[aria-pressed="true"],
@@ -514,8 +499,8 @@ body:has(#play-panel.is-viewing-tile) #board-side-controls .play-only {
 .board-tools button:disabled,
 .board-menu button:disabled,
 .action-link:disabled {
-    color: #677788;
-    border-color: #ccd4de;
+    color: #676461;
+    border-color: #d7d4d0;
     cursor: default;
 }
 
@@ -877,7 +862,7 @@ body:not(:has(#play-panel:not([hidden]), #mosaic-panel:not([hidden]))) #open-pla
     position: absolute;
     box-sizing: border-box;
     border: 2px solid white;
-    box-shadow: inset 0 0 0 1px #203751, 0 0 0 1px #203751;
+    box-shadow: inset 0 0 0 1px var(--ui-ink), 0 0 0 1px var(--ui-ink);
     pointer-events: none;
 }
 

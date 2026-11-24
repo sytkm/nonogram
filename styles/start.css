@@ -32,19 +32,34 @@ header:has(#play-panel:not([hidden])) {
 
 h1 {
     margin: 0;
-    font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
-    font-size: clamp(1.4rem, 3vw, 2.25rem);
+    font-size: clamp(1.125rem, 2.5vw, 1.5rem);
     font-weight: 700;
     color: var(--puzzle-ink);
 }
 
 :root {
-    --puzzle-paper: #f9f7ee;
-    --puzzle-ink: #293b35;
-    --puzzle-rule: #829088;
-    --puzzle-major-rule: #52675e;
-    --puzzle-accent: #25594b;
-    --puzzle-accent-active: #194235;
+    --ui-paper: #fff;
+    --ui-ink: #20201f;
+    --ui-rule: #a09d98;
+    --ui-rule-strong: #57534e;
+    --ui-accent: #ad3024;
+    --ui-accent-active: #88251c;
+    --ui-subtle: #f1efed;
+    --ui-hover: #f0ede9;
+    --ui-accent-tint: #f8e8e2;
+    --ui-corner: 0.2rem;
+
+    --puzzle-paper: var(--ui-paper);
+    --puzzle-ink: var(--ui-ink);
+    --puzzle-rule: var(--ui-rule);
+    --puzzle-major-rule: var(--ui-rule-strong);
+    --puzzle-accent: var(--ui-accent);
+    --puzzle-accent-active: var(--ui-accent-active);
+}
+
+::selection {
+    background: var(--ui-accent-tint);
+    color: var(--ui-ink);
 }
 
 .home-art,
@@ -89,7 +104,7 @@ header:has(#start-panel:not([hidden]) #image-preview[hidden]) {
 
 header:has(#start-panel:not([hidden]) #image-preview[hidden]) .site-heading {
     padding-block-end: 0.85rem;
-    border-bottom: 1px solid var(--puzzle-rule);
+    border-bottom: 2px solid var(--ui-ink);
 }
 
 #start-panel:has(#image-preview[hidden]) .home-intro {
@@ -103,22 +118,52 @@ header:has(#start-panel:not([hidden]) #image-preview[hidden]) .site-heading {
     line-height: 1.65;
 }
 
-#start-panel:has(#image-preview[hidden]) .home-copy > p:first-child {
-    max-width: 30rem;
-    margin-block-start: 0;
-    font-size: 1.125rem;
+.home-title {
+    margin: 0 0 0.7rem;
+    font-size: clamp(2rem, 5.5vw, 4.5rem);
+    line-height: 1.12;
+    letter-spacing: -0.035em;
+    font-weight: 850;
+}
+
+.home-title-break {
+    display: none;
+}
+
+.home-lead {
+    max-width: 26em;
+    margin: 0 0 1.25rem;
+}
+
+#open-image {
+    padding-inline: 1rem;
+    min-block-size: 48px;
+    font-weight: 700;
 }
 
 #start-panel:has(#image-preview[hidden]) #image-formats {
     font-size: 0.875rem;
 }
 
-.home-daily {
-    margin-block: 1rem;
+.home-quick-play {
+    margin-block: 1.4rem 1rem;
+    padding-block-start: 0.85rem;
+    border-top: 1px solid var(--ui-rule);
 }
 
-.home-daily time {
-    font-size: 0.875rem;
+.home-quick-play h3 {
+    margin: 0 0 0.5rem;
+    font-size: 0.9375rem;
+}
+
+.home-daily {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+#daily-date {
+    font-size: 0.75rem;
 }
 
 .home-recovery:has(#saved-progress:not([hidden]), #shared-link-status:not(:empty)) {
@@ -154,11 +199,42 @@ header:has(#start-panel:not([hidden]) #image-preview[hidden]) .site-heading {
     justify-items: start;
     gap: 0.65rem;
     margin: 0;
+    padding-block: 0.5rem 0.75rem;
+    border-block: 1px solid var(--ui-ink);
     font-size: 0.875rem;
 }
 
+.home-art figcaption {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-weight: 700;
+}
+
+.home-art figcaption span {
+    font-variant-numeric: tabular-nums;
+}
+
+.home-art p {
+    margin: 0;
+    line-height: 1.5;
+}
+
+.puzzle-clue {
+    display: inline-grid;
+    grid-auto-flow: column;
+    place-content: center;
+    inline-size: var(--example-cell);
+    block-size: var(--example-cell);
+    background: var(--puzzle-accent);
+    color: #fff;
+    font-weight: 600;
+    vertical-align: middle;
+}
+
 .home-puzzle {
-    --home-square: clamp(1.5rem, 4vw, 2.5rem);
+    --example-cell: clamp(1.75rem, 4vw, 3rem);
     border-collapse: collapse;
     text-align: center;
     font-variant-numeric: tabular-nums;
@@ -167,10 +243,14 @@ header:has(#start-panel:not([hidden]) #image-preview[hidden]) .site-heading {
 .home-puzzle th,
 .home-puzzle td {
     box-sizing: border-box;
-    width: var(--home-square);
-    height: var(--home-square);
+    width: var(--example-cell);
+    height: var(--example-cell);
     padding: 0;
     font-size: 0.875rem;
+}
+
+.home-puzzle .puzzle-clue {
+    font-size: calc(var(--example-cell) * 0.62);
 }
 
 .home-puzzle tbody td {
@@ -195,13 +275,15 @@ header:has(#start-panel:not([hidden]) #image-preview[hidden]) .site-heading {
 }
 
 .home-puzzle .home-first-move td {
-    border-inline-color: #91b8a9;
+    border-inline-color: #d1978e;
     background: var(--puzzle-accent);
 }
 
 @media (min-width: 48rem) {
+    .home-title-break { display: initial; }
+
     #start-panel:has(#image-preview[hidden]) .home-intro {
-        grid-template-columns: minmax(0, 1.55fr) minmax(0, 1fr);
+        grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
     }
 }
 
@@ -233,7 +315,6 @@ header:has(#start-panel:not([hidden]) #image-preview:not([hidden])) {
     margin-block: 1.1rem 0.85rem;
     padding-block-end: 0.6rem;
     border-bottom: 1px solid var(--puzzle-rule);
-    font-family: "Hiragino Mincho ProN", "Yu Mincho", serif;
     font-size: clamp(1.25rem, 3vw, 1.65rem);
 }
 
