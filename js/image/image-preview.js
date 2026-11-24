@@ -154,7 +154,7 @@ function setupImagePicker() {
             return;
         }
         const image = currentImage.image;
-        const imageData = rasterizePuzzleImage(image, side.valueAsNumber);
+        const imageData = rasterizePuzzleImage(image, side.valueAsNumber, side.valueAsNumber === currentImage.pixelArtSide);
         currentImage.imageData = imageData;
         currentImage.colorPuzzle = undefined;
         currentImage.suggestedThreshold = suggestMonochromeThreshold(imageData);
@@ -169,7 +169,8 @@ function setupImagePicker() {
         side.max = String(limit);
         sideRange.max = side.max;
         if (reset || !side.validity.valid || !side.value) {
-            side.value = String(!indexed && originalSide > MAX_PUZZLE_SIDE ? SUGGESTED_PHOTO_SIDE : originalSide);
+            const convertedSide = currentImage.pixelArtSide ?? (originalSide > MAX_PUZZLE_SIDE ? SUGGESTED_PHOTO_SIDE : originalSide);
+            side.value = String(indexed ? originalSide : convertedSide);
         }
     }
 
@@ -182,10 +183,14 @@ function setupImagePicker() {
         colorCount.value = colorCount.max;
         updateSizeLimit(true);
         updateSize();
-        status.textContent = !usesIndexedColors() && originalSide > MAX_PUZZLE_SIDE
-            ? '大きな画像なので、最長辺' + SUGGESTED_PHOTO_SIDE + 'マスを提案します。' +
-              MAX_PUZZLE_SIDE + 'マスまで変更できます。'
-            : '';
+        if (currentImage.pixelArtSide) {
+            status.textContent = 'ドット絵の格子に合わせて、最初の長い辺を' + currentImage.pixelArtSide + 'マスにしました。';
+        } else {
+            status.textContent = !usesIndexedColors() && originalSide > MAX_PUZZLE_SIDE
+                ? '大きな画像なので、最長辺' + SUGGESTED_PHOTO_SIDE + 'マスを提案します。' +
+                  MAX_PUZZLE_SIDE + 'マスまで変更できます。'
+                : '';
+        }
         resetPreviewTabs();
         preview.hidden = false;
         leavePuzzleScreen();
@@ -219,6 +224,7 @@ function setupImagePicker() {
                     fallbackMessage = 'このPNGはカラー問題にできません。白黒のプレビューを表示しました。';
                 }
             }
+            if (!selection.originalPuzzle) selection.pixelArtSide = suggestPixelArtSide(decoded.image);
             openPreview();
             if (fallbackMessage) status.textContent = fallbackMessage;
         } catch (error) {
