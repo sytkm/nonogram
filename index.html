@@ -32,7 +32,7 @@
     <script src="js/play/puzzle-play.js?v=mosaic-initial-color"></script>
     <script src="js/app.js?v=magazine-puzzle-colors"></script>
     <link rel="stylesheet" href="styles/start.css?v=compact-home-headline">
-    <link rel="stylesheet" href="styles/play.css?v=magazine-puzzle-colors">
+    <link rel="stylesheet" href="styles/play.css?v=separate-answer-tool">
     <link rel="stylesheet" href="styles/dialogs.css?v=example-clues">
     <link rel="stylesheet" href="styles/mosaic.css?v=puzzle-magazine">
     <script src="js/ui/dialog-dismiss.js?v=clear-results" defer></script>
@@ -487,9 +487,11 @@
                     </div>
                 </div>
                 <div id="hint-tools" class="board-menu play-only" role="group" aria-labelledby="hint-tools-toggle" hidden>
-                    <button type="button" id="logic-hint" data-close-board-menu>考え方ヒント <small class="penalty"></small></button>
-                    <button type="button" id="line-hint" data-close-board-menu>行・列ヒント <small class="penalty"></small></button>
-                    <button type="button" id="check-conflicts" data-close-board-menu>矛盾チェック <small class="penalty"></small></button>
+                    <div class="toolbar-group hint-actions" role="group" aria-label="ヒントと確認">
+                        <button type="button" id="logic-hint" data-close-board-menu>考え方ヒント <small class="penalty"></small></button>
+                        <button type="button" id="line-hint" data-close-board-menu>行・列ヒント <small class="penalty"></small></button>
+                        <button type="button" id="check-conflicts" data-close-board-menu>矛盾チェック <small class="penalty"></small></button>
+                    </div>
                     <div id="answer-tool"><button type="button" id="solve" data-close-board-menu>答えを見る <small class="penalty"></small></button></div>
                 </div>
             </div>
