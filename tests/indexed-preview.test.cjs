@@ -31,6 +31,7 @@ function setup({ decodeFails = false, pngColorType, pixelArtSide, indexedPuzzle 
     const context = vm.createContext({
         window: { location: { href: 'https://example.com/nonogram/' } }, document: { getElementById: element },
         setupTabs: () => () => {},
+        setupImageCrop: () => () => {},
         maxSharedPuzzleCells: 40_000,
         puzzleShareURL: (_, puzzle) => new Promise(resolve => normalShares.push({ puzzle, resolve })),
         mosaicShareURL: (_, puzzle) => new Promise(resolve => splitShares.push({ puzzle, resolve })),

@@ -5,9 +5,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="inflate.min.js"></script>
-    <script src="js/image/image-input.js?v=pixel-art-grid"></script>
+    <script src="js/image/image-input.js?v=image-crop"></script>
     <script src="js/image/indexed-png.js"></script>
-    <script src="js/image/image-preview.js?v=pixel-art-grid-note"></script>
+    <script src="js/image/image-crop.js"></script>
+    <script src="js/image/image-preview.js?v=image-crop"></script>
     <script src="js/play/play-clock.js?v=start-when-ready"></script>
     <script src="js/board/board-tools.js?v=clue-eyedropper"></script>
     <script src="js/puzzle/line-logic.js"></script>
@@ -32,9 +33,9 @@
     <script src="js/play/play-dialogs.js?v=mosaic-tile-clear"></script>
     <script src="js/play/puzzle-play.js?v=mosaic-initial-color"></script>
     <script src="js/app.js?v=magazine-puzzle-colors"></script>
-    <link rel="stylesheet" href="styles/start.css?v=conversion-sliders">
+    <link rel="stylesheet" href="styles/start.css?v=image-crop">
     <link rel="stylesheet" href="styles/play.css?v=separate-answer-tool">
-    <link rel="stylesheet" href="styles/dialogs.css?v=paint-sound-styles">
+    <link rel="stylesheet" href="styles/dialogs.css?v=image-crop">
     <link rel="stylesheet" href="styles/mosaic.css?v=puzzle-magazine">
     <script src="js/ui/dialog-dismiss.js?v=clear-results" defer></script>
     <title>画像でノノグラム</title>
@@ -121,6 +122,7 @@
                     <figure class="preview-image">
                         <canvas id="preview-canvas" role="img" aria-label="問題に使う画像"></canvas>
                         <figcaption id="preview-size"></figcaption>
+                        <button type="button" id="open-image-crop" class="action-link" aria-haspopup="dialog" aria-controls="image-crop-dialog" hidden>切り抜く範囲を選ぶ</button>
                         <p id="preview-message" class="quality-result" role="status"></p>
                     </figure>
                     <div class="preview-options">
@@ -269,6 +271,30 @@
             <button type="button" id="mosaic-clear-result" class="action-link" aria-haspopup="dialog" aria-controls="clear-result-dialog">クリア結果</button>
         </section>
     </main>
+    <dialog id="image-crop-dialog" aria-labelledby="image-crop-title" aria-describedby="image-crop-help">
+        <div class="dialog-heading">
+            <h2 id="image-crop-title">切り抜く範囲を選ぶ</h2>
+        </div>
+        <p id="image-crop-help">元画像の上でドラッグするか、位置と大きさをピクセル単位で指定します。</p>
+        <div id="image-crop-stage" aria-hidden="true">
+            <canvas id="image-crop-canvas"></canvas>
+            <div id="image-crop-selection"></div>
+        </div>
+        <p id="image-crop-status" class="quality-result" role="status"></p>
+        <form id="image-crop-form">
+            <div class="image-crop-fields">
+                <label>左から<input name="x" type="number" min="0" step="1" required inputmode="numeric"></label>
+                <label>上から<input name="y" type="number" min="0" step="1" required inputmode="numeric"></label>
+                <label>幅<input name="width" type="number" min="1" step="1" required inputmode="numeric"></label>
+                <label>高さ<input name="height" type="number" min="1" step="1" required inputmode="numeric"></label>
+            </div>
+            <div class="toolbar-group">
+                <button type="button" id="image-crop-reset" class="action-link">画像全体を選ぶ</button>
+                <button type="button" id="image-crop-cancel" class="action-link" autofocus>キャンセル</button>
+                <button type="submit" id="image-crop-apply" class="action-link action-primary">適用</button>
+            </div>
+        </form>
+    </dialog>
     <dialog id="clear-result-dialog" aria-labelledby="clear-result-title" aria-describedby="clear-result-note">
         <div class="dialog-heading">
             <h2 id="clear-result-title">クリア！</h2>

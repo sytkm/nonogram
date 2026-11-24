@@ -46,7 +46,7 @@ function detectImageFormat(header) {
 /**
  * 画像のヘッダーを判別してブラウザで読み込む。一時URLは成功・失敗を問わず破棄する。
  * @param {File} file
- * @returns {Promise<{image: HTMLImageElement, canMakeConvertedColor: boolean, canPlayLegacyColor: boolean}>}
+ * @returns {Promise<{image: HTMLImageElement, canMakeConvertedColor: boolean, canPlayLegacyColor: boolean, canCrop: boolean}>}
  * @throws {Error} 対応外の形式、またはブラウザが復号できない画像
  */
 async function readPuzzleImage(file) {
@@ -70,20 +70,26 @@ async function readPuzzleImage(file) {
             // PNGの色タイプ2はRGB、6はRGBA。どちらも変換して遊べる。
             canMakeConvertedColor: format !== 'png' || [2, 6].includes(header[25]),
             canPlayLegacyColor: format === 'png' && header[25] === 3 && header[28] === 0,
+            canCrop: format !== 'png' || header[25] !== 3,
         };
     } finally {
         URL.revokeObjectURL(source);
     }
 }
 
+function fullImageRegion(image) {
+    return { x: 0, y: 0, width: image.naturalWidth ?? image.width, height: image.naturalHeight ?? image.height };
+}
+
 /**
- * @param {HTMLImageElement} image - 復号済みの画像
+ * @param {HTMLImageElement|ImageBitmap} image - 復号済みの画像または切り抜き
  * @param {number} longestSide - 変換する盤面の長辺のマス数
  * @param {boolean} preservePixels - ドット絵の格子に合わせる場合は色を混ぜない
  * @returns {ImageData} 変換用キャンバスのRGBAピクセル
  */
 function rasterizePuzzleImage(image, longestSide, preservePixels = false) {
-    const { width, height } = fitPuzzleSize(image.naturalWidth, image.naturalHeight, longestSide);
+    const source = fullImageRegion(image);
+    const { width, height } = fitPuzzleSize(source.width, source.height, longestSide);
     const canvas = document.createElement('canvas');
     canvas.width = width;
     canvas.height = height;
@@ -124,7 +130,7 @@ function inferPixelArtScale({ data, width, height }) {
 }
 
 function suggestPixelArtSide(image) {
-    const { naturalWidth: width, naturalHeight: height } = image;
+    const { width, height } = fullImageRegion(image);
     if (width * height > MAX_GRID_SCAN_PIXELS || greatestCommonDivisor(width, height) < 2) return;
     const originalSide = Math.max(width, height);
     try {
