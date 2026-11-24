@@ -25,6 +25,7 @@ function fixture(tracePaint = true, startWithColor = false) {
     }
     const settings = { tracePaint };
     const feedbackCalls = [];
+    const soundCalls = [];
     const renderer = { paintCell() {}, drawBoard() {}, renderFixedClues() {} };
     const board = { cells: [[0, 0]], marks: {} };
     const context = vm.createContext({
@@ -32,6 +33,7 @@ function fixture(tracePaint = true, startWithColor = false) {
         paletteSymbol: String,
         createBoardRenderer: () => renderer,
         createBoardFeedback: () => ({ clear() {}, show(...cell) { feedbackCalls.push(cell); } }),
+        playBoardPaintSound(enabled, retry) { if (enabled() && !retry) soundCalls.push('play'); },
         createBoardViewport: () => ({ initialize() {}, cellSize: 40,
             pointFor: event => ({ x: event.clientX / 40, y: 0.5 }),
             clueGutters: () => ({}), scrollCellIntoView() {} }),
@@ -56,7 +58,7 @@ function fixture(tracePaint = true, startWithColor = false) {
     const event = (x = 20) => ({ pointerType: 'touch', pointerId: 1, isPrimary: true,
         button: 0, detail: 1, clientX: x, clientY: 20, preventDefault() {} });
     function tap(x = 20) { const e = event(x); canvas.onpointerdown(e); canvas.onpointerup(e); canvas.onclick(e); }
-    return { get, canvas, board, controls, paletteControls, settings, event, tap, feedbackCalls };
+    return { get, canvas, board, controls, paletteControls, settings, event, tap, feedbackCalls, soundCalls };
 }
 
 test('初期の移動モードではタップ・ドラッグ・キーで塗らず、設定変更でも移動を保つ', () => {
@@ -126,6 +128,7 @@ test('なぞり塗り設定は色選択後だけ効き、2本目の指で未確�
 
 test('演出は手で変えたマスだけに送り、同じ色・移動・自動斜線・答え表示には出さない', () => {
     const f = fixture();
+    f.settings.paintSound = true;
     f.tap();
     assert.equal(f.feedbackCalls.length, 0);
     f.settings.autoSlash = true;
@@ -138,6 +141,7 @@ test('演出は手で変えたマスだけに送り、同じ色・移動・自�
     f.get('solve').onclick();
     assert.equal(f.board.cells[0][1], 1);
     assert.equal(f.feedbackCalls.length, 1);
+    assert.deepEqual(f.soundCalls, ['play']);
 });
 
 test('色で開始した区画は設定に従って最初のタップで塗れ、移動にも切り替えられる', () => {
