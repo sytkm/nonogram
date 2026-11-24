@@ -30,7 +30,6 @@ function setupImagePicker() {
     const colorPanel = document.getElementById('paint-color-count-panel');
     const colorLimit = document.getElementById('paint-color-limit');
     const colorResult = document.getElementById('paint-color-result');
-    colorCount.max = String(MAX_CONVERSION_COLORS);
     const playPreview = document.getElementById('play-preview');
     const splitPreview = document.getElementById('split-preview');
     const playOptions = document.getElementById('preview-play-options');
@@ -71,13 +70,22 @@ function setupImagePicker() {
         return currentImage.puzzle === currentImage.originalPuzzle ? currentImage.shareSource : undefined;
     }
 
+    function updateColorLimit(indexed) {
+        const originalColors = indexed && colorCount.value === colorCount.max;
+        colorLimit.value = originalColors ? '元の配色' : colorCount.value + '色';
+        colorCount.setAttribute('aria-valuetext', colorLimit.value);
+    }
+
     function updatePreview() {
         const useColor = mode.value === 'color';
         const indexed = usesIndexedColors();
         resetPreviewChecks();
         let puzzle;
         if (indexed) {
-            puzzle = resizeIndexedPuzzle(currentImage.originalPuzzle, side.valueAsNumber);
+            puzzle = currentImage.indexedPuzzle;
+            if (colorCount.value !== colorCount.max) {
+                puzzle = reduceIndexedPuzzle(puzzle, colorCount.valueAsNumber);
+            }
         } else if (useColor) {
             currentImage.colorPuzzle ??= makeColorPuzzle(currentImage.imageData, colorCount.valueAsNumber);
             puzzle = currentImage.colorPuzzle;
@@ -95,9 +103,8 @@ function setupImagePicker() {
             '元画像 ' + naturalWidth + ' × ' + naturalHeight +
             ' ／ 盤面 ' + matrix[0].length + ' × ' + matrix.length + ' マス';
         document.getElementById('preview-original-color').hidden = !indexed;
-        sideRange.hidden = indexed;
+        resetSize.disabled = side.value === side.max;
         resetSize.hidden = !indexed;
-        resetSize.disabled = puzzle === currentImage.originalPuzzle;
         const tileCount = mosaicTileCount(matrix);
         const withinLimit = tileCount <= MAX_MOSAIC_TILES;
         splitPreview.disabled = playPreview.disabled || !withinLimit;
@@ -118,14 +125,14 @@ function setupImagePicker() {
             updatePuzzleSharing(puzzle, originalShareSource());
         }
         document.getElementById('threshold-panel').hidden = useColor;
-        colorPanel.hidden = !useColor || indexed;
+        colorPanel.hidden = !useColor;
         if (!colorPanel.hidden) {
             const usedColors = new Set();
             for (const row of matrix) {
                 for (const color of row) usedColors.add(color);
             }
             usedColors.delete(puzzle.blank);
-            colorLimit.value = colorCount.value + '色';
+            updateColorLimit(indexed);
             colorResult.textContent = '変換結果：塗る色' + usedColors.size + '色 ＋ 背景色1色。';
         }
         document.getElementById('threshold-value').value = threshold.value;
@@ -151,6 +158,7 @@ function setupImagePicker() {
         playPreview.disabled = false;
         sideRange.value = side.value;
         if (usesIndexedColors()) {
+            currentImage.indexedPuzzle = resizeIndexedPuzzle(currentImage.originalPuzzle, side.valueAsNumber);
             updatePreview();
             return;
         }
@@ -181,6 +189,8 @@ function setupImagePicker() {
         const hasColorMode = Boolean(currentImage.originalPuzzle) || currentImage.canMakeConvertedColor;
         document.getElementById('puzzle-mode-panel').hidden = !hasColorMode;
         mode.value = hasColorMode ? 'color' : 'monochrome';
+        // 右端は元の配色。元の色数が16色を超えていても復元できる。
+        colorCount.max = String(currentImage.originalPuzzle ? MAX_CONVERSION_COLORS + 1 : MAX_CONVERSION_COLORS);
         colorCount.value = colorCount.max;
         updateSizeLimit(true);
         updateSize();
@@ -269,8 +279,8 @@ function setupImagePicker() {
     });
     colorCount.addEventListener('input', () => {
         currentImage.colorPuzzle = undefined;
-        colorLimit.value = colorCount.value + '色';
-        if (!playPreview.disabled) updatePreview();
+        if (playPreview.disabled) updateColorLimit(usesIndexedColors());
+        else updatePreview();
     });
     document.getElementById('reset-threshold').addEventListener('click', () => {
         if (!playPreview.disabled) resetThreshold();

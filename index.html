@@ -130,7 +130,7 @@
                             <button type="button" id="preview-tab-share" role="tab" aria-selected="false" aria-controls="preview-share-panel" tabindex="-1">共有</button>
                         </div>
                         <section id="preview-settings-panel" class="preview-settings preview-tab-panel" role="tabpanel" aria-labelledby="preview-tab-settings" tabindex="0">
-                            <p id="preview-original-color" hidden>元画像の色と空白を使います。マス数を減らすと細かい模様が省かれることがあります。</p>
+                            <p id="preview-original-color" hidden>色数スライダーの右端で元の配色に戻せます。マス数を減らすと細かい模様が省かれることがあります。</p>
                             <div id="puzzle-mode-panel" hidden>
                                 <label for="puzzle-mode">問題の色</label>
                                 <select id="puzzle-mode">
@@ -141,10 +141,10 @@
                             <div id="puzzle-size-panel">
                                 <label for="puzzle-side">長い辺のマス数</label>
                                 <div class="preview-range-row">
-                                    <input id="puzzle-side-range" type="range" min="1" aria-label="長い辺のマス数を調整" hidden>
+                                    <input id="puzzle-side-range" type="range" min="1" aria-label="長い辺のマス数を調整">
                                     <input id="puzzle-side" type="number" min="1" step="1" inputmode="numeric">
-                                    <button type="button" id="reset-puzzle-side" class="action-link" hidden>元のマス数に戻す</button>
                                 </div>
+                                <button type="button" id="reset-puzzle-side" class="action-link" hidden>元のマス数に戻す</button>
                                 <p id="puzzle-side-estimate" hidden></p>
                             </div>
                             <div id="threshold-panel">

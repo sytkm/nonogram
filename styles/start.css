@@ -462,6 +462,10 @@ header:has(#start-panel:not([hidden]) #image-preview:not([hidden])) {
     font-variant-numeric: tabular-nums;
 }
 
+#preview-original-color:not([hidden]) ~ #paint-color-count-panel output {
+    min-width: 4em;
+}
+
 #preview-split-help,
 .preview-tab-panel p,
 .preview-image p {
