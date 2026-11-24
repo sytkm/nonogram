@@ -398,6 +398,9 @@ body:has(#play-panel.is-viewing-tile) #board-side-controls .play-only {
 }
 
 #hint-tools:not([hidden]) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.625rem;
     inset-inline: max(0.5rem, env(safe-area-inset-left)) max(0.5rem, env(safe-area-inset-right));
 }
 
@@ -582,9 +585,13 @@ body:not(:has(#play-panel:not([hidden]), #mosaic-panel:not([hidden]))) #open-pla
 }
 
 #answer-tool {
-    margin-top: 0.5rem;
-    padding-top: 0.5rem;
-    border-top: 1px solid var(--puzzle-rule);
+    padding-block-start: 0.625rem;
+    border-block-start: 1px solid var(--puzzle-rule);
+}
+
+#answer-tool button {
+    inline-size: 100%;
+    text-align: start;
 }
 
 .penalty {
