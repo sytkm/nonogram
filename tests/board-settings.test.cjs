@@ -4,22 +4,24 @@ const path = require('node:path');
 const vm = require('node:vm');
 const test = require('node:test');
 
-function fixture(storage) {
+function fixture(storage, state = {}) {
     const inputs = new Map();
     let refreshed = 0;
     const get = id => {
         if (!inputs.has(id)) inputs.set(id, { hidden: false, showModal() {} });
         return inputs.get(id);
     };
+    const clueActions = [{ value: 'mark' }, { value: 'color' }];
+    get('settings-dialog').querySelectorAll = () => clueActions;
     const open = {};
     const context = vm.createContext({ localStorage: storage,
         document: { getElementById: get, querySelectorAll: () => [open] },
-        showBoardMenu() {}, activeBoard: { state: {}, refreshSettings() { refreshed++; } },
+        showBoardMenu() {}, activeBoard: { state, refreshSettings() { refreshed++; } },
     });
     vm.runInContext(fs.readFileSync(path.join(__dirname, '../js/board/board-settings.js'), 'utf8'), context);
     context.setupSettings();
     open.onclick();
-    return { get, context, refreshed: () => refreshed };
+    return { get, context, clueActions, refreshed: () => refreshed };
 }
 
 test('演出は初期オンで、明示したオフとオンを再読み込み後も保つ', () => {
@@ -44,4 +46,21 @@ test('保存できない環境でも演出の設定はそのページで切り�
     f.get('paint-feedback').checked = false;
     f.get('paint-feedback').onchange();
     assert.equal(f.context.boardSetting('paintFeedback'), false);
+});
+
+test('数字を押したときの動作は旧盤面の設定を読み、切り替え後は共通設定を優先する', () => {
+    let saved;
+    const storage = { getItem: () => saved, setItem: (key, value) => { saved = value; } };
+    assert.deepEqual(fixture(storage).clueActions.map(input => input.checked), [true, false]);
+
+    const oldBoard = { pickClueColor: true };
+    const first = fixture(storage, oldBoard);
+    assert.deepEqual(first.clueActions.map(input => input.checked), [false, true]);
+    first.clueActions[0].onchange();
+    assert.equal(first.context.boardSetting('pickClueColor', oldBoard), false);
+
+    const next = fixture(storage, oldBoard);
+    assert.deepEqual(next.clueActions.map(input => input.checked), [true, false]);
+    next.clueActions[1].onchange();
+    assert.deepEqual(fixture(storage).clueActions.map(input => input.checked), [false, true]);
 });
