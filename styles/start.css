@@ -221,8 +221,20 @@ header:has(#start-panel:not([hidden]) #image-preview[hidden]) .site-heading {
     line-height: 1.5;
 }
 
+.puzzle-clue {
+    display: inline-grid;
+    grid-auto-flow: column;
+    place-content: center;
+    inline-size: var(--example-cell);
+    block-size: var(--example-cell);
+    background: var(--puzzle-accent);
+    color: #fff;
+    font-weight: 600;
+    vertical-align: middle;
+}
+
 .home-puzzle {
-    --home-square: clamp(1.75rem, 4vw, 3rem);
+    --example-cell: clamp(1.75rem, 4vw, 3rem);
     border-collapse: collapse;
     text-align: center;
     font-variant-numeric: tabular-nums;
@@ -231,10 +243,14 @@ header:has(#start-panel:not([hidden]) #image-preview[hidden]) .site-heading {
 .home-puzzle th,
 .home-puzzle td {
     box-sizing: border-box;
-    width: var(--home-square);
-    height: var(--home-square);
+    width: var(--example-cell);
+    height: var(--example-cell);
     padding: 0;
     font-size: 0.875rem;
+}
+
+.home-puzzle .puzzle-clue {
+    font-size: calc(var(--example-cell) * 0.62);
 }
 
 .home-puzzle tbody td {

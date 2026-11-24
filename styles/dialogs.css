@@ -111,19 +111,26 @@ dialog button:focus-visible {
 }
 
 .guide-example {
+    --example-cell: 1.75rem;
     border-collapse: collapse;
 }
 
+.guide-clues {
+    display: inline-flex;
+    vertical-align: middle;
+    font-size: 0.8125rem;
+}
+
 .guide-example th {
-    padding-inline-end: 0.6rem;
+    padding: 0;
     text-align: right;
     white-space: nowrap;
 }
 
 .guide-example td {
     box-sizing: border-box;
-    width: 1.75rem;
-    height: 1.75rem;
+    width: var(--example-cell);
+    height: var(--example-cell);
     border: 1px solid var(--puzzle-rule);
     background: #fff;
     color: var(--puzzle-ink);
@@ -149,18 +156,6 @@ dialog button:focus-visible {
 .guide-color-example .guide-color-b {
     background: #e8c36d;
     color: var(--ui-ink);
-}
-
-.guide-clue-a {
-    color: var(--ui-accent);
-}
-
-.guide-clue-b {
-    color: #73500e;
-}
-
-.guide-color-example th > span + span {
-    margin-inline-start: 0.5rem;
 }
 
 /* The guide keeps navigation visible while only its text scrolls. */
