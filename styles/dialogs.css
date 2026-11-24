@@ -142,21 +142,21 @@ dialog button:focus-visible {
 
 /* Keep the rule examples distinct from the puzzle's own palette. */
 .guide-color-example .guide-color-a {
-    background: #305ba3;
+    background: var(--ui-accent);
     color: #fff;
 }
 
 .guide-color-example .guide-color-b {
-    background: #a52c38;
-    color: #fff;
+    background: #e8c36d;
+    color: var(--ui-ink);
 }
 
 .guide-clue-a {
-    color: #305ba3;
+    color: var(--ui-accent);
 }
 
 .guide-clue-b {
-    color: #a52c38;
+    color: #73500e;
 }
 
 .guide-color-example th > span + span {
