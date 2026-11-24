@@ -120,14 +120,10 @@ header:has(#start-panel:not([hidden]) #image-preview[hidden]) .site-heading {
 
 .home-title {
     margin: 0 0 0.7rem;
-    font-size: clamp(2rem, 5.5vw, 4.5rem);
+    font-size: clamp(2rem, 4vw, 3.25rem);
     line-height: 1.12;
     letter-spacing: -0.035em;
     font-weight: 850;
-}
-
-.home-title-break {
-    display: none;
 }
 
 .home-lead {
@@ -280,10 +276,81 @@ header:has(#start-panel:not([hidden]) #image-preview[hidden]) .site-heading {
 }
 
 @media (min-width: 48rem) {
-    .home-title-break { display: initial; }
-
     #start-panel:has(#image-preview[hidden]) .home-intro {
         grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+    }
+}
+
+@media (min-width: 48rem) and (max-height: 42rem) {
+    header:has(#start-panel:not([hidden]) #image-preview[hidden]) {
+        padding-block: 0.75rem 1rem;
+    }
+
+    #start-panel:has(#image-preview[hidden]) .home-intro {
+        margin-block-start: 1rem;
+    }
+
+    .home-lead {
+        margin-block-end: 0.875rem;
+    }
+
+    .home-quick-play {
+        margin-block: 1rem 0.75rem;
+        padding-block-start: 0.65rem;
+    }
+
+    .home-puzzle {
+        --example-cell: clamp(1.75rem, 3.5vw, 2.5rem);
+    }
+
+    #start-panel:has(#image-preview[hidden]) .home-credits {
+        margin-block-start: 1rem;
+        padding-block-start: 0.5rem;
+    }
+}
+
+@media (min-width: 48rem) and (max-height: 36rem) {
+    header:has(#start-panel:not([hidden]) #image-preview[hidden]) {
+        padding-block: 0.5rem 0.75rem;
+    }
+
+    header:has(#start-panel:not([hidden]) #image-preview[hidden]) .site-heading {
+        padding-block-end: 0.5rem;
+    }
+
+    #start-panel:has(#image-preview[hidden]) .home-intro {
+        margin-block-start: 0.75rem;
+    }
+
+    .home-title,
+    .home-lead {
+        margin-block-end: 0.5rem;
+    }
+
+    .home-copy > .home-lead {
+        line-height: 1.5;
+    }
+
+    .home-copy > #image-formats {
+        margin-block: 0.5rem;
+    }
+
+    .home-quick-play {
+        margin-block: 0.625rem 0.5rem;
+        padding-block-start: 0.5rem;
+    }
+
+    .home-recovery:has(#saved-progress:not([hidden]), #shared-link-status:not(:empty)) {
+        padding-block-start: 0.5rem;
+    }
+
+    #start-panel:has(#image-preview[hidden]) .home-credits {
+        margin-block-start: 0.75rem;
+        line-height: 1.55;
+    }
+
+    #start-panel:has(#image-preview[hidden]) #image-status:empty {
+        margin-block: 0;
     }
 }
 
