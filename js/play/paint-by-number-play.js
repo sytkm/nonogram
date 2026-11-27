@@ -173,7 +173,11 @@ async function startPaintPuzzle(source, saved) {
     }
     paletteControls.updateRemaining(remaining);
     updateProgress(false);
-    controls.fitInitially();
+    // 大きい盤面は番号を読める倍率で始め、全体表示は利用者が選べるようにする。
+    const viewport = document.getElementById('pixelcanvas');
+    if (Math.min(viewport.clientWidth / matrix[0].length, viewport.clientHeight / matrix.length) >= 12) {
+        controls.fitInitially();
+    }
     if (!board.paused && !board.finished && !document.hidden) clock.resume();
     if (!board.finished && !board.paused) {
         document.querySelector('.palette-color[aria-pressed="true"]')?.focus({ preventScroll: true });
