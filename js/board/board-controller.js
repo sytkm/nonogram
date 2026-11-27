@@ -2,7 +2,7 @@
 
 function setupBoard({
     answer, palette, blank, rowClues, columnClues, initialCellSize, clock, board,
-    multiColor, onEdit, fixedSlashes, paletteControls, startWithColor = false,
+    multiColor, onEdit, fixedSlashes, paletteControls, startWithColor = false, paintByNumber = false,
 }) {
     const { selectColor, getSelectedColor } = paletteControls;
     const { cells } = board;
@@ -12,13 +12,14 @@ function setupBoard({
     const renderer = createBoardRenderer({
         canvas, viewport, clueOverlay: document.getElementById('fixed-clues'),
         board, rowClues, columnClues, palette, blank, fixedSlashes,
+        numberAt: paintByNumber ? (row, column) => answer[row][column] === blank ? null : answer[row][column] : undefined,
     });
     const undo = document.getElementById('board-undo');
     const redo = document.getElementById('board-redo');
     const history = createBoardHistory(board);
     let keyboardCell;
     keyboardMarker.hidden = true;
-    let showSymbols = multiColor && boardSetting('showSymbols', board);
+    let showSymbols = (paintByNumber || multiColor) && (paintByNumber || boardSetting('showSymbols', board));
     const palettePanel = document.getElementById('color-palette');
     palettePanel.classList.toggle('show-symbols', showSymbols);
     const moveButton = document.getElementById('palette-move');
@@ -80,13 +81,14 @@ function setupBoard({
     }
 
     function record(changes, assist = false) {
-        if (assist && boardSetting('autoSlash', board)) {
+        if (!paintByNumber && assist && boardSetting('autoSlash', board)) {
             const remaining = findCompletedLineBlanks(cells, rowsOfClues, columnsOfClues, blank, changes);
             for (const cell of remaining) applyColor(cell, -1, changes);
         }
-        history.record(changes);
+        if (!paintByNumber) history.record(changes);
         const cellsChanged = changes.some(change => 'row' in change);
         if (cellsChanged) {
+            if (paintByNumber) clock.start();
             const hadConflicts = conflicts && clearConflicts();
             const hadLogicalMarker = logicalHintShown && highlightedHint?.cell;
             if (logicalHintShown) {
@@ -104,7 +106,7 @@ function setupBoard({
 
     function moveHistory(action) {
         stopStroke();
-        if (board.finished || !history[action]()) return;
+        if (paintByNumber || board.finished || board.paused || !history[action]()) return;
         highlightedHint = undefined;
         logicalHintShown = false;
         hintMessage.textContent = '';
@@ -124,6 +126,12 @@ function setupBoard({
 
     function positionKeyboardCell(scroll = false) {
         if (!keyboardCell) return;
+        if (paintByNumber) {
+            const { row, column } = keyboardCell;
+            const color = answer[row][column];
+            canvas.setAttribute('aria-label', '塗り絵の盤面、' + (row + 1) + '行' + (column + 1) + '列、' +
+                (color === blank ? '空白' : '番号' + color + (cells[row][column] === color ? '、塗り済み' : '、未着色')));
+        }
         const x = (leftClueCount + keyboardCell.column) * boardView.cellSize;
         const y = (topClueCount + keyboardCell.row) * boardView.cellSize;
         Object.assign(keyboardMarker.style, {
@@ -311,7 +319,8 @@ function setupBoard({
                 initialFitPending = false;
                 boardView.fitBoard();
             }
-            clock.start();
+            if (paintByNumber) clock.resume();
+            else clock.start();
         } else {
             stopStroke();
             pausedPosition = { left: viewport.scrollLeft, top: viewport.scrollTop };
@@ -349,7 +358,7 @@ function setupBoard({
             trace: '1本指でなぞると塗れます。2本指で盤面を動かせます。マウスでもなぞって塗れます。',
             pick: 'マスの色・空白・斜線や、ヒントの数字の色を拾えます。キーボードでマスから拾うには Space または Enter を押します。',
         };
-        instructions.textContent = messages[mode];
+        instructions.textContent = paintByNumber ? (mode === 'move' ? '盤面を動かせます。塗るにはパレットの色を選んでください。' : '番号と同じ色で塗ります。1色を塗り終えると次の色に切り替わります。2本指で移動・拡大できます。') : messages[mode];
         // 読み上げ用の説明だけを更新し、入力モードで盤面の表示領域を変えない。
     }
 
@@ -360,6 +369,7 @@ function setupBoard({
     }
 
     function applyColor({ row, column }, color, action, manual = false) {
+        if (board.paused || board.finished || (paintByNumber && !canPaintNumberCell(answer, cells, blank, { row, column }, color))) return;
         if (fixedSlashes.has(row * columns + column)) return;
         const before = cells[row][column];
         if (before === color) return;
@@ -369,7 +379,7 @@ function setupBoard({
         minimap.repaint();
         if (manual) {
             feedback.show(row, column);
-            playCellSound(color);
+            if (!paintByNumber) playCellSound(color);
         }
     }
 
@@ -392,7 +402,9 @@ function setupBoard({
         const { id, changes } = stroke;
         stroke = undefined;
         if (canvas.hasPointerCapture(id)) canvas.releasePointerCapture(id);
-        return record(changes, true);
+        const changed = record(changes, true);
+        if (paintByNumber && changed) onEdit();
+        return changed;
     }
 
     const touchPan = createTouchPan(viewport, () => {
@@ -410,13 +422,19 @@ function setupBoard({
         pressedClue = undefined;
     }, boardView.pinch);
 
-    paletteControls.onSelect(() => setInputMode(configuredPaintMode()));
+    paletteControls.onSelect(() => {
+        setInputMode(configuredPaintMode());
+        if (paintByNumber) {
+            board.selectedColor = getSelectedColor();
+            queueProgressSave();
+        }
+    });
     moveButton.onclick = () => setInputMode('move');
     setInputMode(startWithColor ? configuredPaintMode() : 'move');
     pickPaintedColor.disabled = false;
     pickPaintedColor.onclick = () => setInputMode(inputMode === 'pick' ? 'move' : 'pick');
     function editCell(cell, color) {
-        if (board.finished) return;
+        if (board.finished || board.paused) return;
         stopStroke();
         const action = [];
         applyColor(cell, color, action, true);
@@ -431,7 +449,7 @@ function setupBoard({
     redo.onclick = () => moveHistory('redo');
     updateHistoryButtons();
     canvas.onclick = event => {
-        if (inputMode === 'move' || board.finished || !event.detail || touchPan.suppressesClick()) return;
+        if (inputMode === 'move' || board.finished || board.paused || !event.detail || touchPan.suppressesClick()) return;
         const point = boardView.pointFor(event);
         const clue = boardClueAt(point, rowsOfClues, columnsOfClues);
         if (clue && clue.key === pressedClue) {
@@ -452,7 +470,11 @@ function setupBoard({
             if (!before) playBoardPaintSound(paintSoundEnabled);
             return;
         }
-        const cell = boardCellAt(point, columns, rows);
+        let cell = boardCellAt(point, columns, rows);
+        if (paintByNumber && event.pointerType === 'touch' && (!cell || answer[cell.row][cell.column] === blank)) {
+            cell = paintTouchCell(point, columns, rows, Math.min(0.25, 4 / boardView.cellSize),
+                candidate => canPaintNumberCell(answer, cells, blank, candidate, getSelectedColor()));
+        }
         if (!cell) return;
         keyboardCell = cell;
         positionKeyboardCell();
@@ -460,7 +482,7 @@ function setupBoard({
         else if (inputMode === 'paint') editCell(cell, getSelectedColor());
     };
     canvas.oncontextmenu = event => {
-        if (event.pointerType === 'touch') return;
+        if (paintByNumber || board.paused || event.pointerType === 'touch') return;
         const cell = boardCellAt(boardView.pointFor(event), columns, rows);
         if (!cell || board.finished) return;
         event.preventDefault();
@@ -471,7 +493,7 @@ function setupBoard({
         positionKeyboardCell();
     };
     canvas.onkeydown = event => {
-        if (event.altKey) return;
+        if (event.altKey || board.paused) return;
         const key = event.key.toLowerCase();
         if (event.metaKey || event.ctrlKey) {
             if (key !== 'z' && key !== 'y') return;
@@ -507,11 +529,15 @@ function setupBoard({
             canvas.setPointerCapture(event.pointerId);
             if (touchPan.down(event, inputMode !== 'trace' || board.finished)) return;
         } else touchPan.reset();
-        if (board.finished || stroke || !event.isPrimary || event.button !== 0) return;
+        if (board.paused || board.finished || stroke || !event.isPrimary || event.button !== 0) return;
         const point = boardView.pointFor(event);
         pressedClue = boardClueAt(point, rowsOfClues, columnsOfClues)?.key;
         if (inputMode !== 'trace') return;
-        const cell = boardCellAt(point, columns, rows);
+        let cell = boardCellAt(point, columns, rows);
+        if (paintByNumber && event.pointerType === 'touch' && (!cell || answer[cell.row][cell.column] === blank)) {
+            cell = paintTouchCell(point, columns, rows, Math.min(0.25, 4 / boardView.cellSize),
+                candidate => canPaintNumberCell(answer, cells, blank, candidate, getSelectedColor()));
+        }
         if (!cell) return;
         canvas.setPointerCapture(event.pointerId);
         stroke = { id: event.pointerId, point, color: getSelectedColor(), changes: [] };
@@ -527,15 +553,15 @@ function setupBoard({
         if (touchPan.end(event)) return;
         if (!stroke || event.pointerId !== stroke.id) return;
         continueStroke(event);
-        if (event.pointerType === 'touch' && stroke.changes.length) {
+        if (!paintByNumber && event.pointerType === 'touch' && stroke.changes.length) {
             // Touch activation can start at pointerup, after the first cell was painted.
             playCellSound(stroke.color, true);
         }
-        if (stopStroke()) onEdit();
+        if (stopStroke() && !paintByNumber) onEdit();
     };
     canvas.onpointercancel = canvas.onlostpointercapture = event => {
         if (touchPan.end(event)) return;
-        if (event.pointerId === stroke?.id && stopStroke()) onEdit();
+        if (event.pointerId === stroke?.id && stopStroke() && !paintByNumber) onEdit();
     };
     viewport.onscroll = renderFixedClues;
     return {
@@ -553,7 +579,7 @@ function setupBoard({
         refreshSettings() {
             const mode = configuredPaintMode();
             if (inputMode !== 'pick' && inputMode !== 'move' && inputMode !== mode) setInputMode(mode);
-            showSymbols = multiColor && boardSetting('showSymbols', board);
+            showSymbols = (paintByNumber || multiColor) && (paintByNumber || boardSetting('showSymbols', board));
             palettePanel.classList.toggle('show-symbols', showSymbols);
             renderBoard(true);
         },

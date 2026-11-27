@@ -136,3 +136,24 @@ test('加算の表示は分・時間の境目と秒の端数を保持する', ()
         assert.equal(context.formatPenaltyTime(seconds), expected, String(seconds));
     }
 });
+
+test('未開始の時計はresumeで開始せず、再開済みと完成済みの時計は開始状態を保つ', () => {
+    let now = 0;
+    const clock = context.createPlayClock(() => now);
+    clock.resume();
+    now = 1000;
+    assert.equal(clock.elapsed(), 0);
+    assert.equal(clock.snapshot().started, false);
+    clock.start();
+    now = 2000;
+    clock.suspend();
+    const restored = context.createPlayClock(() => now, clock.snapshot());
+    now = 10_000;
+    restored.resume();
+    now = 11_000;
+    assert.equal(restored.elapsed(), 2000);
+    restored.finish();
+    restored.resume();
+    now = 20_000;
+    assert.equal(restored.elapsed(), 2000);
+});

@@ -78,6 +78,7 @@ test('準備と初回案内を除き、盤面が使えるようになった時�
         requestPuzzleQuality: () => ({ result }),
         maxPuzzleShareLength: 8_000,
         showBoardMenu() {},
+        setPaintPresentation() {},
         drawUnderPalette() {},
         setupBoard: () => ({ stopStroke() {} }),
         setProgressSource() {},

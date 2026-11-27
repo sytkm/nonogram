@@ -9,7 +9,7 @@
 
 /**
  * @typedef {object} ProgressSnapshot
- * @property {'board'|'mosaic'} kind
+ * @property {'board'|'mosaic'|'paint-by-number'} kind
  * @property {PuzzleData} puzzle
  * @property {BoardProgress} [board] - 通常盤面
  * @property {PlayClockSnapshot} [clock]
@@ -21,6 +21,7 @@
 
 /** @typedef {ProgressSnapshot & {id: string, savedAt?: number, dailyDate?: string}} ProgressRecord */
 
+const PAINT_PROGRESS_KEY = 'nonogram:paint-by-number:progress:v1';
 const PROGRESS_KEY = 'nonogram:progress:v1';
 const DAILY_PROGRESS_KEY = 'nonogram:daily-progress:v2';
 let progressSession;
@@ -37,7 +38,8 @@ function readProgress(key = PROGRESS_KEY) {
     try {
         const saved = JSON.parse(localStorage.getItem(key));
         if (!saved || typeof saved.id !== 'string' || !saved.id) return null;
-        if (saved.kind !== 'board' && saved.kind !== 'mosaic') return null;
+        if (saved.kind !== 'board' && saved.kind !== 'mosaic' &&
+            !(key === PAINT_PROGRESS_KEY && saved.kind === 'paint-by-number' && saved.version === 1)) return null;
         if (saved.kind === 'mosaic' && !Array.isArray(saved.tiles)) return null;
 
         const { matrix, palette, blank } = saved.puzzle ?? {};
@@ -99,17 +101,18 @@ function updateResumeButton(saved = readProgress()) {
  * @param {string} [id] - 保存から再開した場合は同じIDを使う
  * @param {boolean} [fromShare] - 保存の入れ替えを確認する共有問題か
  * @param {string} [dailyDate] - 日替わりの保存先を選ぶ日付キー
+ * @param {string} [storageKey] - 通常・塗り絵など形式ごとに独立した保存先
  */
-function setProgressSource(snapshot, id, fromShare = false, dailyDate) {
+function setProgressSource(snapshot, id, fromShare = false, dailyDate, storageKey = PROGRESS_KEY) {
     flushProgress();
-    progressSession = { snapshot, id: id ?? (Date.now() + '-' + Math.random()), fromShare, dailyDate };
+    progressSession = { snapshot, id: id ?? (Date.now() + '-' + Math.random()), fromShare, dailyDate, storageKey };
 }
 
 function writeProgress() {
     try {
-        const { snapshot, id, dailyDate } = progressSession;
+        const { snapshot, id, dailyDate, storageKey } = progressSession;
         const record = { id, ...snapshot(), dailyDate, savedAt: Date.now() };
-        const key = dailyDate ? DAILY_PROGRESS_KEY : PROGRESS_KEY;
+        const key = dailyDate ? DAILY_PROGRESS_KEY : storageKey;
         if (dailyDate) {
             // 日付をまたいで開いたままの盤面や、別タブの未完成盤面で上書きしない。
             if (dailyDate !== dailyDay().key) return false;
@@ -126,6 +129,7 @@ function writeProgress() {
         }
         document.getElementById('progress-warning').textContent = '';
         if (dailyDate) updateDailyPuzzleButton();
+        else if (storageKey === PAINT_PROGRESS_KEY) updatePaintResumeButton();
         else updateResumeButton(record);
         return true;
     } catch {
@@ -147,15 +151,15 @@ function flushProgress(force = false) {
         return writeProgress();
     }
     if (!progressSession) return false;
-    const { id, dailyDate } = progressSession;
-    const saved = dailyDate ? readDailyProgress(dailyDate) : readProgress();
+    const { id, dailyDate, storageKey } = progressSession;
+    const saved = dailyDate ? readDailyProgress(dailyDate) : readProgress(storageKey);
     if (force || saved?.id === id) return writeProgress();
     return false;
 }
 
 function saveProgressForHome(replace = false) {
     if (!progressSession?.fromShare) return 'ready';
-    const saved = readProgress();
+    const saved = readProgress(progressSession.storageKey);
     if (!replace && pendingProgress === undefined && saved && saved.id !== progressSession.id) return 'conflict';
     return flushProgress(true) ? 'ready' : 'failed';
 }

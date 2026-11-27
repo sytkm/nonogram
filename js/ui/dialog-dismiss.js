@@ -39,7 +39,7 @@ function setupDialogDismiss(dialog) {
 
 document.addEventListener('DOMContentLoaded', () => {
     // Preparation has no cancel operation; keep it blocking until the check finishes.
-    for (const id of ['settings-dialog', 'play-guide-dialog', 'restart-dialog', 'play-share-dialog', 'play-menu-dialog', 'clear-result-dialog', 'leave-shared-dialog']) {
+    for (const id of ['paint-guide-dialog', 'paint-replace-dialog', 'paint-share-dialog', 'settings-dialog', 'play-guide-dialog', 'restart-dialog', 'play-share-dialog', 'play-menu-dialog', 'clear-result-dialog', 'leave-shared-dialog']) {
         setupDialogDismiss(document.getElementById(id));
     }
 });

@@ -33,6 +33,9 @@ function setupImagePicker() {
     const colorLimit = document.getElementById('paint-color-limit');
     const colorResult = document.getElementById('paint-color-result');
     const playPreview = document.getElementById('play-preview');
+    const paintPreview = document.getElementById('paint-preview');
+    const sharePaintPreview = document.getElementById('share-paint-preview');
+    const paintHelp = document.getElementById('preview-paint-help');
     const splitPreview = document.getElementById('split-preview');
     const playOptions = document.getElementById('preview-play-options');
     const splitHelp = document.getElementById('preview-split-help');
@@ -99,6 +102,9 @@ function setupImagePicker() {
             };
         }
         currentImage.puzzle = puzzle;
+        const paintProblem = paintPuzzleProblem(puzzle);
+        paintPreview.disabled = sharePaintPreview.disabled = playPreview.disabled || Boolean(paintProblem);
+        paintHelp.textContent = paintProblem || '番号と同じ色でマスを塗って、絵を完成させます。';
         const { matrix } = puzzle;
         const { naturalWidth, naturalHeight } = currentImage.image;
         const crop = currentImage.crop;
@@ -277,6 +283,7 @@ function setupImagePicker() {
     side.addEventListener('input', () => {
         playPreview.disabled = !side.validity.valid || !side.value;
         splitPreview.disabled = playPreview.disabled;
+        paintPreview.disabled = sharePaintPreview.disabled = playPreview.disabled;
         if (playPreview.disabled) {
             resetSize.disabled = false;
             resetPreviewChecks();
@@ -319,6 +326,8 @@ function setupImagePicker() {
         const shareSource = originalShareSource();
         startPuzzle(currentImage.puzzle, { generated, initialCheck, shareSource, fitOnStart: true });
     });
+    paintPreview.addEventListener('click', () => startPaintPuzzle(currentImage.puzzle));
+    sharePaintPreview.addEventListener('click', () => openPaintShare(normalizePaintPuzzle(currentImage.puzzle)));
     splitPreview.addEventListener('click', () => {
         resetPreviewChecks();
         openMosaic(currentImage.puzzle);

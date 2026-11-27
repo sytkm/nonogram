@@ -62,7 +62,10 @@ function setupPlayGuide() {
     }
 
     for (const button of document.querySelectorAll('[data-open-play-guide]')) {
-        button.onclick = () => openGuide();
+        button.onclick = () => {
+            if (activeBoard?.state.kind === 'paint-by-number' && !playPanel.hidden) document.getElementById('paint-guide-dialog').showModal();
+            else openGuide();
+        };
     }
 
     return (split, onClose) => {
@@ -96,6 +99,7 @@ function showClearResult(opener, { title = 'クリア！', note = '', download =
     const message = document.getElementById('clear-result-note');
     message.textContent = note.trim();
     message.hidden = !message.textContent;
+    document.getElementById('clear-paint-share').hidden = activeBoard?.state.kind !== 'paint-by-number';
     document.getElementById('downl').hidden = !download;
     document.getElementById('clear-mosaic-downloads').hidden = !mosaic;
     const restartButton = document.getElementById('clear-result-restart');

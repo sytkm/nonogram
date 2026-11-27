@@ -32,12 +32,13 @@ function setup({ decodeFails = false, pngColorType, pixelArtSide, indexedPuzzle 
         window: { location: { href: 'https://example.com/nonogram/' } }, document: { getElementById: element },
         setupTabs: () => () => {},
         setupImageCrop: () => () => {},
+        isValidSharedPuzzle: () => true,
         maxSharedPuzzleCells: 40_000,
         puzzleShareURL: (_, puzzle) => new Promise(resolve => normalShares.push({ puzzle, resolve })),
         mosaicShareURL: (_, puzzle) => new Promise(resolve => splitShares.push({ puzzle, resolve })),
         setupQualityCheck: () => () => {},
     });
-    for (const name of ['js/image/image-input.js', 'js/play/mosaic.js', 'js/ui/share-controls.js', 'js/image/image-preview.js']) {
+    for (const name of ['js/image/image-input.js', 'js/play/mosaic.js', 'js/ui/share-controls.js', 'js/puzzle/paint-by-number.js', 'js/image/image-preview.js']) {
         vm.runInContext(fs.readFileSync(path.join(__dirname, '..', name), 'utf8'), context);
     }
     context.setupPuzzleShare = (group, url) => { group.url = url; };
@@ -289,4 +290,29 @@ test('パレットPNGの減色は塗るマスと空白を保ち、マス数と�
     ui.element('play-preview').click();
     assert.equal(ui.starts.at(-1).puzzle, ui.original);
     assert.equal(ui.rasterizations(), 0);
+});
+
+test('塗り絵の寸法上限は既存ノノグラムを制限せず、調整後だけ塗り絵を開始できる', async () => {
+    const ui = setup();
+    await ui.element('file').change();
+    assert.equal(ui.element('play-preview').disabled, false);
+    assert.equal(ui.element('paint-preview').disabled, true);
+    assert.match(ui.element('preview-paint-help').textContent, /200マス/);
+    ui.element('puzzle-side').value = '200';
+    ui.element('puzzle-side').input();
+    assert.equal(ui.element('paint-preview').disabled, false);
+});
+
+test('塗り色16色のパレットPNGは元の配色を保ち、減色すれば塗り絵を開始できる', async () => {
+    const ui = setup({ indexedPuzzle: {
+        matrix: [Array.from({ length: 16 }, (_, n) => n)],
+        palette: Array.from({ length: 16 }, (_, n) => [n * 15, n * 10, n * 5]), blank: 16,
+    } });
+    await ui.element('file').change();
+    assert.equal(ui.element('play-preview').disabled, false);
+    assert.equal(ui.element('paint-preview').disabled, true);
+    assert.match(ui.element('preview-paint-help').textContent, /16色/);
+    ui.element('paint-color-count').value = '16';
+    ui.element('paint-color-count').input();
+    assert.equal(ui.element('paint-preview').disabled, false);
 });
