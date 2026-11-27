@@ -9,7 +9,7 @@ test('新旧の通常共有リンクは最初に盤面全体を表示する', as
     const guideCalls = [];
     const app = fs.readFileSync(path.join(__dirname, '../js/app.js'), 'utf8');
     const init = [
-        'setupShareActions', 'setupImagePicker', 'setupProgressRestore', 'setupDailyPuzzle',
+        'setupPaintProgress', 'setupShareActions', 'setupImagePicker', 'setupProgressRestore', 'setupDailyPuzzle',
         'setupBoardMenus', 'setupSettings', 'setupPaletteNavigation', 'setupPlayDisplay',
     ];
     const puzzle = { matrix: [[1]], palette: [[255, 255, 255], [0, 0, 0]], blank: 0 };
@@ -18,6 +18,7 @@ test('新旧の通常共有リンクは最初に盤面全体を表示する', as
         window: { location: {}, addEventListener() {} },
         document: { addEventListener() {}, getElementById: () => ({}) },
         normalSharePrefix: '#puzzle=',
+        paintSharePrefix: '#paint=',
         mosaicSharePrefix: '#mosaic=',
         setupPlayGuide: () => (split, onClose) => guideCalls.push({ split, onClose }),
         readPuzzleShare: async () => puzzle,

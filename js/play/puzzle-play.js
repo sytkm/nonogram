@@ -68,6 +68,7 @@ function updatePlayTime() {
 /** @param {((onClose: () => void) => boolean)} [openFirstGuide] - 初回案内を開いた場合は true。 */
 async function startPuzzle({ matrix, palette, blank }, options = {}, openFirstGuide) {
     suspendCurrentPuzzle();
+    setPaintPresentation(false);
     const board = options.board ?? {};
     const hasSavedCells = Boolean(board.cells);
     const { rows: rowClues, columns: columnClues } = makePuzzleClues(matrix, blank);

@@ -7,6 +7,7 @@ window.onload = async function () {
     setupShareActions();
     setupImagePicker();
     setupProgressRestore();
+    setupPaintProgress();
     setupDailyPuzzle();
     setupBoardMenus();
     // Safari のネイティブなピンチも、プレイ面で始まった場合だけ抑える。
@@ -27,7 +28,7 @@ window.onload = async function () {
     setupPaletteNavigation();
     setupPlayDisplay();
 
-    const isPuzzleShareHash = hash => hash.startsWith(normalSharePrefix) || hash.startsWith(mosaicSharePrefix);
+    const isPuzzleShareHash = hash => hash.startsWith(normalSharePrefix) || hash.startsWith(mosaicSharePrefix) || hash.startsWith(paintSharePrefix);
     // A pasted fragment can navigate within the current page without reloading it.
     window.addEventListener('hashchange', event => {
         if ([event.oldURL, event.newURL].some(url => isPuzzleShareHash(new URL(url).hash))) {
@@ -38,6 +39,10 @@ window.onload = async function () {
     const { search: query, hash } = window.location;
     if (isPuzzleShareHash(hash)) {
         try {
+            if (hash.startsWith(paintSharePrefix)) {
+                await startPaintPuzzle(await readPaintShare(hash));
+                return;
+            }
             const mosaic = hash.startsWith(mosaicSharePrefix);
             if (mosaic) {
                 openMosaic(await readMosaicShare(hash), { fromShare: true });
@@ -53,7 +58,9 @@ window.onload = async function () {
     if (!query) return;
 
     try {
-        if (query === '?sample') {
+        if (query === '?paint-sample') {
+            await startPaintPuzzle(paintSamplePuzzle());
+        } else if (query === '?sample') {
             await startPuzzle(decodeLegacyPng(samplePNG), { sample: true, shareSource: samplePNG });
         } else {
             const shareSource = decodeURIComponent(query.slice(1));

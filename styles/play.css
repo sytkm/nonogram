@@ -886,3 +886,16 @@ body:not(:has(#play-panel:not([hidden]), #mosaic-panel:not([hidden]))) #open-pla
         .history-controls button { display: grid; place-items: center; }
     }
 }
+
+/* 塗り絵では番号を常時表示し、完了色は色を保ったまま選択不可を示す。 */
+.is-paint-by-number .palette-symbol { display: inline; }
+.is-paint-by-number #color-palette .palette-color.is-complete { opacity: 1; color: var(--puzzle-ink); border-color: #777; }
+.is-paint-by-number .palette-color.is-complete .palette-symbol { text-decoration: line-through; }
+.is-paint-by-number .palette-color.is-complete::after { content: '完了'; font-size: 0.65rem; }
+.is-paint-by-number .history-controls { display: none; }
+.is-paint-by-number #settings-dialog label:has(#stick-clues),
+.is-paint-by-number #settings-dialog .settings-options:has(input[name="clue-action"]),
+.is-paint-by-number #settings-dialog label:has(#color-symbols),
+.is-paint-by-number #settings-dialog label:has(#auto-slash),
+.is-paint-by-number #settings-dialog label:has(#paint-sound),
+.is-paint-by-number #settings-dialog .settings-options:has(input[name="paint-sound-style"]) { display: none; }

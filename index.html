@@ -8,36 +8,38 @@
     <script src="js/image/image-input.js?v=image-crop"></script>
     <script src="js/image/indexed-png.js"></script>
     <script src="js/image/image-crop.js"></script>
-    <script src="js/image/image-preview.js?v=image-crop"></script>
-    <script src="js/play/play-clock.js?v=start-when-ready"></script>
+    <script src="js/image/image-preview.js?v=paint-by-number"></script>
+    <script src="js/play/play-clock.js?v=paint-by-number"></script>
     <script src="js/board/board-tools.js?v=clue-eyedropper"></script>
     <script src="js/puzzle/line-logic.js"></script>
-    <script src="js/play/progress-store.js?v=magazine-puzzle-colors"></script>
+    <script src="js/play/progress-store.js?v=paint-by-number"></script>
     <script src="js/puzzle/puzzle-quality.js?v=line-solvability"></script>
     <script src="js/play/daily-puzzle.js?v=magazine-puzzle-colors"></script>
     <script src="js/puzzle/quality-controls.js?v=clue-labels"></script>
     <script src="js/puzzle/mosaic-share.js?v=normal-share"></script>
+    <script src="js/puzzle/paint-by-number.js"></script>
     <script src="js/play/mosaic.js?v=mosaic-always-visible"></script>
     <script src="js/ui/share-controls.js?v=play-sharing"></script>
     <script src="js/ui/guide-tabs.js?v=preview-tabs"></script>
     <script src="js/puzzle/puzzle-rules.js?v=shared-clues"></script>
     <script src="js/board/board-gestures.js"></script>
-    <script src="js/board/board-palette.js"></script>
+    <script src="js/board/board-palette.js?v=paint-by-number"></script>
     <script src="js/board/board-settings.js?v=paint-sound-styles"></script>
-    <script src="js/board/board-renderer.js?v=clue-mark-position"></script>
+    <script src="js/board/board-renderer.js?v=paint-by-number"></script>
     <script src="js/board/board-viewport.js?v=minimap-navigation"></script>
     <script src="js/board/board-minimap.js?v=minimap-navigation"></script>
     <script src="js/board/board-feedback.js"></script>
     <script src="js/board/board-sound.js?v=paint-sound-styles"></script>
-    <script src="js/board/board-controller.js?v=paint-sound-styles"></script>
-    <script src="js/play/play-dialogs.js?v=mosaic-tile-clear"></script>
-    <script src="js/play/puzzle-play.js?v=mosaic-initial-color"></script>
-    <script src="js/app.js?v=magazine-puzzle-colors"></script>
+    <script src="js/board/board-controller.js?v=paint-by-number"></script>
+    <script src="js/play/play-dialogs.js?v=paint-by-number"></script>
+    <script src="js/play/puzzle-play.js?v=paint-by-number"></script>
+    <script src="js/play/paint-by-number-play.js"></script>
+    <script src="js/app.js?v=paint-by-number"></script>
     <link rel="stylesheet" href="styles/start.css?v=image-crop">
-    <link rel="stylesheet" href="styles/play.css?v=separate-answer-tool">
+    <link rel="stylesheet" href="styles/play.css?v=paint-by-number">
     <link rel="stylesheet" href="styles/dialogs.css?v=image-crop">
     <link rel="stylesheet" href="styles/mosaic.css?v=puzzle-magazine">
-    <script src="js/ui/dialog-dismiss.js?v=clear-results" defer></script>
+    <script src="js/ui/dialog-dismiss.js?v=paint-by-number" defer></script>
     <title>画像でノノグラム</title>
 </head>
 
@@ -56,7 +58,7 @@
             <div class="home-intro">
                 <div class="home-copy">
                     <h2 class="home-title">画像から<br class="home-title-break">問題を作る</h2>
-                    <p class="home-lead">写真やイラストをノノグラムに。数字を手がかりにマスを塗って、元の絵を完成させます。</p>
+                    <p class="home-lead">写真やイラストをノノグラムや塗り絵に。数字を手がかりにマスを塗って、元の絵を完成させます。</p>
                     <div class="toolbar-group" role="group" aria-label="問題を作る">
                         <button type="button" id="open-image" class="action-link action-primary" aria-describedby="image-formats">自分の画像で作る</button>
                     </div>
@@ -65,7 +67,8 @@
                     <div class="home-quick-play">
                         <h3>すぐ遊ぶ</h3>
                         <div class="toolbar-group">
-                            <a href="?sample" class="action-link">サンプル問題</a>
+                            <a href="?sample" class="action-link">ノノグラムのサンプル</a>
+                            <a href="?paint-sample" class="action-link">塗り絵のサンプル</a>
                             <span class="home-daily">
                                 <button type="button" id="open-daily-puzzle" class="action-link" aria-describedby="daily-date">今日の問題を遊ぶ</button>
                                 <time id="daily-date"></time>
@@ -82,6 +85,10 @@
                                 <p id="saved-progress-summary"></p>
                                 <p id="saved-progress-timestamp" hidden>最終保存 <time id="saved-progress-time"></time></p>
                             </div>
+                        </div>
+                        <div id="saved-paint-progress" class="toolbar-group" hidden>
+                            <button type="button" id="resume-paint-progress" class="action-link" aria-describedby="saved-paint-summary">塗り絵の続きから</button>
+                            <p id="saved-paint-summary"></p>
                         </div>
                     </div>
                 </div>
@@ -112,12 +119,17 @@
             </div>
             <p id="image-status" role="status"></p>
             <section id="image-preview" aria-labelledby="preview-heading" hidden>
-                <h2 id="preview-heading" tabindex="-1">ノノグラムのプレビュー</h2>
+                <h2 id="preview-heading" tabindex="-1">画像のプレビュー</h2>
                 <div class="toolbar-group" id="preview-play-options" role="group" aria-label="プレビューした問題で遊ぶ">
                     <button type="button" id="split-preview" class="action-link action-primary" aria-describedby="preview-split-help">10×10に分けて遊ぶ</button>
                     <button type="button" id="play-preview" class="action-link">分けずに遊ぶ</button>
                 </div>
                 <p id="preview-split-help"></p>
+                <div class="toolbar-group" role="group" aria-label="塗り絵で遊ぶ">
+                    <button type="button" id="paint-preview" class="action-link" aria-describedby="preview-paint-help">塗り絵で遊ぶ</button>
+                    <button type="button" id="share-paint-preview" class="action-link" aria-describedby="preview-paint-help">塗り絵を共有</button>
+                </div>
+                <p id="preview-paint-help" role="status">番号と同じ色でマスを塗って、絵を完成させます。</p>
                 <div class="preview-layout">
                     <figure class="preview-image">
                         <canvas id="preview-canvas" role="img" aria-label="問題に使う画像"></canvas>
@@ -307,6 +319,7 @@
                 <a class="action-link action-primary" id="mosaic-save" download="nonogram-mosaic.png" hidden>完成画像を保存</a>
                 <a class="action-link" id="mosaic-save-large" download="nonogram-mosaic-large.png" hidden>拡大した画像を保存</a>
             </div>
+            <button type="button" id="clear-paint-share" class="action-link" hidden>塗り絵を共有</button>
             <button type="button" id="clear-result-restart" class="action-link" aria-haspopup="dialog" aria-controls="restart-dialog" hidden>もう一度遊ぶ</button>
             <button type="button" id="clear-result-return-mosaic" class="action-link action-primary" hidden>全体図に戻る</button>
             <a href="?" class="action-link" data-play-home>ホームに戻る</a>
@@ -351,6 +364,38 @@
             <h2 id="play-share-title">問題を共有</h2>
             <form method="dialog"><button type="submit" autofocus>閉じる</button></form>
         </div>
+    </dialog>
+    <dialog id="paint-share-dialog" aria-labelledby="paint-share-title">
+        <div class="dialog-heading">
+            <h2 id="paint-share-title">塗り絵を共有</h2>
+            <form method="dialog"><button type="submit" autofocus>閉じる</button></form>
+        </div>
+        <p>問題だけを共有します。塗った状態とプレイ時間は含みません。</p>
+        <p id="paint-share-status" role="status"></p>
+        <div id="paint-share-actions"><div data-share-actions="塗り絵"></div></div>
+    </dialog>
+    <dialog id="paint-replace-dialog" aria-labelledby="paint-replace-title">
+        <form method="dialog">
+            <h2 id="paint-replace-title">塗り絵の保存を入れ替える</h2>
+            <p id="paint-replace-summary"></p>
+            <p>新しい塗り絵を始めると、前の塗り絵の保存は上書きされます。ノノグラムの保存は残ります。</p>
+            <div class="toolbar-group">
+                <button type="submit" value="cancel" class="action-link" autofocus>キャンセル</button>
+                <button type="submit" value="replace" class="action-link">新しい塗り絵を始める</button>
+            </div>
+        </form>
+    </dialog>
+    <dialog id="paint-guide-dialog" aria-labelledby="paint-guide-title">
+        <div class="dialog-heading">
+            <h2 id="paint-guide-title">塗り絵の遊び方</h2>
+            <form method="dialog"><button type="submit" autofocus>閉じる</button></form>
+        </div>
+        <p>パレットで番号を選び、同じ番号のマスを塗ります。正しい色で塗ると番号が消えます。違う色・空白・塗り済みのマスは変わりません。</p>
+        <p>1色を塗り終えると、指やマウスを離した時点で次の未完了色へ番号順に切り替わります。完了した色は選べません。すべて塗るとクリアです。</p>
+        <p>なぞり塗りは設定で切り替えられます。2本指で移動・ピンチで拡大縮小、移動ボタンで1本指やマウスでの移動ができます。「全体」「標準」とミニマップも使えます。</p>
+        <p>キーボードではTabでパレットの色や盤面を選び、矢印キーでマスを移動してSpaceまたはEnterで塗ります。選択中の色と操作中のマスは別々に表示されます。</p>
+        <p>進み具合は自動保存され、ホームの「塗り絵の続きから」で再開できます。時間は最初に正しく塗ったときから計り、一時停止中や別タブ・ページを閉じている間は止まります。</p>
+        <p>クリア結果から完成画像の保存と問題の共有ができます。塗った状態や時間は共有されません。</p>
     </dialog>
     <dialog id="settings-dialog" aria-labelledby="settings-title">
         <div class="dialog-heading">
@@ -510,6 +555,7 @@
             <p>「再開」を押すと、続きから遊べます。</p>
         </div>
     </section>
+    <p id="paint-keyboard-instructions" class="sr-only" hidden>矢印キーでマスを移動し、SpaceまたはEnterで選択中の番号の色を塗ります。空白や塗り済みのマスは変更できません。</p>
     <div class="play-workspace">
         <div id="pixelcanvas" hidden>
             <div class="fixed-clues" aria-hidden="true"><canvas id="fixed-clues" hidden></canvas></div>

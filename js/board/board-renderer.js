@@ -13,7 +13,7 @@ function boardResolution(width, height, pixelRatio) {
  * 盤面と固定ヒントを描く。入力イベントや盤面データの更新は行わない。
  * 進行中の同じマス配列と、その時点のチェック状態を読み取る。
  */
-function createBoardRenderer({ canvas, viewport, clueOverlay, board, rowClues, columnClues, palette, blank, fixedSlashes }) {
+function createBoardRenderer({ canvas, viewport, clueOverlay, board, rowClues, columnClues, palette, blank, fixedSlashes, numberAt }) {
     const { cells } = board;
     const [rowsOfClues, leftClueCount] = rowClues;
     const [columnsOfClues, topClueCount] = columnClues;
@@ -131,7 +131,12 @@ function createBoardRenderer({ canvas, viewport, clueOverlay, board, rowClues, c
             if (row === rows - 1) context.fillRect(left, top + height - border, width, border);
             if (column === columns - 1) context.fillRect(left + width - border, top, border, height);
         }
-        if (showSymbols && color >= 0 && color !== blank && cellSize >= 6 && width >= 4 && height >= 4) {
+        const number = numberAt?.(row, column);
+        if (number && color === blank && cellSize >= 6 && width >= 4 && height >= 4) {
+            context.fillStyle = clueInk;
+            context.fillText(String(number), left + width / 2, top + height / 2, width * 0.85);
+        }
+        if (!numberAt && showSymbols && color >= 0 && color !== blank && cellSize >= 6 && width >= 4 && height >= 4) {
             context.fillStyle = chooseTextColor(...palette[color]);
             context.fillText(paletteSymbol(color, blank), left + width / 2, top + height / 2, width * 0.85);
         }

@@ -35,7 +35,7 @@ function setupPaletteNavigation() {
     updatePaletteNavigation = update;
 }
 
-function drawUnderPalette(palette, usedColors, blank, initialColor) {
+function drawUnderPalette(palette, usedColors, blank, initialColor, { numbered = false } = {}) {
     let selectedColor = initialColor;
     let onSelect = () => {};
     const container = document.getElementById('color-palette');
@@ -47,7 +47,7 @@ function drawUnderPalette(palette, usedColors, blank, initialColor) {
 
     function selectColor(color) {
         const button = buttons.get(color);
-        if (!button) return;
+        if (!button || button.disabled) return;
         buttons.get(selectedColor)?.setAttribute('aria-pressed', 'false');
         button.setAttribute('aria-pressed', 'true');
         selectedColor = color;
@@ -73,7 +73,7 @@ function drawUnderPalette(palette, usedColors, blank, initialColor) {
         const swatch = document.createElement('span');
         const symbol = document.createElement('span');
         const hexColor = '#' + palette[color].map(channel => channel.toString(16).padStart(2, '0')).join('');
-        const colorSymbol = paletteSymbol(color, blank);
+        const colorSymbol = numbered ? String(color) : paletteSymbol(color, blank);
         const label = '色 ' + colorSymbol + ' ' + hexColor;
 
         button.type = 'button';
@@ -99,6 +99,14 @@ function drawUnderPalette(palette, usedColors, blank, initialColor) {
     container.scrollTop = 0;
     updatePaletteNavigation();
     return {
+        updateRemaining(remaining) {
+            for (const [color, button] of buttons) {
+                if (color === blank || color < 0) continue;
+                button.disabled = remaining[color] === 0;
+                button.classList.toggle('is-complete', button.disabled);
+                button.setAttribute('aria-label', button.title + (button.disabled ? ' 完了' : ' 残り' + remaining[color] + 'マス'));
+            }
+        },
         selectColor, getSelectedColor: () => selectedColor,
         onSelect(callback) { onSelect = callback; },
         showSelection(show) {
